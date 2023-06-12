@@ -1,0 +1,406 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AB1511E82A34F6B100A6D87E /* modeler.c in Sources */ = {isa = PBXBuildFile; fileRef = AB1511E72A34F6B100A6D87E /* modeler.c */; };
+		AB1511EC2A3510F700A6D87E /* libvulkan.1.3.250.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB1511EA2A3505B800A6D87E /* libvulkan.1.3.250.dylib */; };
+		AB1511F22A35146800A6D87E /* libvulkan.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB1511ED2A35117400A6D87E /* libvulkan.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB1511F32A35146800A6D87E /* libvulkan.1.3.250.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB1511EA2A3505B800A6D87E /* libvulkan.1.3.250.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB46FC1D2A35532000E6951B /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB6DF34B2A354270001081EA /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		ABE1DEF52A3592D600A963A6 /* vulkan in Resources */ = {isa = PBXBuildFile; fileRef = ABE1DEF42A3592D600A963A6 /* vulkan */; };
+		ABF162392A34E3A7007655F7 /* modelerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF162382A34E3A7007655F7 /* modelerApp.swift */; };
+		ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF1623A2A34E3A7007655F7 /* ModelerView.swift */; };
+		ABF1623D2A34E3AC007655F7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABF1623C2A34E3AC007655F7 /* Assets.xcassets */; };
+		ABF162402A34E3AC007655F7 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABF1623F2A34E3AC007655F7 /* Preview Assets.xcassets */; };
+		ABF162482A34EF19007655F7 /* ModelerViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF162472A34EF19007655F7 /* ModelerViewRepresentable.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		AB1511F12A35145900A6D87E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				AB46FC1D2A35532000E6951B /* libMoltenVK.dylib in CopyFiles */,
+				AB1511F22A35146800A6D87E /* libvulkan.1.dylib in CopyFiles */,
+				AB1511F32A35146800A6D87E /* libvulkan.1.3.250.dylib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		AB1511E52A34F62D00A6D87E /* modeler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = modeler.h; path = ../../src/modeler.h; sourceTree = "<group>"; };
+		AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modeler-Bridging-Header.h"; sourceTree = "<group>"; };
+		AB1511E72A34F6B100A6D87E /* modeler.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = modeler.c; path = ../../src/modeler.c; sourceTree = "<group>"; };
+		AB1511EA2A3505B800A6D87E /* libvulkan.1.3.250.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.3.250.dylib; path = ../../../VulkanSDK/1.3.250.0/macOS/lib/libvulkan.1.3.250.dylib; sourceTree = "<group>"; };
+		AB1511ED2A35117400A6D87E /* libvulkan.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.dylib; path = ../../../VulkanSDK/1.3.250.0/macOS/lib/libvulkan.1.dylib; sourceTree = "<group>"; };
+		AB6DF34B2A354270001081EA /* libMoltenVK.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMoltenVK.dylib; path = ../../../VulkanSDK/1.3.250.0/macOS/lib/libMoltenVK.dylib; sourceTree = "<group>"; };
+		ABE1DEF42A3592D600A963A6 /* vulkan */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vulkan; sourceTree = "<group>"; };
+		ABF162352A34E3A7007655F7 /* modeler.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = modeler.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		ABF162382A34E3A7007655F7 /* modelerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = modelerApp.swift; sourceTree = "<group>"; };
+		ABF1623A2A34E3A7007655F7 /* ModelerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerView.swift; sourceTree = "<group>"; };
+		ABF1623C2A34E3AC007655F7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		ABF1623F2A34E3AC007655F7 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		ABF162412A34E3AC007655F7 /* modeler.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = modeler.entitlements; sourceTree = "<group>"; };
+		ABF162472A34EF19007655F7 /* ModelerViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewRepresentable.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		ABF162322A34E3A7007655F7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB1511EC2A3510F700A6D87E /* libvulkan.1.3.250.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AB1511E92A3505B800A6D87E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AB6DF34B2A354270001081EA /* libMoltenVK.dylib */,
+				AB1511ED2A35117400A6D87E /* libvulkan.1.dylib */,
+				AB1511EA2A3505B800A6D87E /* libvulkan.1.3.250.dylib */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		ABF1622C2A34E3A6007655F7 = {
+			isa = PBXGroup;
+			children = (
+				ABE1DEF42A3592D600A963A6 /* vulkan */,
+				ABF162372A34E3A7007655F7 /* modeler */,
+				ABF162362A34E3A7007655F7 /* Products */,
+				AB1511E92A3505B800A6D87E /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		ABF162362A34E3A7007655F7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				ABF162352A34E3A7007655F7 /* modeler.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		ABF162372A34E3A7007655F7 /* modeler */ = {
+			isa = PBXGroup;
+			children = (
+				ABF162382A34E3A7007655F7 /* modelerApp.swift */,
+				ABF162472A34EF19007655F7 /* ModelerViewRepresentable.swift */,
+				ABF1623A2A34E3A7007655F7 /* ModelerView.swift */,
+				AB1511E52A34F62D00A6D87E /* modeler.h */,
+				AB1511E72A34F6B100A6D87E /* modeler.c */,
+				ABF1623C2A34E3AC007655F7 /* Assets.xcassets */,
+				ABF162412A34E3AC007655F7 /* modeler.entitlements */,
+				ABF1623E2A34E3AC007655F7 /* Preview Content */,
+				AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */,
+			);
+			path = modeler;
+			sourceTree = "<group>";
+		};
+		ABF1623E2A34E3AC007655F7 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				ABF1623F2A34E3AC007655F7 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		ABF162342A34E3A7007655F7 /* modeler */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ABF162442A34E3AC007655F7 /* Build configuration list for PBXNativeTarget "modeler" */;
+			buildPhases = (
+				ABF162312A34E3A7007655F7 /* Sources */,
+				ABF162322A34E3A7007655F7 /* Frameworks */,
+				ABF162332A34E3A7007655F7 /* Resources */,
+				AB1511F12A35145900A6D87E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = modeler;
+			productName = modeler;
+			productReference = ABF162352A34E3A7007655F7 /* modeler.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		ABF1622D2A34E3A6007655F7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1410;
+				LastUpgradeCheck = 1410;
+				TargetAttributes = {
+					ABF162342A34E3A7007655F7 = {
+						CreatedOnToolsVersion = 14.1;
+						LastSwiftMigration = 1410;
+					};
+				};
+			};
+			buildConfigurationList = ABF162302A34E3A7007655F7 /* Build configuration list for PBXProject "modeler" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = ABF1622C2A34E3A6007655F7;
+			productRefGroup = ABF162362A34E3A7007655F7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				ABF162342A34E3A7007655F7 /* modeler */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		ABF162332A34E3A7007655F7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABF162402A34E3AC007655F7 /* Preview Assets.xcassets in Resources */,
+				ABE1DEF52A3592D600A963A6 /* vulkan in Resources */,
+				ABF1623D2A34E3AC007655F7 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		ABF162312A34E3A7007655F7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */,
+				ABF162482A34EF19007655F7 /* ModelerViewRepresentable.swift in Sources */,
+				AB1511E82A34F6B100A6D87E /* modeler.c in Sources */,
+				ABF162392A34E3A7007655F7 /* modelerApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		ABF162422A34E3AC007655F7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		ABF162432A34E3AC007655F7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		ABF162452A34E3AC007655F7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = modeler/modeler.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"modeler/Preview Content\"";
+				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = $VULKAN_HEADERS;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = $VULKAN_LIB;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.abalog.modeler;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "modeler/modeler-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		ABF162462A34E3AC007655F7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = modeler/modeler.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"modeler/Preview Content\"";
+				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = $VULKAN_HEADERS;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = $VULKAN_LIB;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.abalog.modeler;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "modeler/modeler-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		ABF162302A34E3A7007655F7 /* Build configuration list for PBXProject "modeler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABF162422A34E3AC007655F7 /* Debug */,
+				ABF162432A34E3AC007655F7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		ABF162442A34E3AC007655F7 /* Build configuration list for PBXNativeTarget "modeler" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABF162452A34E3AC007655F7 /* Debug */,
+				ABF162462A34E3AC007655F7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = ABF1622D2A34E3A6007655F7 /* Project object */;
+}
