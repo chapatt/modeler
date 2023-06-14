@@ -78,31 +78,6 @@ VkInstance createInstance(void)
         VkResult result = vkCreateInstance(&createInfo, VK_NULL_HANDLE, &instance);
         if (result != VK_SUCCESS) {
             fprintf(stderr, "Failed to create instance: ");
-            
-            switch (result) {
-                case VK_ERROR_OUT_OF_HOST_MEMORY:
-                    fprintf(stderr, "VK_ERROR_OUT_OF_HOST_MEMORY\n");
-                    break;
-                case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-                    fprintf(stderr, "VK_ERROR_OUT_OF_DEVICE_MEMORY\n");
-                    break;
-                case VK_ERROR_INITIALIZATION_FAILED:
-                    fprintf(stderr, "VK_ERROR_INITIALIZATION_FAILED\n");
-                    break;
-                case VK_ERROR_LAYER_NOT_PRESENT:
-                    fprintf(stderr, "VK_ERROR_LAYER_NOT_PRESENT\n");
-                    break;
-                case VK_ERROR_EXTENSION_NOT_PRESENT:
-                    fprintf(stderr, "VK_ERROR_EXTENSION_NOT_PRESENT\n");
-                    break;
-                case VK_ERROR_INCOMPATIBLE_DRIVER:
-                    fprintf(stderr, "VK_ERROR_INCOMPATIBLE_DRIVER\n");
-                    break;
-                default:
-                    fprintf(stderr, "UNKNOWN\n");
-                    break;
-            }
-
             exit(EXIT_FAILURE);
         }
 
@@ -168,21 +143,6 @@ bool isDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
                 VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &familyHasPresent);
                 if (result != VK_SUCCESS) {
                         fprintf(stderr, "Failed to check for GPU surface support: ");
-            
-                        switch (result) {
-                                case VK_ERROR_OUT_OF_HOST_MEMORY:
-                                fprintf(stderr, "VK_ERROR_OUT_OF_HOST_MEMORY\n");
-                                break;
-                        case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-                                fprintf(stderr, "VK_ERROR_OUT_OF_DEVICE_MEMORY\n");
-                                break;
-                        case VK_ERROR_SURFACE_LOST_KHR:
-                                fprintf(stderr, "VK_ERROR_SURFACE_LOST_KHR\n");
-                                break;
-                        default:
-                                fprintf(stderr, "UNKNOWN\n");
-                                break;
-                        }
                         exit(EXIT_FAILURE);
                 }
                 hasPresent = hasPresent || familyHasPresent == VK_TRUE;
@@ -269,19 +229,6 @@ VkSurfaceKHR createSurface(VkInstance instance, HINSTANCE hinstance, HWND hwnd)
         result = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface);
         if (result != VK_SUCCESS) {
                 fprintf(stderr, "Failed to create surface!\n");
-
-                switch (result) {
-                case VK_ERROR_OUT_OF_HOST_MEMORY:
-                    fprintf(stderr, "VK_ERROR_OUT_OF_HOST_MEMORY\n");
-                    break;
-                case VK_ERROR_OUT_OF_DEVICE_MEMORY:
-                    fprintf(stderr, "VK_ERROR_OUT_OF_DEVICE_MEMORY\n");
-                    break;
-                default:
-                    fprintf(stderr, "UNKNOWN\n");
-                    break;
-                }
-
                 exit(EXIT_FAILURE);
         }
     
