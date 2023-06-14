@@ -19,6 +19,9 @@ VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice);
 void destroyLogicalDevice(VkDevice device);
 uint32_t findFirstMatchingFamily(VkPhysicalDevice physicalDevice, VkQueueFlags flag);
 bool areLayersSupported(const char **layers, size_t layerCount);
+bool areInstanceExtensionsSupported(const char **extensions, size_t extensionCount);
+bool areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount);
+bool compareExtensions(const char **extensions, size_t extensionCount, VkExtensionProperties *availableExtensions, uint32_t availableExtensionCount);
 
 void initVulkan(HINSTANCE hinstance, HWND hwnd)
 {
@@ -41,6 +44,7 @@ VkInstance createInstance(void)
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &applicationInfo;
+
 #ifdef DEBUG
         const char *validationLayers[] = {"VK_LAYER_KHRONOS_validation"};
         if (!areLayersSupported(validationLayers, 1)) {
@@ -51,15 +55,24 @@ VkInstance createInstance(void)
         createInfo.enabledLayerCount = 1;
         createInfo.ppEnabledLayerNames = validationLayers;
 #endif
-        createInfo.enabledExtensionCount = 4;
-        const char *requiredExtensions[] = {
-                VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
+
+        createInfo.enabledExtensionCount = 3;
+        const char *requiredExtensions[4] = {
                 VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
                 VK_KHR_SURFACE_EXTENSION_NAME,
                 VK_KHR_WIN32_SURFACE_EXTENSION_NAME
         };
+        if (!areInstanceExtensionsSupported(requiredExtensions, 3)) {
+                fprintf(stderr, "Required instance extensions not available!");
+                exit(EXIT_FAILURE);
+        }
+        const char *optionalExtension = VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME;
+        if (areInstanceExtensionsSupported(&optionalExtension, 1)) {
+                ++createInfo.enabledExtensionCount;
+                requiredExtensions[3] = optionalExtension;
+                createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+        }
         createInfo.ppEnabledExtensionNames = requiredExtensions;
-        createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
     
         VkInstance instance;
         VkResult result = vkCreateInstance(&createInfo, VK_NULL_HANDLE, &instance);
@@ -172,7 +185,6 @@ bool isDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
                         }
                         exit(EXIT_FAILURE);
                 }
-                /*familyHasPresent = vkGetPhysicalDeviceWin32PresentationSupportKHR(device, i);*/
                 hasPresent = hasPresent || familyHasPresent == VK_TRUE;
         }
         free(queueFamilies);
@@ -197,11 +209,13 @@ VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice)
         createInfo.pQueueCreateInfos = &queueCreateInfo;
         createInfo.queueCreateInfoCount = 1;
         createInfo.pEnabledFeatures = &deviceFeatures;
-#ifdef APPLE
+
         const char* deviceExtension = "VK_KHR_portability_subset";
-        createInfo.ppEnabledExtensionNames = &deviceExtension;
-        createInfo.enabledExtensionCount = 1;
-#endif
+        if (areDeviceExtensionsSupported(physicalDevice, &deviceExtension, 1)) {
+                createInfo.ppEnabledExtensionNames = &deviceExtension;
+                createInfo.enabledExtensionCount = 1;
+        }
+
         createInfo.enabledLayerCount = 0;
     
         VkDevice device;
@@ -293,6 +307,48 @@ bool areLayersSupported(const char **layers, size_t layerCount)
                 }
 
                 if (!layerFound) {
+                        return false;
+                }
+        }
+
+        return true;
+}
+
+bool areInstanceExtensionsSupported(const char **extensions, size_t extensionCount)
+{
+        uint32_t availableExtensionCount;
+        vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, NULL);
+
+        VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
+        vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, availableExtensions);
+
+        return compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
+}
+
+bool areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount)
+{
+        uint32_t availableExtensionCount;
+        vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, NULL);
+
+        VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
+        vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, availableExtensions);
+
+        return compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
+}
+
+bool compareExtensions(const char **extensions, size_t extensionCount, VkExtensionProperties *availableExtensions, uint32_t availableExtensionCount)
+{
+        while (extensionCount--) {
+                bool extensionFound = false;
+
+                while (availableExtensionCount--) {
+                        if (strcmp(extensions[extensionCount], availableExtensions[availableExtensionCount].extensionName) == 0) {
+                                extensionFound = true;
+                                break;
+                        }
+                }
+
+                if (!extensionFound) {
                         return false;
                 }
         }
