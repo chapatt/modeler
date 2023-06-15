@@ -75,8 +75,7 @@ VkInstance createInstance(void)
         createInfo.ppEnabledExtensionNames = requiredExtensions;
     
         VkInstance instance;
-        VkResult result = vkCreateInstance(&createInfo, VK_NULL_HANDLE, &instance);
-        if (result != VK_SUCCESS) {
+        if (vkCreateInstance(&createInfo, VK_NULL_HANDLE, &instance) != VK_SUCCESS) {
             fprintf(stderr, "Failed to create instance: ");
             exit(EXIT_FAILURE);
         }
@@ -93,7 +92,10 @@ VkPhysicalDevice choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
 {
         VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
         uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(instance, &deviceCount, NULL);
+        if (vkEnumeratePhysicalDevices(instance, &deviceCount, NULL) != VK_SUCCESS) {
+            fprintf(stderr, "Failed to get physical device count!");
+            exit(EXIT_FAILURE);
+        }
     
         if (deviceCount == 0) {
             fprintf(stderr, "Failed to find a Physical Device\n");
@@ -101,7 +103,10 @@ VkPhysicalDevice choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
         }
     
         VkPhysicalDevice *devices = (VkPhysicalDevice *) malloc(sizeof(VkPhysicalDevice) * deviceCount);
-        vkEnumeratePhysicalDevices(instance, &deviceCount, devices);
+        if (vkEnumeratePhysicalDevices(instance, &deviceCount, devices) != VK_SUCCESS) {
+            fprintf(stderr, "Failed to get physical devices!");
+            exit(EXIT_FAILURE);
+        }
     
         for (uint32_t i = 0; i < deviceCount; ++i) {
                 if (isDeviceSuitable(devices[i], surface)) {
@@ -179,8 +184,7 @@ VkDevice createLogicalDevice(VkPhysicalDevice physicalDevice)
         createInfo.enabledLayerCount = 0;
     
         VkDevice device;
-        VkResult result = vkCreateDevice(physicalDevice, &createInfo, NULL, &device);
-        if (result != VK_SUCCESS) {
+        if (vkCreateDevice(physicalDevice, &createInfo, NULL, &device) != VK_SUCCESS) {
                 fprintf(stderr, "Failed to create logical device!\n");
                 exit(EXIT_FAILURE);
         }
@@ -226,8 +230,7 @@ VkSurfaceKHR createSurface(VkInstance instance, HINSTANCE hinstance, HWND hwnd)
     
         VkSurfaceKHR surface;
         VkResult result;
-        result = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface);
-        if (result != VK_SUCCESS) {
+        if (vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface) != VK_SUCCESS) {
                 fprintf(stderr, "Failed to create surface!\n");
                 exit(EXIT_FAILURE);
         }
@@ -238,10 +241,16 @@ VkSurfaceKHR createSurface(VkInstance instance, HINSTANCE hinstance, HWND hwnd)
 bool areLayersSupported(const char **layers, size_t layerCount)
 {
         uint32_t availableLayerCount;
-        vkEnumerateInstanceLayerProperties(&availableLayerCount, NULL);
+        if (vkEnumerateInstanceLayerProperties(&availableLayerCount, NULL) != VK_SUCCESS) {
+                fprintf(stderr, "Failed to get available instance layer count!\n");
+                exit(EXIT_FAILURE);
+        }
 
         VkLayerProperties *availableLayers = (VkLayerProperties *) malloc(sizeof(VkLayerProperties) * availableLayerCount);
-        vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers);
+        if (vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers) != VK_SUCCESS) {
+                fprintf(stderr, "Failed to get available instance layers!\n");
+                exit(EXIT_FAILURE);
+        }
 
         while (layerCount--) {
                 bool layerFound = false;
@@ -264,10 +273,16 @@ bool areLayersSupported(const char **layers, size_t layerCount)
 bool areInstanceExtensionsSupported(const char **extensions, size_t extensionCount)
 {
         uint32_t availableExtensionCount;
-        vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, NULL);
+        if (vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, NULL) != VK_SUCCESS) {
+                fprintf(stderr, "Failed to get available instance extension count!\n");
+                exit(EXIT_FAILURE);
+        }
 
         VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
-        vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, availableExtensions);
+        if (vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, availableExtensions) != VK_SUCCESS) {
+                fprintf(stderr, "Failed to get available instance extensions!\n");
+                exit(EXIT_FAILURE);
+        }
 
         return compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
 }
@@ -275,10 +290,16 @@ bool areInstanceExtensionsSupported(const char **extensions, size_t extensionCou
 bool areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount)
 {
         uint32_t availableExtensionCount;
-        vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, NULL);
+        if (vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, NULL) != VK_SUCCESS) {
+                fprintf(stderr, "Failed to get available device extension count!\n");
+                exit(EXIT_FAILURE);
+        }
 
         VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
-        vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, availableExtensions);
+        if (vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, availableExtensions) != VK_SUCCESS) {
+                fprintf(stderr, "Failed to get available device extensions!\n");
+                exit(EXIT_FAILURE);
+        }
 
         return compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
 }
