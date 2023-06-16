@@ -2,6 +2,8 @@
 #define VK_USE_PLATFORM_METAL_EXT
 #endif
 
+#include <stdio.h>
+
 #include "surface_metal.h"
 
 VkSurfaceKHR createSurfaceMetal(VkInstance instance, const CAMetalLayer *layer)
@@ -14,7 +16,7 @@ VkSurfaceKHR createSurfaceMetal(VkInstance instance, const CAMetalLayer *layer)
     VkResult result;
     result = vkCreateMetalSurfaceEXT(instance, &createInfo, NULL, &surface);
     if (result != VK_SUCCESS) {
-            printf("Failed to create surface!\n");
+            fprintf(stderr, "Failed to create surface!\n");
             return NULL;
     }
     

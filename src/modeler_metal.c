@@ -10,6 +10,9 @@
 
 #include "modeler_metal.h"
 #include "instance.h"
+#include "surface_metal.h"
+#include "physical_device.h"
+#include "device.h"
 
 VkSurfaceKHR createSurfaceMetal(VkInstance instance, const CAMetalLayer *layer);
 
@@ -17,8 +20,9 @@ void initVulkanMetal(void *surfaceLayer)
 {
         printf("metal layer pointer: %ld\n", (long) surfaceLayer);
     
-        VkInstance instance = createInstance(&VK_EXT_METAL_SURFACE_EXTENSION_NAME, 1);
-        VkSurfaceKHR surface = createSurface(instance, surfaceLayer);
+        const char *platformExtension = VK_EXT_METAL_SURFACE_EXTENSION_NAME;
+        VkInstance instance = createInstance(&platformExtension, 1);
+        VkSurfaceKHR surface = createSurfaceMetal(instance, surfaceLayer);
         VkPhysicalDevice physicalDevice = choosePhysicalDevice(instance, surface);
-        VkDevice device = createLogicalDevice(physicalDevice);
+        VkDevice device = createDevice(physicalDevice);
 }

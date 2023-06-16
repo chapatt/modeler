@@ -8,7 +8,7 @@ class ModelerView: NSView {
         if let layer = self.layer {
             layer.backgroundColor = NSColor.blue.cgColor
             let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
-            initVulkan(layerPointer)
+            initVulkanMetal(layerPointer)
         }
     }
     

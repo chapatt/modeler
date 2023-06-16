@@ -54,7 +54,7 @@ VkInstance createInstance(const char **platformExtensions, size_t platformExtens
         const char *optionalExtension = VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME;
         if (areInstanceExtensionsSupported(&optionalExtension, 1)) {
                 requiredExtensions[createInfo.enabledExtensionCount] = optionalExtension;
-                ++createInfo.enabledExtensionCount;
+                createInfo.enabledExtensionCount++;
                 createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
         }
         createInfo.ppEnabledExtensionNames = requiredExtensions;
