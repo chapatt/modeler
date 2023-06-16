@@ -23,6 +23,7 @@ VkDevice createDevice(VkPhysicalDevice physicalDevice)
         createInfo.pQueueCreateInfos = &queueCreateInfo;
         createInfo.queueCreateInfoCount = 1;
         createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.enabledLayerCount = 0;
 
         const char* deviceExtension = "VK_KHR_portability_subset";
         if (areDeviceExtensionsSupported(physicalDevice, &deviceExtension, 1)) {
@@ -30,7 +31,6 @@ VkDevice createDevice(VkPhysicalDevice physicalDevice)
                 createInfo.enabledExtensionCount = 1;
         }
 
-        createInfo.enabledLayerCount = 0;
     
         VkDevice device;
         if (vkCreateDevice(physicalDevice, &createInfo, NULL, &device) != VK_SUCCESS) {
