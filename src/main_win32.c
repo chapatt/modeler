@@ -50,7 +50,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
     ShowWindow(hwnd, nCmdShow);
 
-    initVulkan(hInstance, hwnd);
+    initVulkanWin32(hInstance, hwnd);
 
     MSG msg = {};
     while (GetMessage(&msg, NULL, 0, 0) > 0)

@@ -1,6 +1,6 @@
-#ifndef modeler_h
-#define modeler_h
+#ifndef modeler_win32_h
+#define modeler_win32_h
 
-void initVulkan(HINSTANCE hinstance, HWND hwnd);
+void initVulkanWin32(HINSTANCE hinstance, HWND hwnd);
 
-#endif /* modeler_h */
+#endif /* modeler_win32_h */
