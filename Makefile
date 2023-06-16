@@ -33,4 +33,4 @@ utils.o: src/utils.c src/utils.h
 	${CC} $(CFLAGS) -c src/utils.c
 
 clean:
-	rm -rf main_win32 main_win32.o modeler_win32.o
+	rm -rf modeler.exe main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o utils.o
