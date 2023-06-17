@@ -1,4 +1,4 @@
 #include <vulkan/vulkan.h>
 
-VkInstance createInstance(const char **platformExtensions, size_t platformExtensionCount);
+VkInstance createInstance(const char **extensions, size_t extensionCount);
 void destroyInstance(VkInstance instance);

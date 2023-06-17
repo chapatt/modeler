@@ -9,7 +9,7 @@
 bool areInstanceExtensionsSupported(const char **extensions, size_t extensionCount);
 bool areLayersSupported(const char **layers, size_t layerCount);
 
-VkInstance createInstance(const char **platformExtensions, size_t platformExtensionCount)
+VkInstance createInstance(const char **extensions, size_t extensionCount)
 {
         VkApplicationInfo applicationInfo = {};
         applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -39,13 +39,10 @@ VkInstance createInstance(const char **platformExtensions, size_t platformExtens
                 VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
                 VK_KHR_SURFACE_EXTENSION_NAME
         };
-        createInfo.enabledExtensionCount = platformExtensionCount + independentExtensionCount;
+        createInfo.enabledExtensionCount = extensionCount;
         const char **requiredExtensions = (const char **) malloc(sizeof(char *) * (createInfo.enabledExtensionCount + 1));
-        for (size_t i = 0; i < platformExtensionCount; ++i) {     
-            requiredExtensions[i] = platformExtensions[i];
-        }
-        for (size_t i = 0; i < independentExtensionCount; ++i) {     
-            requiredExtensions[i + 1] = independentExtensions[i];
+        for (size_t i = 0; i < extensionCount; ++i) {     
+            requiredExtensions[i] = extensions[i];
         }
         if (!areInstanceExtensionsSupported(requiredExtensions, createInfo.enabledExtensionCount)) {
                 fprintf(stderr, "Required instance extensions not available!");

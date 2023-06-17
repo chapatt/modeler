@@ -18,10 +18,12 @@ VkSurfaceKHR createSurfaceMetal(VkInstance instance, const CAMetalLayer *layer);
 
 void initVulkanMetal(void *surfaceLayer)
 {
-        printf("metal layer pointer: %ld\n", (long) surfaceLayer);
-    
-        const char *platformExtension = VK_EXT_METAL_SURFACE_EXTENSION_NAME;
-        VkInstance instance = createInstance(&platformExtension, 1);
+        const char *instanceExtensions[] = {
+                VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+                VK_KHR_SURFACE_EXTENSION_NAME,
+                VK_EXT_METAL_SURFACE_EXTENSION_NAME
+        };
+        VkInstance instance = createInstance(instanceExtensions, 3);
         VkSurfaceKHR surface = createSurfaceMetal(instance, surfaceLayer);
         VkPhysicalDevice physicalDevice = choosePhysicalDevice(instance, surface);
         VkDevice device = createDevice(physicalDevice);
