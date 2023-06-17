@@ -63,7 +63,10 @@ bool areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **
                 exit(EXIT_FAILURE);
         }
 
-        return compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
+        bool match = compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
+        free(availableExtensions);
+
+        return match;
 }
 
 /* Not guaranteed to find a match (0 returned if none are found) */

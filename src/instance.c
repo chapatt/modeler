@@ -65,6 +65,8 @@ VkInstance createInstance(const char **platformExtensions, size_t platformExtens
             exit(EXIT_FAILURE);
         }
 
+        free(requiredExtensions);
+
         return instance;
 }
 
@@ -87,7 +89,11 @@ bool areInstanceExtensionsSupported(const char **extensions, size_t extensionCou
                 exit(EXIT_FAILURE);
         }
 
-        return compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
+        bool match = compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
+
+        free(availableExtensions);
+
+        return match;
 }
 
 bool areLayersSupported(const char **layers, size_t layerCount)
@@ -118,6 +124,8 @@ bool areLayersSupported(const char **layers, size_t layerCount)
                         return false;
                 }
         }
+
+        free(availableLayers);
 
         return true;
 }

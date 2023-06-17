@@ -33,6 +33,8 @@ VkPhysicalDevice choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
                 }
         }
 
+        free(devices);
+
         if (physicalDevice == VK_NULL_HANDLE) {
                 fprintf(stderr, "Failed to find a suitable GPU!\n");
                 exit(EXIT_FAILURE);
