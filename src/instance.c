@@ -5,11 +5,18 @@
 
 #include "instance.h"
 #include "utils.h"
+#include "vulkan_utils.h"
 
-bool areInstanceExtensionsSupported(const char **extensions, size_t extensionCount);
-bool areLayersSupported(const char **layers, size_t layerCount);
+typedef enum support_result_t {
+        SUPPORT_ERROR = -1,
+        SUPPORT_UNSUPPORTED = 0,
+        SUPPORT_SUPPORTED = 1
+} SupportResult;
 
-VkInstance createInstance(const char **extensions, size_t extensionCount)
+SupportResult areInstanceExtensionsSupported(const char **extensions, size_t extensionCount, char **error);
+SupportResult areLayersSupported(const char **layers, size_t layerCount, char **error);
+
+bool createInstance(const char **extensions, size_t extensionCount, VkInstance *instance, char **error)
 {
         VkApplicationInfo applicationInfo = {};
         applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -25,46 +32,50 @@ VkInstance createInstance(const char **extensions, size_t extensionCount)
 
 #ifdef DEBUG
         const char *validationLayers[] = {"VK_LAYER_KHRONOS_validation"};
-        if (!areLayersSupported(validationLayers, 1)) {
-                fprintf(stderr, "Validation layers not available!");
-                exit(EXIT_FAILURE);
+        switch (areLayersSupported(validationLayers, 1, error)) {
+        case SUPPORT_ERROR:
+                return false;
+        case SUPPORT_UNSUPPORTED:
+                asprintf(error, "Validation layers not available!");
+                return false;
         }
 
         createInfo.enabledLayerCount = 1;
         createInfo.ppEnabledLayerNames = validationLayers;
 #endif
 
-        size_t independentExtensionCount = 2;
-        const char *independentExtensions[] = {
-                VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-                VK_KHR_SURFACE_EXTENSION_NAME
-        };
         createInfo.enabledExtensionCount = extensionCount;
         const char **requiredExtensions = (const char **) malloc(sizeof(char *) * (createInfo.enabledExtensionCount + 1));
         for (size_t i = 0; i < extensionCount; ++i) {     
             requiredExtensions[i] = extensions[i];
         }
-        if (!areInstanceExtensionsSupported(requiredExtensions, createInfo.enabledExtensionCount)) {
-                fprintf(stderr, "Required instance extensions not available!");
-                exit(EXIT_FAILURE);
+        switch (areInstanceExtensionsSupported(requiredExtensions, createInfo.enabledExtensionCount, error)) {
+        case SUPPORT_ERROR:
+                return false;
+        case SUPPORT_UNSUPPORTED:
+                asprintf(error, "Required instance extensions not available!");
+                return false;
         }
         const char *optionalExtension = VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME;
-        if (areInstanceExtensionsSupported(&optionalExtension, 1)) {
+        switch (areInstanceExtensionsSupported(&optionalExtension, 1, error)) {
+        case SUPPORT_ERROR:
+                return false;
+        case SUPPORT_SUPPORTED:
                 requiredExtensions[createInfo.enabledExtensionCount] = optionalExtension;
                 createInfo.enabledExtensionCount++;
                 createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
         }
         createInfo.ppEnabledExtensionNames = requiredExtensions;
     
-        VkInstance instance;
-        if (vkCreateInstance(&createInfo, VK_NULL_HANDLE, &instance) != VK_SUCCESS) {
-            fprintf(stderr, "Failed to create instance: ");
-            exit(EXIT_FAILURE);
+        VkResult result;
+        if ((result = vkCreateInstance(&createInfo, VK_NULL_HANDLE, instance)) != VK_SUCCESS) {
+                asprintf(error, "Failed to create instance: %s", string_VkResult(result));
+                return false;
         }
 
         free(requiredExtensions);
 
-        return instance;
+        return true;
 }
 
 void destroyInstance(VkInstance instance)
@@ -72,39 +83,39 @@ void destroyInstance(VkInstance instance)
         vkDestroyInstance(instance, NULL);
 }
 
-bool areInstanceExtensionsSupported(const char **extensions, size_t extensionCount)
+SupportResult areInstanceExtensionsSupported(const char **extensions, size_t extensionCount, char **error)
 {
         uint32_t availableExtensionCount;
         if (vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, NULL) != VK_SUCCESS) {
-                fprintf(stderr, "Failed to get available instance extension count!\n");
-                exit(EXIT_FAILURE);
+                asprintf(error, "Failed to get available instance extension count!\n");
+                return SUPPORT_ERROR;
         }
 
         VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
         if (vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, availableExtensions) != VK_SUCCESS) {
-                fprintf(stderr, "Failed to get available instance extensions!\n");
-                exit(EXIT_FAILURE);
+                asprintf(error, "Failed to get available instance extensions!\n");
+                return SUPPORT_ERROR;
         }
 
         bool match = compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
 
         free(availableExtensions);
 
-        return match;
+        return match ? SUPPORT_SUPPORTED : SUPPORT_UNSUPPORTED;
 }
 
-bool areLayersSupported(const char **layers, size_t layerCount)
+SupportResult areLayersSupported(const char **layers, size_t layerCount, char **error)
 {
         uint32_t availableLayerCount;
         if (vkEnumerateInstanceLayerProperties(&availableLayerCount, NULL) != VK_SUCCESS) {
-                fprintf(stderr, "Failed to get available instance layer count!\n");
-                exit(EXIT_FAILURE);
+                asprintf(error, "Failed to get available instance layer count!\n");
+                return SUPPORT_ERROR;
         }
 
         VkLayerProperties *availableLayers = (VkLayerProperties *) malloc(sizeof(VkLayerProperties) * availableLayerCount);
         if (vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers) != VK_SUCCESS) {
-                fprintf(stderr, "Failed to get available instance layers!\n");
-                exit(EXIT_FAILURE);
+                asprintf(error, "Failed to get available instance layers!\n");
+                return SUPPORT_ERROR;
         }
 
         for (size_t i = 0; i < layerCount; ++i) {
@@ -118,11 +129,11 @@ bool areLayersSupported(const char **layers, size_t layerCount)
                 }
 
                 if (!layerFound) {
-                        return false;
+                        return SUPPORT_UNSUPPORTED;
                 }
         }
 
         free(availableLayers);
 
-        return true;
+        return SUPPORT_SUPPORTED;
 }
