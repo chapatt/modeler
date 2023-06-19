@@ -85,15 +85,16 @@ void destroyInstance(VkInstance instance)
 
 SupportResult areInstanceExtensionsSupported(const char **extensions, size_t extensionCount, char **error)
 {
+        VkResult result;
         uint32_t availableExtensionCount;
-        if (vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, NULL) != VK_SUCCESS) {
-                asprintf(error, "Failed to get available instance extension count!\n");
+        if ((result = vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, NULL)) != VK_SUCCESS) {
+                asprintf(error, "Failed to get available instance extension count: %s", string_VkResult(result));
                 return SUPPORT_ERROR;
         }
 
         VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
-        if (vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, availableExtensions) != VK_SUCCESS) {
-                asprintf(error, "Failed to get available instance extensions!\n");
+        if ((result = vkEnumerateInstanceExtensionProperties(NULL, &availableExtensionCount, availableExtensions)) != VK_SUCCESS) {
+                asprintf(error, "Failed to get available instance extensions: %s", string_VkResult(result));
                 return SUPPORT_ERROR;
         }
 
@@ -106,15 +107,16 @@ SupportResult areInstanceExtensionsSupported(const char **extensions, size_t ext
 
 SupportResult areLayersSupported(const char **layers, size_t layerCount, char **error)
 {
+        VkResult result;
         uint32_t availableLayerCount;
-        if (vkEnumerateInstanceLayerProperties(&availableLayerCount, NULL) != VK_SUCCESS) {
-                asprintf(error, "Failed to get available instance layer count!\n");
+        if ((result = vkEnumerateInstanceLayerProperties(&availableLayerCount, NULL)) != VK_SUCCESS) {
+                asprintf(error, "Failed to get available instance layer count: %s", string_VkResult(result));
                 return SUPPORT_ERROR;
         }
 
         VkLayerProperties *availableLayers = (VkLayerProperties *) malloc(sizeof(VkLayerProperties) * availableLayerCount);
-        if (vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers) != VK_SUCCESS) {
-                asprintf(error, "Failed to get available instance layers!\n");
+        if ((result = vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers)) != VK_SUCCESS) {
+                asprintf(error, "Failed to get available instance layers: %s", string_VkResult(result));
                 return SUPPORT_ERROR;
         }
 
