@@ -1,6 +1,8 @@
 #ifndef MODELER_METAL_H
 #define MODELER_METAL_H
 
-void initVulkanMetal(void *surfaceLayer);
+#include <stdbool.h>
+
+bool initVulkanMetal(void *surfaceLayer, char **error);
 
 #endif /* MODELER_METAL_H */
