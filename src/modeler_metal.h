@@ -1,6 +1,6 @@
-#ifndef modeler_metal_h
-#define modeler_metal_h
+#ifndef MODELER_METAL_H
+#define MODELER_METAL_H
 
 void initVulkanMetal(void *surfaceLayer);
 
-#endif /* modeler_metal_h */
+#endif /* MODELER_METAL_H */

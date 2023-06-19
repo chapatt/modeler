@@ -1,5 +1,5 @@
-#ifndef VULKAN_HELPERS_H
-#define VULKAN_HELPERS_H
+#ifndef VULKAN_UTILS_H
+#define VULKAN_UTILS_H
 
 #include <vulkan/vulkan.h>
 
@@ -108,4 +108,4 @@ static inline const char* string_VkResult(VkResult input_value)
     }
 }
 
-#endif
+#endif /* VULKAN_UTILS_H */
