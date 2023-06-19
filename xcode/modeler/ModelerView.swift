@@ -8,7 +8,22 @@ class ModelerView: NSView {
         if let layer = self.layer {
             layer.backgroundColor = NSColor.blue.cgColor
             let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
-            initVulkanMetal(layerPointer)
+
+            let errorPointerPointer: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>? = UnsafeMutablePointer.allocate(capacity: 1)
+            if (!initVulkanMetal(layerPointer, errorPointerPointer)) {
+                if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
+                    if let error: String = String(validatingUTF8: pointer) {
+                        print("LKJDSLKGHJKDJSKLJDGK: ", error)
+                        let alert = NSAlert()
+                        alert.messageText = "Modeler Error"
+                        alert.informativeText = error
+                        alert.addButton(withTitle: "OK")
+                        alert.alertStyle = .critical
+                        alert.runModal()
+                        exit(EXIT_FAILURE)
+                    }
+                }
+            }
         }
     }
     
