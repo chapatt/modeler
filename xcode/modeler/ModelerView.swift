@@ -13,14 +13,7 @@ class ModelerView: NSView {
             if (!initVulkanMetal(layerPointer, errorPointerPointer)) {
                 if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
                     if let error: String = String(validatingUTF8: pointer) {
-                        print("LKJDSLKGHJKDJSKLJDGK: ", error)
-                        let alert = NSAlert()
-                        alert.messageText = "Modeler Error"
-                        alert.informativeText = error
-                        alert.addButton(withTitle: "OK")
-                        alert.alertStyle = .critical
-                        alert.runModal()
-                        exit(EXIT_FAILURE)
+                        handleFatalError(message: error)
                     }
                 }
             }
@@ -29,5 +22,15 @@ class ModelerView: NSView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func handleFatalError(message: String) {
+        let alert = NSAlert()
+        alert.messageText = "Modeler Error"
+        alert.informativeText = message
+        alert.addButton(withTitle: "OK")
+        alert.alertStyle = .critical
+        alert.runModal()
+        exit(EXIT_FAILURE)
     }
 }
