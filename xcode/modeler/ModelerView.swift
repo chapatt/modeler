@@ -31,6 +31,6 @@ class ModelerView: NSView {
         alert.addButton(withTitle: "OK")
         alert.alertStyle = .critical
         alert.runModal()
-        exit(EXIT_FAILURE)
+        NSApplication.shared.terminate(nil)
     }
 }
