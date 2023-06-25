@@ -3,3 +3,6 @@ xcuserdata/
 
 *.o
 *.exe
+xdg-shell-client-protocol.h
+xdg-shell-protocol.c
+modeler
