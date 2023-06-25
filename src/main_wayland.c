@@ -26,6 +26,7 @@ void createWindow(struct display *display);
 void destroyWindow(struct display *display);
 void disconnectDisplay(struct display *display);
 static void xdgSurfaceConfigure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
+void handleFatalError(char *message);
 
 int main(int argc, char **argv)
 {
@@ -36,8 +37,7 @@ int main(int argc, char **argv)
 
 	char *error;
 	if (!initVulkanWayland(display.display, display.surface, &error)) {
-		fprintf(stderr, error);
-		exit(1);
+		handleFatalError(error);
 	}
 
 	while (wl_display_dispatch(display.display) != -1) {
@@ -67,14 +67,12 @@ void connectDisplay(struct display *display)
 {
 	display->display = wl_display_connect(NULL);
 	if (display->display == NULL) {
-		fprintf(stderr, "Can't connect to Wayland display\n");
-		exit(1);
+		handleFatalError("Can't connect to Wayland display\n");
 	}
-	fprintf(stderr, "Connected to Wayland display\n");
+	printf("Connected to Wayland display\n");
 
 	if ((display->registry = wl_display_get_registry(display->display)) == NULL) {
-		fprintf(stderr, "Can't get a Wayland registry\n");
-		exit(1);
+		handleFatalError("Can't get a Wayland registry\n");
 	}
 	printf("Got a Wayland registry\n");
 
@@ -90,15 +88,13 @@ void connectDisplay(struct display *display)
 void createWindow(struct display *display)
 {
 	if (display->compositor == NULL) {
-		fprintf(stderr, "Can't find Wayland compositor\n");
-		exit(1);
+		handleFatalError("Can't find Wayland compositor\n");
 	}
 	printf("Found Wayland compositor\n");
 
 	display->surface = wl_compositor_create_surface(display->compositor);
 	if (display->surface == NULL) {
-		fprintf(stderr, "Can't create Wayland surface\n");
-		exit(1);
+		handleFatalError("Can't create Wayland surface\n");
 	}
 	printf("Created Wayland surface\n");
 
@@ -118,15 +114,13 @@ static void globalRegistryHandler(void *data, struct wl_registry *registry, uint
 	if (strcmp(interface, "wl_compositor") == 0) {
 		display->compositor = wl_registry_bind(registry, id, &wl_compositor_interface, 1);
 		if (display->compositor == NULL) {
-			fprintf(stderr, "Can't bind Wayland compositor\n");
-			exit(1);
+			handleFatalError("Can't bind Wayland compositor\n");
 		}
 		printf("Bound Wayland compositor\n");
 	} else if (strcmp(interface, "xdg_wm_base") == 0) {
 		display->xdgWmBase = wl_registry_bind(registry, id, &xdg_wm_base_interface, 1);
 		if (display->xdgWmBase == NULL) {
-			fprintf(stderr, "Can't bind xdg wm base\n");
-			exit(1);
+			handleFatalError("Can't bind xdg wm base\n");
 		}
 		printf("Bound xdg wm base\n");
 	}
@@ -141,4 +135,10 @@ static void xdgSurfaceConfigure(void *data, struct xdg_surface *xdg_surface, uin
 {
 	struct display *display = data;
 	xdg_surface_ack_configure(xdg_surface, serial);
+}
+
+void handleFatalError(char *message)
+{
+	fprintf(stderr, "%s\n", message);
+	exit(1);
 }
