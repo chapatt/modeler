@@ -14,8 +14,8 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
-    WNDCLASSEXW wc = {};
-    wc.cbSize = sizeof(WNDCLASSEX);
+	WNDCLASSEXW wc = {};
+	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = windowProc;
 	wc.cbClsExtra = 0;
@@ -32,73 +32,73 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		handleFatalError(NULL, "Can't register Windows window class");
 	}
 
-    HWND hwnd = CreateWindowEx(
-        0,
-        CLASS_NAME,
-        L"Modeler",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        NULL,  
-        NULL,
-        hInstance,
-        NULL
-    );
+	HWND hwnd = CreateWindowEx(
+		0,
+		CLASS_NAME,
+		L"Modeler",
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		NULL,
+		NULL,
+		hInstance,
+		NULL
+	);
 
-    if (!hwnd) {
-        handleFatalError(NULL, "Can't create window.");
-    }
+	if (!hwnd) {
+		handleFatalError(NULL, "Can't create window.");
+	}
 
-    char *error;
-    if (!initVulkanWin32(hInstance, hwnd, &error)) {
-        handleFatalError(hwnd, error);
-    }
+	char *error;
+	if (!initVulkanWin32(hInstance, hwnd, &error)) {
+		handleFatalError(hwnd, error);
+	}
 
-    ShowWindow(hwnd, nCmdShow);
+	ShowWindow(hwnd, nCmdShow);
 
-    MSG msg = {};
-    while (GetMessage(&msg, NULL, 0, 0) > 0)
-    {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
+	MSG msg = {};
+	while (GetMessage(&msg, NULL, 0, 0) > 0)
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 
-    return 0;
+	return 0;
 }
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    switch (uMsg) {
+	switch (uMsg) {
 	case WM_CREATE:
-        return 0;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-    case WM_PAINT:
-        return 0;
-    }
+		return 0;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	case WM_PAINT:
+		return 0;
+	}
 
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 void handleFatalError(HWND hwnd, char *message)
 {
-    MessageBox(
-        hwnd,
-        utf8ToUtf16(message),
-        L"Modeler Error",
-        MB_OK | MB_DEFBUTTON1 | MB_ICONERROR | MB_SYSTEMMODAL
-    );
+	MessageBox(
+		hwnd,
+		utf8ToUtf16(message),
+		L"Modeler Error",
+		MB_OK | MB_DEFBUTTON1 | MB_ICONERROR | MB_SYSTEMMODAL
+	);
 
-    fprintf(stderr, "%s\n", message);
+	fprintf(stderr, "%s\n", message);
 	exit(1);
 }
 
 wchar_t *utf8ToUtf16(const char *utf8)
 {
-    int outputSize = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0);
-    wchar_t *output = (wchar_t *) malloc(outputSize * sizeof(wchar_t));
+	int outputSize = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0);
+	wchar_t *output = (wchar_t *) malloc(outputSize * sizeof(wchar_t));
 
-    MultiByteToWideChar(CP_UTF8, 0, utf8, -1, output, outputSize);
+	MultiByteToWideChar(CP_UTF8, 0, utf8, -1, output, outputSize);
  
-    return output;
+	return output;
 }

@@ -9,17 +9,17 @@
 
 VkSurfaceKHR createSurfaceWin32(VkInstance instance, HINSTANCE hinstance, HWND hwnd)
 {
-        VkWin32SurfaceCreateInfoKHR createInfo = {};
-        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hwnd = hwnd;
-        createInfo.hinstance = hinstance;
+	VkWin32SurfaceCreateInfoKHR createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	createInfo.hwnd = hwnd;
+	createInfo.hinstance = hinstance;
     
-        VkSurfaceKHR surface;
-        VkResult result;
-        if (vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface) != VK_SUCCESS) {
-                fprintf(stderr, "Failed to create surface!\n");
-                exit(EXIT_FAILURE);
-        }
+	VkSurfaceKHR surface;
+	VkResult result;
+	if (vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface) != VK_SUCCESS) {
+		fprintf(stderr, "Failed to create surface!\n");
+		exit(EXIT_FAILURE);
+	}
     
-        return surface;
+	return surface;
 }
