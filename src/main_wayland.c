@@ -33,18 +33,18 @@ int main(int argc, char **argv)
 	connectDisplay(&display);
 	createWindow(&display);
 
-        char *error;
-        if (!initVulkanWayland(display.display, display.surface, &error)) {
-                fprintf(stderr, error);
-                exit(1);
-        }
+    char *error;
+    if (!initVulkanWayland(display.display, display.surface, &error)) {
+        fprintf(stderr, error);
+        exit(1);
+    }
 
-        while (wl_display_dispatch(display.display) != -1) {
-                /* This space deliberately left blank */
-        }
+    while (wl_display_dispatch(display.display) != -1) {
+        /* This space deliberately left blank */
+    }
 
-        disconnectDisplay(&display);
-        destroyWindow(&display);
+    disconnectDisplay(&display);
+    destroyWindow(&display);
 }
 
 static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version)
@@ -100,8 +100,8 @@ void connectDisplay(struct display *display)
 
 static void xdgSurfaceConfigure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
 {
-        struct display *display = data;
-        xdg_surface_ack_configure(xdg_surface, serial);
+    struct display *display = data;
+    xdg_surface_ack_configure(xdg_surface, serial);
 }
 
 void createWindow(struct display *display)
@@ -119,12 +119,12 @@ void createWindow(struct display *display)
 	}
 	printf("Created Wayland surface\n");
 
-        display->xdgSurface = xdg_wm_base_get_xdg_surface(display->xdgWmBase, display->surface);
-        display->xdgSurfaceListener.configure = xdgSurfaceConfigure;
-        xdg_surface_add_listener(display->xdgSurface, &display->xdgSurfaceListener, display);
-        display->xdgToplevel = xdg_surface_get_toplevel(display->xdgSurface);
-        xdg_toplevel_set_title(display->xdgToplevel, "Modeler");
-        wl_surface_commit(display->surface);
+    display->xdgSurface = xdg_wm_base_get_xdg_surface(display->xdgWmBase, display->surface);
+    display->xdgSurfaceListener.configure = xdgSurfaceConfigure;
+    xdg_surface_add_listener(display->xdgSurface, &display->xdgSurfaceListener, display);
+    display->xdgToplevel = xdg_surface_get_toplevel(display->xdgSurface);
+    xdg_toplevel_set_title(display->xdgToplevel, "Modeler");
+    wl_surface_commit(display->surface);
 }
 
 void destroyWindow(struct display *display)
