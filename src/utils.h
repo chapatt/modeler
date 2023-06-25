@@ -1,6 +1,7 @@
 #ifndef MODELER_UTILS_H
 #define MODELER_UTILS_H
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <vulkan/vulkan.h>
 
