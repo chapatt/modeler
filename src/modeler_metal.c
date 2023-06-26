@@ -22,8 +22,14 @@ bool initVulkanMetal(void *surfaceLayer, char **error)
 	if (!createInstance(instanceExtensions, 3, &instance, error)) {
 		return false;
 	}
-	VkSurfaceKHR surface = createSurfaceMetal(instance, surfaceLayer);
+
+	VkSurfaceKHR surface;
+	if (!createSurfaceMetal(instance, surfaceLayer, &surface, error)) {
+		return false;
+	}
+
 	VkPhysicalDevice physicalDevice = choosePhysicalDevice(instance, surface);
+
 	VkDevice device = createDevice(physicalDevice);
 
 	return true;

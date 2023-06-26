@@ -6,19 +6,20 @@
 #include <vulkan/vulkan.h>
 
 #include "surface_win32.h"
+#include "utils.h"
+#include "vulkan_utils.h"
 
-VkSurfaceKHR createSurfaceWin32(VkInstance instance, HINSTANCE hinstance, HWND hwnd)
+bool createSurfaceWin32(VkInstance instance, HINSTANCE hinstance, HWND hwnd, VkSurfaceKHR *surface, char **error)
 {
 	VkWin32SurfaceCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	createInfo.hwnd = hwnd;
 	createInfo.hinstance = hinstance;
     
-	VkSurfaceKHR surface;
 	VkResult result;
-	if (vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, &surface) != VK_SUCCESS) {
-		fprintf(stderr, "Failed to create surface!\n");
-		exit(EXIT_FAILURE);
+	if ((result = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, surface)) != VK_SUCCESS) {
+		asprintf(error, "Failed to create surface: %s", string_VkResult(result));
+		return false;
 	}
     
 	return surface;

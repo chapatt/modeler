@@ -15,8 +15,14 @@ bool initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *way
 	if (!createInstance(instanceExtensions, 3, &instance, error)) {
 		return false;
 	}
-	VkSurfaceKHR surface = createSurfaceWayland(instance, waylandDisplay, waylandSurface);
+
+	VkSurfaceKHR surface;
+	if (!createSurfaceWayland(instance, waylandDisplay, waylandSurface, &surface, error)) {
+		return false;
+	}
+
 	VkPhysicalDevice physicalDevice = choosePhysicalDevice(instance, surface);
+
 	VkDevice device = createDevice(physicalDevice);
 
 	return true;

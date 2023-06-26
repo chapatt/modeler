@@ -24,8 +24,14 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 	if (!createInstance(instanceExtensions, 3, &instance, error)) {
 		return false;
 	}
-	VkSurfaceKHR surface = createSurfaceWin32(instance, hinstance, hwnd);
-	VkPhysicalDevice physicalDevice = choosePhysicalDevice(instance, surface);
+
+	VkSurfaceKHR surface;
+	if (!createSurfaceWin32(instance, hinstance, hwnd, &surface, error)) {
+		return false;
+	}
+
+	VkPhysicalDevice physicalDevice = choosePhysicalDevice(instance, surface, &physicalDevice, error);
+	
 	VkDevice device = createDevice(physicalDevice);
 
 	return true;
