@@ -30,8 +30,11 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 		return false;
 	}
 
-	VkPhysicalDevice physicalDevice = choosePhysicalDevice(instance, surface, &physicalDevice, error);
-	
+	VkPhysicalDevice physicalDevice;
+	if (!choosePhysicalDevice(instance, surface, &physicalDevice, error)) {
+		return false;
+	}
+
 	VkDevice device = createDevice(physicalDevice);
 
 	return true;

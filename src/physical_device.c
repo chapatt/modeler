@@ -1,49 +1,61 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "physical_device.h"
+#include "utils.h"
+#include "vulkan_utils.h"
 
-bool isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+typedef enum suitability_result_t {
+	SUITABILITY_ERROR = -1,
+	SUITABILITY_UNSUITABLE = 0,
+	SUITABILITY_SUITABLE = 1
+} SuitabilityResult;
 
-VkPhysicalDevice choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface)
+SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error);
+
+bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice *physicalDevice, char **error)
 {
-	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+	VkResult result;
+
 	uint32_t deviceCount = 0;
-	if (vkEnumeratePhysicalDevices(instance, &deviceCount, NULL) != VK_SUCCESS) {
-	    fprintf(stderr, "Failed to get physical device count!");
-	    exit(EXIT_FAILURE);
+	if ((result = vkEnumeratePhysicalDevices(instance, &deviceCount, NULL)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device count: %s", string_VkResult(result));
+		return false;
 	}
     
 	if (deviceCount == 0) {
-	    fprintf(stderr, "Failed to find a Physical Device\n");
-	    exit(EXIT_FAILURE);
+		asprintf(error, "Failed to find a Physical Device");
+		return false;
 	}
     
 	VkPhysicalDevice *devices = (VkPhysicalDevice *) malloc(sizeof(VkPhysicalDevice) * deviceCount);
-	if (vkEnumeratePhysicalDevices(instance, &deviceCount, devices) != VK_SUCCESS) {
-	    fprintf(stderr, "Failed to get physical devices!");
-	    exit(EXIT_FAILURE);
+	if ((result = vkEnumeratePhysicalDevices(instance, &deviceCount, devices)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical devices: %s", string_VkResult(result));
+		return false;
 	}
-    
-	for (uint32_t i = 0; i < deviceCount; ++i) {
-		if (isPhysicalDeviceSuitable(devices[i], surface)) {
-			physicalDevice = devices[i];
-			break;
+
+	bool matchFound = false;
+	for (uint32_t i = 0; !matchFound && i < deviceCount; ++i) {
+		switch (isPhysicalDeviceSuitable(devices[i], surface, error)) {
+		case SUITABILITY_ERROR:
+			return false;
+		case SUITABILITY_SUITABLE:
+			*physicalDevice = devices[i];
+			matchFound = true;
 		}
 	}
 
 	free(devices);
 
-	if (physicalDevice == VK_NULL_HANDLE) {
-		fprintf(stderr, "Failed to find a suitable GPU!\n");
-		exit(EXIT_FAILURE);
+	if (*physicalDevice == VK_NULL_HANDLE) {
+		asprintf(error, "Failed to find a suitable GPU!");
+		return false;
 	}
     
-	return physicalDevice;
+	return true;
 }
 
-bool isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error)
 {
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
@@ -65,15 +77,15 @@ bool isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surf
 		compiledFlags |= queueFamilies[i].queueFlags;
 
 		VkBool32 familyHasPresent = VK_FALSE;
-		VkResult result = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &familyHasPresent);
-		if (result != VK_SUCCESS) {
-			fprintf(stderr, "Failed to check for GPU surface support: ");
-			exit(EXIT_FAILURE);
+		VkResult result;
+		if ((result = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &familyHasPresent)) != VK_SUCCESS) {
+			asprintf(error, "Failed to check for GPU surface support: %s", string_VkResult(result));
+			return SUITABILITY_ERROR;
 		}
 		hasPresent = hasPresent || familyHasPresent == VK_TRUE;
 	}
 	free(queueFamilies);
 	bool hasQueues = compiledFlags & VK_QUEUE_GRAPHICS_BIT;
 
-	return hasProperties && hasFeatures && hasQueues && hasPresent;
+	return (hasProperties && hasFeatures && hasQueues && hasPresent) ? SUITABILITY_SUITABLE : SUITABILITY_UNSUITABLE;
 }
