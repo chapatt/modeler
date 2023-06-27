@@ -23,6 +23,7 @@
 		ABE1DF262A3C10B800A963A6 /* libVkLayer_khronos_shader_object.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = ABE1DF1F2A3C109000A963A6 /* libVkLayer_khronos_shader_object.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		ABE1DF272A3C10B800A963A6 /* libVkLayer_khronos_synchronization2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = ABE1DF232A3C109300A963A6 /* libVkLayer_khronos_synchronization2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		ABE1DF282A3C10B800A963A6 /* libVkLayer_khronos_validation.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = ABE1DF212A3C109200A963A6 /* libVkLayer_khronos_validation.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		ABE1DF2A2A40C18800A963A6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE1DF292A40C18800A963A6 /* AppDelegate.swift */; };
 		ABF162392A34E3A7007655F7 /* modelerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF162382A34E3A7007655F7 /* modelerApp.swift */; };
 		ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF1623A2A34E3A7007655F7 /* ModelerView.swift */; };
 		ABF1623D2A34E3AC007655F7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABF1623C2A34E3AC007655F7 /* Assets.xcassets */; };
@@ -67,6 +68,7 @@
 		ABE1DF212A3C109200A963A6 /* libVkLayer_khronos_validation.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_validation.dylib; path = ../../../VulkanSDK/1.3.250.0/macOS/lib/libVkLayer_khronos_validation.dylib; sourceTree = "<group>"; };
 		ABE1DF222A3C109300A963A6 /* libVkLayer_api_dump.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_api_dump.dylib; path = ../../../VulkanSDK/1.3.250.0/macOS/lib/libVkLayer_api_dump.dylib; sourceTree = "<group>"; };
 		ABE1DF232A3C109300A963A6 /* libVkLayer_khronos_synchronization2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_synchronization2.dylib; path = ../../../VulkanSDK/1.3.250.0/macOS/lib/libVkLayer_khronos_synchronization2.dylib; sourceTree = "<group>"; };
+		ABE1DF292A40C18800A963A6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		ABF162352A34E3A7007655F7 /* modeler.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = modeler.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABF162382A34E3A7007655F7 /* modelerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = modelerApp.swift; sourceTree = "<group>"; };
 		ABF1623A2A34E3A7007655F7 /* ModelerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerView.swift; sourceTree = "<group>"; };
@@ -145,6 +147,7 @@
 				ABF162412A34E3AC007655F7 /* modeler.entitlements */,
 				ABF1623E2A34E3AC007655F7 /* Preview Content */,
 				AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */,
+				ABE1DF292A40C18800A963A6 /* AppDelegate.swift */,
 			);
 			path = modeler;
 			sourceTree = "<group>";
@@ -238,6 +241,7 @@
 				ABE1DF122A3C0A8400A963A6 /* modeler_metal.c in Sources */,
 				ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */,
 				ABF162482A34EF19007655F7 /* ModelerViewRepresentable.swift in Sources */,
+				ABE1DF2A2A40C18800A963A6 /* AppDelegate.swift in Sources */,
 				ABF162392A34E3A7007655F7 /* modelerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
