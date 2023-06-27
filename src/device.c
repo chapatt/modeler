@@ -2,16 +2,10 @@
 #include <stdlib.h>
 
 #include "device.h"
+#include "physical_device.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
-typedef enum support_result_t {
-	SUPPORT_ERROR = -1,
-	SUPPORT_UNSUPPORTED = 0,
-	SUPPORT_SUPPORTED = 1
-} SupportResult;
-
-SupportResult areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount, char **error);
 uint32_t findFirstMatchingFamily(VkPhysicalDevice physicalDevice, VkQueueFlags flag);
 
 bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **error)
@@ -40,7 +34,6 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **erro
 		createInfo.ppEnabledExtensionNames = &deviceExtension;
 		createInfo.enabledExtensionCount = 1;
 	}
-
     
 	VkResult result;
 	if ((result = vkCreateDevice(physicalDevice, &createInfo, NULL, device)) != VK_SUCCESS) {
@@ -57,28 +50,6 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **erro
 void destroyDevice(VkDevice device)
 {
 	vkDestroyDevice(device, NULL);
-}
-
-SupportResult areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount, char **error)
-{
-	VkResult result;
-
-	uint32_t availableExtensionCount;
-	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, NULL)) != VK_SUCCESS) {
-		asprintf(error, "Failed to get available device extension count: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
-	}
-
-	VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
-	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, availableExtensions)) != VK_SUCCESS) {
-		asprintf(error, "Failed to get available device extensions: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
-	}
-
-	bool match = compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
-	free(availableExtensions);
-
-	return match ? SUPPORT_SUPPORTED : SUPPORT_UNSUPPORTED;
 }
 
 /* Not guaranteed to find a match (0 returned if none are found) */

@@ -87,5 +87,36 @@ SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSu
 	free(queueFamilies);
 	bool hasQueues = compiledFlags & VK_QUEUE_GRAPHICS_BIT;
 
-	return (hasProperties && hasFeatures && hasQueues && hasPresent) ? SUITABILITY_SUITABLE : SUITABILITY_UNSUITABLE;
+	bool hasExtensions = false;
+	const char* deviceExtension = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+	switch (areDeviceExtensionsSupported(physicalDevice, &deviceExtension, 1, error)) {
+	case SUPPORT_ERROR:
+		return SUITABILITY_ERROR;
+	case SUPPORT_SUPPORTED:
+		hasExtensions = true;
+	}
+
+	return (hasProperties && hasFeatures && hasQueues && hasPresent && hasExtensions) ? SUITABILITY_SUITABLE : SUITABILITY_UNSUITABLE;
+}
+
+SupportResult areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount, char **error)
+{
+	VkResult result;
+
+	uint32_t availableExtensionCount;
+	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, NULL)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get available device extension count: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
+	}
+
+	VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
+	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, availableExtensions)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get available device extensions: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
+	}
+
+	bool match = compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
+	free(availableExtensions);
+
+	return match ? SUPPORT_SUPPORTED : SUPPORT_UNSUPPORTED;
 }
