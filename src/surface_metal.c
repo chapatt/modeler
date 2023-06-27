@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "surface_metal.h"
+#include "vulkan_utils.h"
 
 bool createSurfaceMetal(VkInstance instance, const CAMetalLayer *layer, VkSurfaceKHR *surface, char **error)
 {
@@ -13,7 +14,7 @@ bool createSurfaceMetal(VkInstance instance, const CAMetalLayer *layer, VkSurfac
 	createInfo.pLayer = layer;
 
 	VkResult result;
-	if ((result = vkCreateMetalSurfaceEXT(instance, &createInfo, NULL, &surface)) != VK_SUCCESS) {
+	if ((result = vkCreateMetalSurfaceEXT(instance, &createInfo, NULL, surface)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create surface: %s", string_VkResult(result));
 		return false;
 	}
