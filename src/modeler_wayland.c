@@ -26,7 +26,10 @@ bool initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *way
 		return false;
 	}
 
-	VkDevice device = createDevice(physicalDevice);
+	VkDevice device;
+	if (!createDevice(physicalDevice, &device, error)) {
+		return false;
+	}
 
 	return true;
 }

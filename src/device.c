@@ -3,11 +3,18 @@
 
 #include "device.h"
 #include "utils.h"
+#include "vulkan_utils.h"
 
-bool areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount);
+typedef enum support_result_t {
+	SUPPORT_ERROR = -1,
+	SUPPORT_UNSUPPORTED = 0,
+	SUPPORT_SUPPORTED = 1
+} SupportResult;
+
+SupportResult areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount, char **error);
 uint32_t findFirstMatchingFamily(VkPhysicalDevice physicalDevice, VkQueueFlags flag);
 
-VkDevice createDevice(VkPhysicalDevice physicalDevice)
+bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **error)
 {
 	VkDeviceQueueCreateInfo queueCreateInfo = {};
 	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -15,7 +22,7 @@ VkDevice createDevice(VkPhysicalDevice physicalDevice)
 	queueCreateInfo.queueCount = 1;
 	float queuePriority = 1.0f;
 	queueCreateInfo.pQueuePriorities = &queuePriority;
-    
+
 	VkPhysicalDeviceFeatures deviceFeatures = {};
     
 	VkDeviceCreateInfo createInfo = {};
@@ -26,22 +33,25 @@ VkDevice createDevice(VkPhysicalDevice physicalDevice)
 	createInfo.enabledLayerCount = 0;
 
 	const char* deviceExtension = "VK_KHR_portability_subset";
-	if (areDeviceExtensionsSupported(physicalDevice, &deviceExtension, 1)) {
+	switch (areDeviceExtensionsSupported(physicalDevice, &deviceExtension, 1, error)) {
+	case SUPPORT_ERROR:
+		return false;
+	case SUPPORT_SUPPORTED:
 		createInfo.ppEnabledExtensionNames = &deviceExtension;
 		createInfo.enabledExtensionCount = 1;
 	}
 
     
-	VkDevice device;
-	if (vkCreateDevice(physicalDevice, &createInfo, NULL, &device) != VK_SUCCESS) {
-		fprintf(stderr, "Failed to create logical device!\n");
-		exit(EXIT_FAILURE);
+	VkResult result;
+	if ((result = vkCreateDevice(physicalDevice, &createInfo, NULL, device)) != VK_SUCCESS) {
+		asprintf(error, "Failed to create logical device: %s", string_VkResult(result));
+		return false;
 	}
     
 	VkQueue queue;
-	vkGetDeviceQueue(device, queueCreateInfo.queueFamilyIndex, 0, &queue);
+	vkGetDeviceQueue(*device, queueCreateInfo.queueFamilyIndex, 0, &queue);
 
-	return device;
+	return true;
 }
 
 void destroyDevice(VkDevice device)
@@ -49,24 +59,26 @@ void destroyDevice(VkDevice device)
 	vkDestroyDevice(device, NULL);
 }
 
-bool areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount)
+SupportResult areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount, char **error)
 {
+	VkResult result;
+
 	uint32_t availableExtensionCount;
-	if (vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, NULL) != VK_SUCCESS) {
-		fprintf(stderr, "Failed to get available device extension count!\n");
-		exit(EXIT_FAILURE);
+	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, NULL)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get available device extension count: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
 	}
 
 	VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
-	if (vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, availableExtensions) != VK_SUCCESS) {
-		fprintf(stderr, "Failed to get available device extensions!\n");
-		exit(EXIT_FAILURE);
+	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, availableExtensions)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get available device extensions: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
 	}
 
 	bool match = compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
 	free(availableExtensions);
 
-	return match;
+	return match ? SUPPORT_SUPPORTED : SUPPORT_UNSUPPORTED;
 }
 
 /* Not guaranteed to find a match (0 returned if none are found) */
