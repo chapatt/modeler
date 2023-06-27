@@ -2,6 +2,8 @@
 #include <stdlib.h>
 
 #include "surface_wayland.h"
+#include "utils.h"
+#include "vulkan_utils.h"
 
 bool createSurfaceWayland(VkInstance instance, struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, VkSurfaceKHR *surface, char **error)
 {
