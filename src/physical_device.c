@@ -108,20 +108,37 @@ SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSu
 		return SUITABILITY_UNSUITABLE;
 	}
 
+	VkResult result;
+
 	VkSurfaceCapabilitiesKHR capabilities;
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+	if ((result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device capabilities: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
+	}
 
 	uint32_t formatCount = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, NULL);
+	if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, NULL)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device surface format count: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
+	}
 
 	VkSurfaceFormatKHR *formats = (VkSurfaceFormatKHR *) malloc(sizeof(VkSurfaceFormatKHR) * formatCount);
-	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, formats);
+	if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, formats)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device surface formats: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
+	}
 
 	uint32_t presentModeCount = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, NULL);
+	if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, NULL)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device surface present mode count: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
+	}
 
 	VkPresentModeKHR *presentModes = (VkPresentModeKHR *) malloc(sizeof(VkPresentModeKHR) * formatCount);
-	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes);
+	if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device surface present modes: %s", string_VkResult(result));
+		return SUPPORT_ERROR;
+	}
 
 	bool hasSwapchain = formatCount && presentModeCount;
 	if (!hasSwapchain) {
