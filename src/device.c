@@ -26,14 +26,19 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **erro
 	createInfo.pEnabledFeatures = &deviceFeatures;
 	createInfo.enabledLayerCount = 0;
 
-	const char* deviceExtension = "VK_KHR_portability_subset";
-	switch (areDeviceExtensionsSupported(physicalDevice, &deviceExtension, 1, error)) {
+	const char* requiredExtensions[2] = {
+		"VK_KHR_swapchain"
+	};
+	createInfo.enabledExtensionCount = 1;
+	const char* optionalExtension = "VK_KHR_portability_subset";
+	switch (areDeviceExtensionsSupported(physicalDevice, &optionalExtension, 1, error)) {
 	case SUPPORT_ERROR:
 		return false;
 	case SUPPORT_SUPPORTED:
-		createInfo.ppEnabledExtensionNames = &deviceExtension;
-		createInfo.enabledExtensionCount = 1;
+		requiredExtensions[createInfo.enabledExtensionCount] = optionalExtension;
+		createInfo.enabledExtensionCount++;
 	}
+	createInfo.ppEnabledExtensionNames = requiredExtensions;
     
 	VkResult result;
 	if ((result = vkCreateDevice(physicalDevice, &createInfo, NULL, device)) != VK_SUCCESS) {
