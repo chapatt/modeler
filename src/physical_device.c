@@ -60,11 +60,17 @@ SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSu
 	VkPhysicalDeviceProperties deviceProperties;
 	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
 	bool hasProperties = deviceProperties.limits.maxMemoryAllocationCount >= 1;
+	if (!hasProperties) {
+		return SUITABILITY_UNSUITABLE;
+	}
 
 	VkPhysicalDeviceFeatures deviceFeatures;
 	vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
 	bool hasFeatures = deviceFeatures.robustBufferAccess;
-    
+	if (!hasFeatures) {
+		return SUITABILITY_UNSUITABLE;
+	}
+
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, NULL);
     
@@ -86,6 +92,9 @@ SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSu
 	}
 	free(queueFamilies);
 	bool hasQueues = compiledFlags & VK_QUEUE_GRAPHICS_BIT;
+	if (!hasPresent || !hasQueues) {
+		return SUITABILITY_UNSUITABLE;
+	}
 
 	bool hasExtensions = false;
 	const char* deviceExtension = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
@@ -95,8 +104,31 @@ SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSu
 	case SUPPORT_SUPPORTED:
 		hasExtensions = true;
 	}
+	if (!hasExtensions) {
+		return SUITABILITY_UNSUITABLE;
+	}
 
-	return (hasProperties && hasFeatures && hasQueues && hasPresent && hasExtensions) ? SUITABILITY_SUITABLE : SUITABILITY_UNSUITABLE;
+	VkSurfaceCapabilitiesKHR capabilities;
+	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities);
+
+	uint32_t formatCount = 0;
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, NULL);
+
+	VkSurfaceFormatKHR *formats = (VkSurfaceFormatKHR *) malloc(sizeof(VkSurfaceFormatKHR) * formatCount);
+	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, formats);
+
+	uint32_t presentModeCount = 0;
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, NULL);
+
+	VkPresentModeKHR *presentModes = (VkPresentModeKHR *) malloc(sizeof(VkPresentModeKHR) * formatCount);
+	vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes);
+
+	bool hasSwapchain = formatCount && presentModeCount;
+	if (!hasSwapchain) {
+		return SUITABILITY_UNSUITABLE;
+	}
+
+	return SUITABILITY_SUITABLE;
 }
 
 SupportResult areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount, char **error)
