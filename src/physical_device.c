@@ -5,15 +5,14 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
-typedef enum suitability_result_t {
-	SUITABILITY_ERROR = -1,
-	SUITABILITY_UNSUITABLE = 0,
-	SUITABILITY_SUITABLE = 1
-} SuitabilityResult;
+SuitabilityResult isPhysicalDeviceSuitable(PhysicalDeviceCharacteristics characteristics, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error);
+bool isPhysicalDeviceSurfaceSupportSuitable(PhysicalDeviceSurfaceCharacteristics characteristics);
+bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, char **error);
+bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics *characteristics, char **error);
 
-SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error);
-
-bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice *physicalDevice, char **error)
+bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface,
+	VkPhysicalDevice *physicalDevice, PhysicalDeviceCharacteristics *characteristics,
+	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, char **error)
 {
 	VkResult result;
 
@@ -36,18 +35,31 @@ bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface, VkPhysicalD
 
 	bool matchFound = false;
 	for (uint32_t i = 0; !matchFound && i < deviceCount; ++i) {
-		switch (isPhysicalDeviceSuitable(devices[i], surface, error)) {
+		if (!getPhysicalDeviceCharacteristics(devices[i], surface, characteristics, error)) {
+			free(devices);
+			return false;
+		}
+
+		switch(isPhysicalDeviceSuitable(*characteristics, devices[i], surface, error)) {
 		case SUITABILITY_ERROR:
+			free(devices);
 			return false;
 		case SUITABILITY_SUITABLE:
-			*physicalDevice = devices[i];
-			matchFound = true;
+			if (!getPhysicalDeviceSurfaceCharacteristics(devices[i], surface, surfaceCharacteristics, error)) {
+				free(devices);
+				return false;
+			}
+
+			if (isPhysicalDeviceSurfaceSupportSuitable(*surfaceCharacteristics)) {
+				*physicalDevice = devices[i];
+				matchFound = true;
+			}
 		}
 	}
 
 	free(devices);
 
-	if (*physicalDevice == VK_NULL_HANDLE) {
+	if (*physicalDevice == VK_NULL_HANDLE || !matchFound) {
 		asprintf(error, "Failed to find a suitable GPU!");
 		return false;
 	}
@@ -55,117 +67,131 @@ bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface, VkPhysicalD
 	return true;
 }
 
-SuitabilityResult isPhysicalDeviceSuitable(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error)
+bool findQueueFamilyWithFlags(VkQueueFamilyProperties *queueFamilies, uint32_t queueFamilyCount, VkQueueFlags queueFlags, uint32_t *queueFamilyIndex)
 {
-	VkPhysicalDeviceProperties deviceProperties;
-	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
-	bool hasProperties = deviceProperties.limits.maxMemoryAllocationCount >= 1;
-	if (!hasProperties) {
-		return SUITABILITY_UNSUITABLE;
-	}
-
-	VkPhysicalDeviceFeatures deviceFeatures;
-	vkGetPhysicalDeviceFeatures(physicalDevice, &deviceFeatures);
-	bool hasFeatures = deviceFeatures.robustBufferAccess;
-	if (!hasFeatures) {
-		return SUITABILITY_UNSUITABLE;
-	}
-
-	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, NULL);
-    
-	VkQueueFamilyProperties *queueFamilies = (VkQueueFamilyProperties *) malloc(sizeof(VkQueueFamilyProperties) * queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies);
-    
-	VkQueueFlags compiledFlags = 0;
-	bool hasPresent = false;
 	for (uint32_t i = 0; i < queueFamilyCount; ++i) {
-		compiledFlags |= queueFamilies[i].queueFlags;
+		if (queueFamilies[i].queueFlags & queueFlags) {
+			*queueFamilyIndex = i;
+			return true;
+		}
+	}
 
+	return false;
+}
+
+SuitabilityResult findQueueFamilyWithSurfaceSupport(uint32_t queueFamilyCount, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t *queueFamilyIndex, char **error)
+{
+	for (uint32_t i = 0; i < queueFamilyCount; ++i) {
 		VkBool32 familyHasPresent = VK_FALSE;
 		VkResult result;
 		if ((result = vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &familyHasPresent)) != VK_SUCCESS) {
 			asprintf(error, "Failed to check for GPU surface support: %s", string_VkResult(result));
 			return SUITABILITY_ERROR;
 		}
-		hasPresent = hasPresent || familyHasPresent == VK_TRUE;
+
+		if (familyHasPresent == VK_TRUE) {
+			*queueFamilyIndex = i;
+			return SUITABILITY_SUITABLE;
+		}
 	}
-	free(queueFamilies);
-	bool hasQueues = compiledFlags & VK_QUEUE_GRAPHICS_BIT;
-	if (!hasPresent || !hasQueues) {
+
+	return SUITABILITY_UNSUITABLE;
+}
+
+bool isPhysicalDeviceSurfaceSupportSuitable(PhysicalDeviceSurfaceCharacteristics characteristics)
+{
+	return characteristics.formatCount && characteristics.presentModeCount;
+}
+
+SuitabilityResult isPhysicalDeviceSuitable(PhysicalDeviceCharacteristics characteristics, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error)
+{
+	bool hasProperties = characteristics.deviceProperties.limits.maxMemoryAllocationCount >= 1;
+	if (!hasProperties) {
 		return SUITABILITY_UNSUITABLE;
 	}
 
-	bool hasExtensions = false;
-	const char* deviceExtension = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
-	switch (areDeviceExtensionsSupported(physicalDevice, &deviceExtension, 1, error)) {
-	case SUPPORT_ERROR:
+	bool hasFeatures = characteristics.deviceFeatures.robustBufferAccess;
+	if (!hasFeatures) {
+		return SUITABILITY_UNSUITABLE;
+	}
+
+	uint32_t queueFamilyIndex;
+	if (!findQueueFamilyWithFlags(characteristics.queueFamilies, characteristics.queueFamilyCount, VK_QUEUE_GRAPHICS_BIT, &queueFamilyIndex)) {
+		return SUITABILITY_UNSUITABLE;
+	}
+
+	switch (findQueueFamilyWithSurfaceSupport(characteristics.queueFamilyCount, physicalDevice, surface, &queueFamilyIndex, error)) {
+	case SUITABILITY_ERROR:
 		return SUITABILITY_ERROR;
-	case SUPPORT_SUPPORTED:
-		hasExtensions = true;
-	}
-	if (!hasExtensions) {
+	case SUITABILITY_UNSUITABLE:
 		return SUITABILITY_UNSUITABLE;
 	}
 
-	VkResult result;
-
-	VkSurfaceCapabilitiesKHR capabilities;
-	if ((result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &capabilities)) != VK_SUCCESS) {
-		asprintf(error, "Failed to get physical device capabilities: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
-	}
-
-	uint32_t formatCount = 0;
-	if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, NULL)) != VK_SUCCESS) {
-		asprintf(error, "Failed to get physical device surface format count: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
-	}
-
-	VkSurfaceFormatKHR *formats = (VkSurfaceFormatKHR *) malloc(sizeof(VkSurfaceFormatKHR) * formatCount);
-	if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, formats)) != VK_SUCCESS) {
-		asprintf(error, "Failed to get physical device surface formats: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
-	}
-
-	uint32_t presentModeCount = 0;
-	if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, NULL)) != VK_SUCCESS) {
-		asprintf(error, "Failed to get physical device surface present mode count: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
-	}
-
-	VkPresentModeKHR *presentModes = (VkPresentModeKHR *) malloc(sizeof(VkPresentModeKHR) * formatCount);
-	if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes)) != VK_SUCCESS) {
-		asprintf(error, "Failed to get physical device surface present modes: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
-	}
-
-	bool hasSwapchain = formatCount && presentModeCount;
-	if (!hasSwapchain) {
+	const char* deviceExtension = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+	if (!compareExtensions(&deviceExtension, 1, characteristics.extensions, characteristics.extensionCount)) {
 		return SUITABILITY_UNSUITABLE;
 	}
 
 	return SUITABILITY_SUITABLE;
 }
 
-SupportResult areDeviceExtensionsSupported(VkPhysicalDevice physicalDevice, const char **extensions, size_t extensionCount, char **error)
+bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, char **error)
 {
+	vkGetPhysicalDeviceProperties(physicalDevice, &characteristics->deviceProperties);
+
+	vkGetPhysicalDeviceFeatures(physicalDevice, &characteristics->deviceFeatures);
+
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &characteristics->queueFamilyCount, NULL);
+
+	characteristics->queueFamilies = (VkQueueFamilyProperties *) malloc(sizeof(VkQueueFamilyProperties) * characteristics->queueFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &characteristics->queueFamilyCount, characteristics->queueFamilies);
+
 	VkResult result;
 
-	uint32_t availableExtensionCount;
-	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, NULL)) != VK_SUCCESS) {
+	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &characteristics->extensionCount, NULL)) != VK_SUCCESS) {
 		asprintf(error, "Failed to get available device extension count: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
+		return false;
 	}
 
-	VkExtensionProperties *availableExtensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * availableExtensionCount);
-	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &availableExtensionCount, availableExtensions)) != VK_SUCCESS) {
+	characteristics->extensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * characteristics->extensionCount);
+	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &characteristics->extensionCount, characteristics->extensions)) != VK_SUCCESS) {
 		asprintf(error, "Failed to get available device extensions: %s", string_VkResult(result));
-		return SUPPORT_ERROR;
+		return false;
 	}
 
-	bool match = compareExtensions(extensions, extensionCount, availableExtensions, availableExtensionCount);
-	free(availableExtensions);
+	return true;
+}
 
-	return match ? SUPPORT_SUPPORTED : SUPPORT_UNSUPPORTED;
+bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics *characteristics, char **error)
+{
+	VkResult result;
+    
+	if ((result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &characteristics->capabilities)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device capabilities: %s", string_VkResult(result));
+		return false;
+	}
+
+	if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &characteristics->formatCount, NULL)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device surface format count: %s", string_VkResult(result));
+		return false;
+	}
+
+	characteristics->formats = (VkSurfaceFormatKHR *) malloc(sizeof(VkSurfaceFormatKHR) * characteristics->formatCount);
+	if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &characteristics->formatCount, characteristics->formats)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device surface formats: %s", string_VkResult(result));
+		return false;
+	}
+
+	if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &characteristics->presentModeCount, NULL)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device surface present mode count: %s", string_VkResult(result));
+		return false;
+	}
+
+	characteristics->presentModes = (VkPresentModeKHR *) malloc(sizeof(VkPresentModeKHR) * characteristics->presentModeCount);
+	if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &characteristics->presentModeCount, characteristics->presentModes)) != VK_SUCCESS) {
+		asprintf(error, "Failed to get physical device surface present modes: %s", string_VkResult(result));
+		return false;
+	}
+
+	return true;
 }

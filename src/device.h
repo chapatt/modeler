@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <vulkan/vulkan.h>
 
-bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **error);
+#include "physical_device.h"
+
+bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
+	PhysicalDeviceCharacteristics characteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics,
+	VkDevice *device, VkQueue *graphicsQueue, VkQueue *presentationQueue, char **error);
 
 #endif /* MODELER_DEVICE_H */

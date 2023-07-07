@@ -2,39 +2,64 @@
 #include <stdlib.h>
 
 #include "device.h"
-#include "physical_device.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
-uint32_t findFirstMatchingFamily(VkPhysicalDevice physicalDevice, VkQueueFlags flag);
-
-bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **error)
+bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
+	PhysicalDeviceCharacteristics characteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics,
+	VkDevice *device, VkQueue *graphicsQueue, VkQueue *presentationQueue, char **error)
 {
-	VkDeviceQueueCreateInfo queueCreateInfo = {};
-	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = findFirstMatchingFamily(physicalDevice, VK_QUEUE_GRAPHICS_BIT);
-	queueCreateInfo.queueCount = 1;
-	float queuePriority = 1.0f;
-	queueCreateInfo.pQueuePriorities = &queuePriority;
-
-	VkPhysicalDeviceFeatures deviceFeatures = {};
-    
 	VkDeviceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-	createInfo.pQueueCreateInfos = &queueCreateInfo;
-	createInfo.queueCreateInfoCount = 1;
-	createInfo.pEnabledFeatures = &deviceFeatures;
 	createInfo.enabledLayerCount = 0;
 
+	uint32_t graphicsQueueFamilyIndex;
+	if (!findQueueFamilyWithFlags(characteristics.queueFamilies, characteristics.queueFamilyCount, VK_QUEUE_GRAPHICS_BIT, &graphicsQueueFamilyIndex)) {
+		asprintf(error, "Selected device does not have graphics queue support.");
+		return false;
+	}
+
+	uint32_t presentationQueueFamilyIndex;
+	switch (findQueueFamilyWithSurfaceSupport(characteristics.queueFamilyCount, physicalDevice, surface, &presentationQueueFamilyIndex, error)) {
+	case SUITABILITY_UNSUITABLE:
+		asprintf(error, "Selected device does not have presentation queue support.");
+	case SUITABILITY_ERROR:
+		return false;
+	}
+
+	VkDeviceQueueCreateInfo graphicsQueueCreateInfo = {};
+	graphicsQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	graphicsQueueCreateInfo.queueFamilyIndex = graphicsQueueFamilyIndex;
+	graphicsQueueCreateInfo.queueCount = 1;
+	float graphicsQueuePriority = 1.0f;
+	graphicsQueueCreateInfo.pQueuePriorities = &graphicsQueuePriority;
+
+	VkDeviceQueueCreateInfo presentationQueueCreateInfo = {};
+	presentationQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	presentationQueueCreateInfo.queueFamilyIndex = presentationQueueFamilyIndex;
+	presentationQueueCreateInfo.queueCount = 1;
+	float presentationQueuePriority = 1.0f;
+	presentationQueueCreateInfo.pQueuePriorities = &presentationQueuePriority;
+
+	VkDeviceQueueCreateInfo queueCreateInfos[2] = {graphicsQueueCreateInfo, presentationQueueCreateInfo};
+
+	if (graphicsQueueFamilyIndex == presentationQueueFamilyIndex) {
+		createInfo.queueCreateInfoCount = 1;
+		createInfo.pQueueCreateInfos = &graphicsQueueCreateInfo;
+	} else {
+		createInfo.queueCreateInfoCount = 2;
+		createInfo.pQueueCreateInfos = queueCreateInfos;
+	}
+
+	VkPhysicalDeviceFeatures deviceFeatures = {};
+	createInfo.pEnabledFeatures = &deviceFeatures;
+
 	const char* requiredExtensions[2] = {
-		"VK_KHR_swapchain"
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
 	};
 	createInfo.enabledExtensionCount = 1;
 	const char* optionalExtension = "VK_KHR_portability_subset";
-	switch (areDeviceExtensionsSupported(physicalDevice, &optionalExtension, 1, error)) {
-	case SUPPORT_ERROR:
-		return false;
-	case SUPPORT_SUPPORTED:
+	if (compareExtensions(&optionalExtension, 1, characteristics.extensions, characteristics.extensionCount)) {
 		requiredExtensions[createInfo.enabledExtensionCount] = optionalExtension;
 		createInfo.enabledExtensionCount++;
 	}
@@ -46,8 +71,8 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **erro
 		return false;
 	}
     
-	VkQueue queue;
-	vkGetDeviceQueue(*device, queueCreateInfo.queueFamilyIndex, 0, &queue);
+	vkGetDeviceQueue(*device, graphicsQueueFamilyIndex, 0, &graphicsQueue);
+	vkGetDeviceQueue(*device, presentationQueueFamilyIndex, 0, &presentationQueue);
 
 	return true;
 }
@@ -55,25 +80,4 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkDevice *device, char **erro
 void destroyDevice(VkDevice device)
 {
 	vkDestroyDevice(device, NULL);
-}
-
-/* Not guaranteed to find a match (0 returned if none are found) */
-uint32_t findFirstMatchingFamily(VkPhysicalDevice physicalDevice, VkQueueFlags flags)
-{
-	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, NULL);
-
-	VkQueueFamilyProperties *queueFamilies = (VkQueueFamilyProperties *) malloc(sizeof(VkQueueFamilyProperties) * queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies);
-
-	VkQueueFlags match = 0;
-	for (uint32_t i = 0; i < queueFamilyCount; ++i) {
-		if (queueFamilies[i].queueFlags & flags) {
-			match = i;
-			break;
-		}
-	}
-	free(queueFamilies);
-    
-	return match;
 }
