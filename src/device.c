@@ -71,8 +71,8 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
 		return false;
 	}
     
-	vkGetDeviceQueue(*device, graphicsQueueFamilyIndex, 0, &graphicsQueue);
-	vkGetDeviceQueue(*device, presentationQueueFamilyIndex, 0, &presentationQueue);
+	vkGetDeviceQueue(*device, graphicsQueueFamilyIndex, 0, graphicsQueue);
+	vkGetDeviceQueue(*device, presentationQueueFamilyIndex, 0, presentationQueue);
 
 	return true;
 }
