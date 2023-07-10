@@ -48,12 +48,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		handleFatalError(NULL, "Can't create window.");
 	}
 
+	ShowWindow(hwnd, nCmdShow);
+
 	char *error;
 	if (!initVulkanWin32(hInstance, hwnd, &error)) {
 		handleFatalError(hwnd, error);
 	}
-
-	ShowWindow(hwnd, nCmdShow);
 
 	MSG msg = {};
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
@@ -67,15 +67,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	switch (uMsg) {
-	case WM_CREATE:
-		return 0;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	case WM_PAINT:
-		return 0;
-	}
+//	switch (uMsg) {
+//	case WM_CREATE:
+//		return 0;
+//	case WM_DESTROY:
+//		PostQuitMessage(0);
+//		return 0;
+//	case WM_PAINT:
+//		return 0;
+//	}
 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
