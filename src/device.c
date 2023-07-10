@@ -7,20 +7,19 @@
 
 bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
 	PhysicalDeviceCharacteristics characteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics,
-	VkDevice *device, VkQueue *graphicsQueue, VkQueue *presentationQueue, char **error)
+	VkDevice *device, VkQueue *graphicsQueue, VkQueue *presentationQueue,
+	uint32_t *graphicsQueueFamilyIndex, uint32_t *presentationQueueFamilyIndex, char **error)
 {
 	VkDeviceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	createInfo.enabledLayerCount = 0;
 
-	uint32_t graphicsQueueFamilyIndex;
-	if (!findQueueFamilyWithFlags(characteristics.queueFamilies, characteristics.queueFamilyCount, VK_QUEUE_GRAPHICS_BIT, &graphicsQueueFamilyIndex)) {
+	if (!findQueueFamilyWithFlags(characteristics.queueFamilies, characteristics.queueFamilyCount, VK_QUEUE_GRAPHICS_BIT, graphicsQueueFamilyIndex)) {
 		asprintf(error, "Selected device does not have graphics queue support.");
 		return false;
 	}
 
-	uint32_t presentationQueueFamilyIndex;
-	switch (findQueueFamilyWithSurfaceSupport(characteristics.queueFamilyCount, physicalDevice, surface, &presentationQueueFamilyIndex, error)) {
+	switch (findQueueFamilyWithSurfaceSupport(characteristics.queueFamilyCount, physicalDevice, surface, presentationQueueFamilyIndex, error)) {
 	case SUITABILITY_UNSUITABLE:
 		asprintf(error, "Selected device does not have presentation queue support.");
 	case SUITABILITY_ERROR:
@@ -29,21 +28,21 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
 
 	VkDeviceQueueCreateInfo graphicsQueueCreateInfo = {};
 	graphicsQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	graphicsQueueCreateInfo.queueFamilyIndex = graphicsQueueFamilyIndex;
+	graphicsQueueCreateInfo.queueFamilyIndex = *graphicsQueueFamilyIndex;
 	graphicsQueueCreateInfo.queueCount = 1;
 	float graphicsQueuePriority = 1.0f;
 	graphicsQueueCreateInfo.pQueuePriorities = &graphicsQueuePriority;
 
 	VkDeviceQueueCreateInfo presentationQueueCreateInfo = {};
 	presentationQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	presentationQueueCreateInfo.queueFamilyIndex = presentationQueueFamilyIndex;
+	presentationQueueCreateInfo.queueFamilyIndex = *presentationQueueFamilyIndex;
 	presentationQueueCreateInfo.queueCount = 1;
 	float presentationQueuePriority = 1.0f;
 	presentationQueueCreateInfo.pQueuePriorities = &presentationQueuePriority;
 
 	VkDeviceQueueCreateInfo queueCreateInfos[2] = {graphicsQueueCreateInfo, presentationQueueCreateInfo};
 
-	if (graphicsQueueFamilyIndex == presentationQueueFamilyIndex) {
+	if (*graphicsQueueFamilyIndex == *presentationQueueFamilyIndex) {
 		createInfo.queueCreateInfoCount = 1;
 		createInfo.pQueueCreateInfos = &graphicsQueueCreateInfo;
 	} else {
@@ -71,8 +70,8 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
 		return false;
 	}
     
-	vkGetDeviceQueue(*device, graphicsQueueFamilyIndex, 0, graphicsQueue);
-	vkGetDeviceQueue(*device, presentationQueueFamilyIndex, 0, presentationQueue);
+	vkGetDeviceQueue(*device, *graphicsQueueFamilyIndex, 0, graphicsQueue);
+	vkGetDeviceQueue(*device, *presentationQueueFamilyIndex, 0, presentationQueue);
 
 	return true;
 }

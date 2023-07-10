@@ -27,11 +27,11 @@ all: $(ALL_TARGET)
 debug: CFLAGS += -DDEBUG -g
 debug: all
 
-modeler: main_wayland.o modeler_wayland.o instance.o surface_wayland.o physical_device.o device.o utils.o xdg-shell-protocol.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface_wayland.o physical_device.o device.o utils.o xdg-shell-protocol.o $(LDLIBS)
+modeler: main_wayland.o modeler_wayland.o instance.o surface_wayland.o physical_device.o device.o swapchain.o utils.o xdg-shell-protocol.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface_wayland.o physical_device.o device.o swapchain.o utils.o xdg-shell-protocol.o $(LDLIBS)
 
-modeler.exe: main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o utils.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o utils.o $(LDLIBS)
+modeler.exe: main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o swapchain.o utils.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o swapchain.o utils.o $(LDLIBS)
 
 main_wayland.o: src/main_wayland.c src/modeler_wayland.h xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
@@ -59,6 +59,9 @@ physical_device.o: src/physical_device.c src/physical_device.h
 
 device.o: src/device.c src/device.h
 	$(CC) $(CFLAGS) -c src/device.c
+
+swapchain.o: src/swapchain.c src/swapchain.h
+	$(CC) $(CFLAGS) -c src/swapchain.c
 
 utils.o: src/utils.c src/utils.h
 	$(CC) $(CFLAGS) -c src/utils.c

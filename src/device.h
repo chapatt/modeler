@@ -8,6 +8,7 @@
 
 bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
 	PhysicalDeviceCharacteristics characteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics,
-	VkDevice *device, VkQueue *graphicsQueue, VkQueue *presentationQueue, char **error);
+	VkDevice *device, VkQueue *graphicsQueue, VkQueue *presentationQueue,
+	uint32_t *graphicsQueueFamilyIndex, uint32_t *presentationQueueFamilyIndex, char **error);
 
 #endif /* MODELER_DEVICE_H */

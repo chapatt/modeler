@@ -12,9 +12,21 @@
 #include "surface_win32.h"
 #include "physical_device.h"
 #include "device.h"
+#include "swapchain.h"
+#include "utils.h"
 
 bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 {
+	RECT rect;
+	if (!GetClientRect(hwnd, &rect)) {
+		asprintf(error, "Failed to get window extent");
+		return false;
+	}
+	VkExtent2D windowExtent = {
+		.width = rect.right - rect.left,
+		.height = rect.bottom - rect.top
+	};
+
 	const char *instanceExtensions[] = {
 		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 		VK_KHR_SURFACE_EXTENSION_NAME,
@@ -40,9 +52,16 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 	VkDevice device;
 	VkQueue graphicsQueue;
 	VkQueue presentationQueue;
+	uint32_t graphicsQueueFamilyIndex;
+	uint32_t presentationQueueFamilyIndex;
 	if (!createDevice(physicalDevice, surface, characteristics, surfaceCharacteristics,
-			  &device, &graphicsQueue, &presentationQueue, error))
+		&device, &graphicsQueue, &presentationQueue, &graphicsQueueFamilyIndex, &presentationQueueFamilyIndex, error))
 	{
+		return false;
+	}
+
+	VkSwapchainKHR swapchain;
+	if (!createSwapchain(device, surface, surfaceCharacteristics, graphicsQueueFamilyIndex, presentationQueueFamilyIndex, windowExtent, &swapchain, error)) {
 		return false;
 	}
 
