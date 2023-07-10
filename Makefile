@@ -27,11 +27,14 @@ all: $(ALL_TARGET)
 debug: CFLAGS += -DDEBUG -g
 debug: all
 
+renderloop.o: src/renderloop.c src/renderloop.h
+	$(CC) $(CFLAGS) -c src/renderloop.c
+
 modeler: main_wayland.o modeler_wayland.o instance.o surface_wayland.o physical_device.o device.o swapchain.o utils.o xdg-shell-protocol.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface_wayland.o physical_device.o device.o swapchain.o utils.o xdg-shell-protocol.o $(LDLIBS)
 
-modeler.exe: main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o swapchain.o utils.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o swapchain.o utils.o $(LDLIBS)
+modeler.exe: main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o swapchain.o utils.o renderloop.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface_win32.o physical_device.o device.o swapchain.o utils.o renderloop.o $(LDLIBS)
 
 main_wayland.o: src/main_wayland.c src/modeler_wayland.h xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c

@@ -15,6 +15,8 @@
 #include "swapchain.h"
 #include "utils.h"
 
+#include "renderloop.h"
+
 bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 {
 	RECT rect;
@@ -64,6 +66,8 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 	if (!createSwapchain(device, surface, surfaceCharacteristics, graphicsQueueFamilyIndex, presentationQueueFamilyIndex, windowExtent, &swapchain, error)) {
 		return false;
 	}
+
+	draw(device, swapchain, windowExtent, graphicsQueue, presentationQueue, graphicsQueueFamilyIndex);
 
 	return true;
 }
