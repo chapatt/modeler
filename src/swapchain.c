@@ -56,6 +56,11 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 	return true;
 }
 
+void destroySwapchain(VkDevice device, VkSwapchainKHR swapchain)
+{
+	vkDestroySwapchainKHR(device, swapchain, NULL);
+}
+
 VkSurfaceFormatKHR chooseSwapchainSurfaceFormat(VkSurfaceFormatKHR *surfaceFormats, uint32_t surfaceFormatCount) {
 	for (uint32_t i = 0; i < surfaceFormatCount; ++i) {
 		if (surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB && surfaceFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
