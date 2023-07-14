@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __APPLE__
+#elif defined _WIN32 || defined _WIN64
 #include <windows.h>
+#endif
+
+#include "utils.h"
 
 #include "renderloop.h"
 
-void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex) {
+void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath) {
 //
 //fetch image from swapchain
 //
@@ -121,8 +126,13 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue gr
 //
 	FILE *fp_vert = NULL;
 	FILE *fp_frag = NULL;
-	fp_vert = fopen("vert.spv", "rb+");
-	fp_frag = fopen("frag.spv", "rb+");
+
+	char *vertPath;
+	char *fragPath;
+	asprintf(&vertPath, "%s/%s", resourcePath, "vert.spv");
+	asprintf(&fragPath, "%s/%s", resourcePath, "frag.spv");
+	fp_vert = fopen(vertPath, "rb");
+	fp_frag = fopen(fragPath, "rb");
 	char shader_loaded = 1;
 	if (fp_vert == NULL || fp_frag == NULL) {
 		shader_loaded = 0;
@@ -500,6 +510,8 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue gr
 //
 	printf("\n");
 	for (;;) {
+#ifdef __APPLE__
+#elif defined _WIN32 || defined _WIN64
 		MSG msg = {};
 		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT) {
@@ -509,6 +521,7 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue gr
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+#endif
 //
 //submit
 //
