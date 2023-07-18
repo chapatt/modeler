@@ -67,7 +67,7 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 		return false;
 	}
 
-	draw(device, swapchain, windowExtent, graphicsQueue, presentationQueue, graphicsQueueFamilyIndex);
+	draw(device, swapchain, windowExtent, graphicsQueue, presentationQueue, graphicsQueueFamilyIndex, ".");
 
 	return true;
 }
