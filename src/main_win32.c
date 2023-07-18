@@ -16,7 +16,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 {
 	WNDCLASSEXW wc = {};
 	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+	wc.style = CS_OWNDC;
 	wc.lpfnWndProc = windowProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
@@ -36,8 +36,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		0,
 		CLASS_NAME,
 		L"Modeler",
-		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+		WS_POPUP,
+		500, 500, 500, 300,
 		NULL,
 		NULL,
 		hInstance,
@@ -48,7 +48,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		handleFatalError(NULL, "Can't create window.");
 	}
 
-	ShowWindow(hwnd, nCmdShow);
+	if (ShowWindow(hwnd, nCmdShow) != 0) {
+		handleFatalError(NULL, "Can't show window.");
+	}
 
 	char *error;
 	if (!initVulkanWin32(hInstance, hwnd, &error)) {
