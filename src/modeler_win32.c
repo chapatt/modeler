@@ -52,22 +52,17 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 	}
 
 	VkDevice device;
-	VkQueue graphicsQueue;
-	VkQueue presentationQueue;
-	uint32_t graphicsQueueFamilyIndex;
-	uint32_t presentationQueueFamilyIndex;
-	if (!createDevice(physicalDevice, surface, characteristics, surfaceCharacteristics,
-		&device, &graphicsQueue, &presentationQueue, &graphicsQueueFamilyIndex, &presentationQueueFamilyIndex, error))
-	{
+	QueueInfo queueInfo = {};
+	if (!createDevice(physicalDevice, surface, characteristics, surfaceCharacteristics, &device, &queueInfo, error)) {
 		return false;
 	}
 
 	VkSwapchainKHR swapchain;
-	if (!createSwapchain(device, surface, surfaceCharacteristics, graphicsQueueFamilyIndex, presentationQueueFamilyIndex, windowExtent, &swapchain, error)) {
+	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchain, error)) {
 		return false;
 	}
 
-	draw(device, swapchain, windowExtent, graphicsQueue, presentationQueue, graphicsQueueFamilyIndex, ".");
+	draw(device, swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".");
 
 	return true;
 }
