@@ -84,7 +84,7 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void handleFatalError(HWND hwnd, char *message)
 {
-	wchar_t messageW = utf8ToUtf16(message);
+	wchar_t *messageW = utf8ToUtf16(message);
 
 	MessageBox(
 		hwnd,

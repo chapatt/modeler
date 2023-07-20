@@ -162,6 +162,12 @@ bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurface
 	return true;
 }
 
+void freePhysicalDeviceCharacteristics(PhysicalDeviceCharacteristics *characteristics)
+{
+	free(characteristics->queueFamilies);
+	free(characteristics->extensions);
+}
+
 bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics *characteristics, char **error)
 {
 	VkResult result;
@@ -194,4 +200,10 @@ bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, Vk
 	}
 
 	return true;
+}
+
+void freePhysicalDeviceSurfaceCharacteristics(PhysicalDeviceSurfaceCharacteristics *characteristics)
+{
+	free(characteristics->formats);
+	free(characteristics->presentModes);
 }

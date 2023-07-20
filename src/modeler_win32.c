@@ -68,10 +68,12 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 	return true;
 }
 
-void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain)
+void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics)
 {
 	destroySwapchain(device, swapchain);
 	destroyDevice(device);
+	freePhysicalDeviceCharacteristics(characteristics);
+	freePhysicalDeviceSurfaceCharacteristics(surfaceCharacteristics);
 	destroySurface(instance, surface);
 	destroyInstance(instance);
 }
