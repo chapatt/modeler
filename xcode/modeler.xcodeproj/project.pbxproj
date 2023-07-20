@@ -15,6 +15,7 @@
 		AB6794C42A5E6B9400FF94B9 /* renderloop.c in Sources */ = {isa = PBXBuildFile; fileRef = AB6794C22A5E6B9400FF94B9 /* renderloop.c */; };
 		AB6794C72A5E7C5600FF94B9 /* vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C52A5E7C5600FF94B9 /* vert.spv */; };
 		AB6794C82A5E7C5600FF94B9 /* frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C62A5E7C5600FF94B9 /* frag.spv */; };
+		AB6794CA2A68FA2400FF94B9 /* surface.c in Sources */ = {isa = PBXBuildFile; fileRef = AB6794C92A68FA2400FF94B9 /* surface.c */; };
 		ABE1DEF52A3592D600A963A6 /* vulkan in Resources */ = {isa = PBXBuildFile; fileRef = ABE1DEF42A3592D600A963A6 /* vulkan */; };
 		ABE1DF0C2A3C0A8400A963A6 /* instance.c in Sources */ = {isa = PBXBuildFile; fileRef = ABE1DF052A3C0A8300A963A6 /* instance.c */; };
 		ABE1DF0D2A3C0A8400A963A6 /* surface_metal.c in Sources */ = {isa = PBXBuildFile; fileRef = ABE1DF062A3C0A8300A963A6 /* surface_metal.c */; };
@@ -63,6 +64,7 @@
 		AB6794C22A5E6B9400FF94B9 /* renderloop.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = renderloop.c; path = ../src/renderloop.c; sourceTree = "<group>"; };
 		AB6794C52A5E7C5600FF94B9 /* vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = vert.spv; path = ../vert.spv; sourceTree = "<group>"; };
 		AB6794C62A5E7C5600FF94B9 /* frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = frag.spv; path = ../frag.spv; sourceTree = "<group>"; };
+		AB6794C92A68FA2400FF94B9 /* surface.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = surface.c; path = ../src/surface.c; sourceTree = "<group>"; };
 		AB6DF34B2A354270001081EA /* libMoltenVK.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMoltenVK.dylib; path = ../../../VulkanSDK/1.3.250.0/macOS/lib/libMoltenVK.dylib; sourceTree = "<group>"; };
 		ABE1DEF42A3592D600A963A6 /* vulkan */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vulkan; sourceTree = "<group>"; };
 		ABE1DF052A3C0A8300A963A6 /* instance.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = instance.c; path = ../src/instance.c; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 		ABE1DF142A3C0A9700A963A6 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				AB6794C92A68FA2400FF94B9 /* surface.c */,
 				AB6794C22A5E6B9400FF94B9 /* renderloop.c */,
 				AB6794C12A5E6B9400FF94B9 /* swapchain.c */,
 				ABE1DF082A3C0A8300A963A6 /* device.c */,
@@ -247,6 +250,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB6794CA2A68FA2400FF94B9 /* surface.c in Sources */,
 				AB6794C32A5E6B9400FF94B9 /* swapchain.c in Sources */,
 				AB6794C42A5E6B9400FF94B9 /* renderloop.c in Sources */,
 				ABE1DF0C2A3C0A8400A963A6 /* instance.c in Sources */,
