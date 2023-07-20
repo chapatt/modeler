@@ -8,4 +8,6 @@
 
 bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, VkSwapchainKHR *swapchain, char **error);
 
+void destroySwapchain(VkDevice device, VkSwapchainKHR swapchain);
+
 #endif // MODELER_SWAPCHAIN_H

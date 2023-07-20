@@ -84,12 +84,16 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void handleFatalError(HWND hwnd, char *message)
 {
+	wchar_t messageW = utf8ToUtf16(message);
+
 	MessageBox(
 		hwnd,
-		utf8ToUtf16(message),
+		messageW,
 		L"Modeler Error",
 		MB_OK | MB_DEFBUTTON1 | MB_ICONERROR | MB_SYSTEMMODAL
 	);
+
+	free(messageW);
 
 	fprintf(stderr, "%s\n", message);
 	exit(1);

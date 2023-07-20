@@ -9,6 +9,7 @@
 
 #include "modeler_win32.h"
 #include "instance.h"
+#include "surface.h"
 #include "surface_win32.h"
 #include "physical_device.h"
 #include "device.h"
@@ -65,4 +66,12 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 	draw(device, swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".");
 
 	return true;
+}
+
+void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain)
+{
+	destroySwapchain(device, swapchain);
+	destroyDevice(device);
+	destroySurface(instance, surface);
+	destroyInstance(instance);
 }
