@@ -29,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.center()
         window.isMovableByWindowBackground = true
         window.backgroundColor = NSColor.clear
-        window.contentView = ModelerView(frame: rect)
+        window.contentView = ModelerView()
         window.makeKeyAndOrderFront(nil)
     }
 }
