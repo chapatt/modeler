@@ -1,8 +1,35 @@
-import Foundation
-import AppKit
+import Cocoa
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    private var window: NSWindow!
+
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
+        createWindow()
+    }
+    
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
+    }
+    
+    func createWindow() {
+        let rect = NSRect(
+            x: 0,
+            y: 0,
+            width: NSScreen.main!.frame.midX,
+            height: NSScreen.main!.frame.midY)
+    
+        self.window = NSWindow(
+            contentRect: rect,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false)
+
+        window.title = "Modeler"
+        window.isOpaque = false
+        window.center()
+        window.isMovableByWindowBackground = true
+        window.backgroundColor = NSColor.clear
+        window.contentView = ModelerView(frame: rect)
+        window.makeKeyAndOrderFront(nil)
     }
 }
