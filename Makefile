@@ -30,8 +30,8 @@ debug: all
 renderloop.o: src/renderloop.c src/renderloop.h
 	$(CC) $(CFLAGS) -c src/renderloop.c
 
-modeler: main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o utils.o xdg-shell-protocol.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o utils.o xdg-shell-protocol.o $(LDLIBS)
+modeler: main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o utils.o xdg-shell-protocol.o renderloop.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o utils.o xdg-shell-protocol.o renderloop.o $(LDLIBS)
 
 modeler.exe: main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o utils.o renderloop.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o utils.o renderloop.o $(LDLIBS)
@@ -83,6 +83,7 @@ xdg-shell-client-protocol.h:
 
 clean:
 	$(RM) -rf instance.o physical_device.o device.o utils.o \
-		modeler.exe main_win32.o modeler_win32.o surface_win32.o \
+		modeler.exe main_win32.o modeler_win32.o surface.o surface_win32.o \
 		modeler main_wayland.o  modeler_wayland.o  surface_wayland.o \
-		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c
+		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
+		renderloop.o
