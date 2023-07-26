@@ -4,11 +4,10 @@ class ModelerView: NSView, CALayerDelegate {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.wantsLayer = true
-        self.layer = CAMetalLayer()
-        if let layer = self.layer {
-            layer.delegate = self
-            layer.setNeedsDisplay()
-        }
+        let layer = CAMetalLayer()
+        self.layer = layer
+        layer.delegate = self
+        layer.setNeedsDisplay()
     }
     
     required init?(coder: NSCoder) {
