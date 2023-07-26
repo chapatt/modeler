@@ -18,7 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             width: NSScreen.main!.frame.midX,
             height: NSScreen.main!.frame.midY)
     
-        self.window = NSWindow(
+        window = NSWindow(
             contentRect: rect,
             styleMask: [.borderless],
             backing: .buffered,
