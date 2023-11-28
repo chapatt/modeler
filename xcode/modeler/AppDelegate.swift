@@ -27,9 +27,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.title = "Modeler"
         window.isOpaque = false
         window.center()
-        window.isMovableByWindowBackground = true
         window.backgroundColor = NSColor.clear
         window.contentView = ModelerView()
         window.makeKeyAndOrderFront(nil)
+        window.acceptsMouseMovedEvents = true
     }
 }

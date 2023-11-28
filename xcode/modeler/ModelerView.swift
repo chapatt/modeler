@@ -1,6 +1,8 @@
 import AppKit
 
 class ModelerView: NSView, CALayerDelegate {
+    private var trackingArea: NSTrackingArea!
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.wantsLayer = true
@@ -15,7 +17,9 @@ class ModelerView: NSView, CALayerDelegate {
     }
     
     func display(_ layer: CALayer) {
-        layer.backgroundColor = NSColor.blue.cgColor
+        let trackingOptions: NSTrackingArea.Options = [.activeAlways, .mouseEnteredAndExited, .mouseMoved]
+        trackingArea = NSTrackingArea(rect: bounds, options: trackingOptions, owner: self, userInfo: nil)
+        self.addTrackingArea(trackingArea)
         
         let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
         let errorPointerPointer: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>? = UnsafeMutablePointer.allocate(capacity: 1)
@@ -36,6 +40,24 @@ class ModelerView: NSView, CALayerDelegate {
                     }
                 }
             }
+    override func mouseDown(with event: NSEvent) {
+        print("mouseDown")
+        if event.type == .leftMouseDown {
+            print("mouseDown")
+        }
+    }
+    
+    override func mouseMoved(with event: NSEvent) {
+        print("mouseMoved")
+        if event.type == .mouseMoved {
+            print("mouseMoved")
+        }
+    }
+    
+    override func mouseDragged(with event: NSEvent) {
+        print("mouseDragged")
+        if event.type == .leftMouseDragged {
+            print("mouseDragged")
         }
     }
     
