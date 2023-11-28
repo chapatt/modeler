@@ -30,16 +30,17 @@ class ModelerView: NSView, CALayerDelegate {
         
         let resourcePath = Bundle.main.resourcePath!
         
-        DispatchQueue.global(qos: .userInitiated).async {
-            resourcePath.withCString { resourcePathCString in
-                if (!initVulkanMetal(layerPointer, width, height, resourcePathCString, errorPointerPointer)) {
-                    if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
-                        if let error: String = String(validatingUTF8: pointer) {
-                            self.handleFatalError(message: error)
-                        }
+        resourcePath.withCString { resourcePathCString in
+            if (!initVulkanMetal(layerPointer, width, height, resourcePathCString, errorPointerPointer)) {
+                if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
+                    if let error: String = String(validatingUTF8: pointer) {
+                        self.handleFatalError(message: error)
                     }
                 }
             }
+        }
+    }
+    
     override func mouseDown(with event: NSEvent) {
         print("mouseDown")
         if event.type == .leftMouseDown {

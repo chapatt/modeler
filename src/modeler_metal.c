@@ -2,6 +2,8 @@
 #define VK_USE_PLATFORM_METAL_EXT
 #endif
 
+#include <stdlib.h>
+#include <pthread.h>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_metal.h>
 
@@ -12,11 +14,48 @@
 #include "physical_device.h"
 #include "device.h"
 #include "swapchain.h"
+#include "utils.h"
 
 #include "renderloop.h"
 
+struct threadArguments {
+	void *surfaceLayer;
+	int width;
+	int height;
+	char *resourcePath;
+	char **error;
+};
+
+void *threadProc(void *arg);
+
 bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, char **error)
 {
+	pthread_t thread;
+	struct threadArguments *threadArgs = (struct threadArguments *) malloc(sizeof(struct threadArguments));
+	threadArgs->surfaceLayer = surfaceLayer;
+	threadArgs->width = width;
+	threadArgs->height = height;
+	asprintf(&threadArgs->resourcePath, "%s", resourcePath);
+	threadArgs->error = error;
+
+	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
+		free(threadArgs->resourcePath);
+		free(threadArgs);
+		return false;
+	}
+
+	return true;
+}
+
+void *threadProc(void *arg)
+{
+	struct threadArguments *threadArgs = (struct threadArguments *) arg;
+	void *surfaceLayer = threadArgs->surfaceLayer;
+	int width = threadArgs->width;
+	int height = threadArgs->height;
+	char *resourcePath = threadArgs->resourcePath;
+	char **error = threadArgs->error;
+
 	VkExtent2D windowExtent = {
 		.width = width,
 		.height = height
