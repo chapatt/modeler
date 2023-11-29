@@ -3,6 +3,9 @@
 
 #include <stdbool.h>
 
-bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, char **error);
+#include "queue.h"
+#include "inputEvent.h"
+
+bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error);
 
 #endif /* MODELER_METAL_H */

@@ -23,12 +23,13 @@ struct threadArguments {
 	int width;
 	int height;
 	char *resourcePath;
+	Queue *inputQueue;
 	char **error;
 };
 
 void *threadProc(void *arg);
 
-bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, char **error)
+bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = (struct threadArguments *) malloc(sizeof(struct threadArguments));
@@ -36,6 +37,7 @@ bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *reso
 	threadArgs->width = width;
 	threadArgs->height = height;
 	asprintf(&threadArgs->resourcePath, "%s", resourcePath);
+	threadArgs->inputQueue = inputQueue;
 	threadArgs->error = error;
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
@@ -54,6 +56,7 @@ void *threadProc(void *arg)
 	int width = threadArgs->width;
 	int height = threadArgs->height;
 	char *resourcePath = threadArgs->resourcePath;
+	Queue *inputQueue = threadArgs->inputQueue;
 	char **error = threadArgs->error;
 
 	VkExtent2D windowExtent = {
@@ -94,7 +97,7 @@ void *threadProc(void *arg)
 		return false;
 	}
 
-	draw(device, swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath);
+	draw(device, swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue);
 
 	return true;
 }

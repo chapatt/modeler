@@ -10,7 +10,7 @@
 
 #include "renderloop.h"
 
-void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath) {
+void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue) {
 //
 //fetch image from swapchain
 //
@@ -511,6 +511,11 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue gr
 	printf("\n");
 	for (;;) {
 #ifdef __APPLE__
+		InputEvent *inputEvent;
+		while (dequeue(inputQueue, (void **) &inputEvent)) {
+			printf("thread: %d\n", inputEvent->type);
+			free(inputEvent);
+		}
 #elif defined _WIN32 || defined _WIN64
 		MSG msg = {};
 		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {

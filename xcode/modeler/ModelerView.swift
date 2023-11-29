@@ -2,8 +2,10 @@ import AppKit
 
 class ModelerView: NSView, CALayerDelegate {
     private var trackingArea: NSTrackingArea!
+    private var inputQueue: UnsafeMutablePointer<Queue>
 
     override init(frame frameRect: NSRect) {
+        self.inputQueue = createQueue()
         super.init(frame: frameRect)
         self.wantsLayer = true
         let layer = CAMetalLayer()
@@ -17,7 +19,7 @@ class ModelerView: NSView, CALayerDelegate {
     }
     
     func display(_ layer: CALayer) {
-        let trackingOptions: NSTrackingArea.Options = [.activeAlways, .mouseEnteredAndExited, .mouseMoved]
+        let trackingOptions: NSTrackingArea.Options = [.activeAlways, .inVisibleRect, .mouseEnteredAndExited, .mouseMoved]
         trackingArea = NSTrackingArea(rect: bounds, options: trackingOptions, owner: self, userInfo: nil)
         self.addTrackingArea(trackingArea)
         
@@ -31,7 +33,7 @@ class ModelerView: NSView, CALayerDelegate {
         let resourcePath = Bundle.main.resourcePath!
         
         resourcePath.withCString { resourcePathCString in
-            if (!initVulkanMetal(layerPointer, width, height, resourcePathCString, errorPointerPointer)) {
+            if (!initVulkanMetal(layerPointer, width, height, resourcePathCString, inputQueue, errorPointerPointer)) {
                 if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
                     if let error: String = String(validatingUTF8: pointer) {
                         self.handleFatalError(message: error)
@@ -44,8 +46,9 @@ class ModelerView: NSView, CALayerDelegate {
     override func mouseDown(with event: NSEvent) {
         print("mouseDown")
         if event.type == .leftMouseDown {
-            print("mouseDown")
+            print("main: mouseDown")
         }
+        enqueueInputEvent(inputQueue, MOUSE_DOWN)
     }
     
     override func mouseMoved(with event: NSEvent) {

@@ -3,6 +3,9 @@
 
 #include <vulkan/vulkan.h>
 
-void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath);
+#include "queue.h"
+#include "inputEvent.h"
+
+void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue);
 
 #endif // MODELER_RENDERLOOP_H
