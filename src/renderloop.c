@@ -440,7 +440,7 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue gr
 	rendp_area.offset.x = 0;
 	rendp_area.offset.y = 0;
 	rendp_area.extent = windowExtent;
-	VkClearValue clear_val = {0.0f, 0.0f, 0.0f, 0.0f};
+	VkClearValue clear_val = {0.0f, 0.0f, 0.0f, 0.5f};
 	for (uint32_t i = 0; i < swap_image_count; i++) {
 
 
