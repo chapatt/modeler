@@ -18,18 +18,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             width: NSScreen.main!.frame.midX,
             height: NSScreen.main!.frame.midY)
     
-        window = NSWindow(
+        window = ModelerWindow(
             contentRect: rect,
             styleMask: [.borderless],
             backing: .buffered,
             defer: false)
-
-        window.title = "Modeler"
-        window.isOpaque = false
-        window.center()
-        window.backgroundColor = NSColor.clear
-        window.contentView = ModelerView()
-        window.makeKeyAndOrderFront(nil)
-        window.acceptsMouseMovedEvents = true
     }
 }

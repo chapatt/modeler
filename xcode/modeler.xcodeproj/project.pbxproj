@@ -12,6 +12,7 @@
 		AB1511F32A35146800A6D87E /* libvulkan.1.3.250.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB1511EA2A3505B800A6D87E /* libvulkan.1.3.250.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB42D9382B15DB6000CAF4C0 /* queue.c in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9362B15DB6000CAF4C0 /* queue.c */; };
 		AB42D9392B15DB6000CAF4C0 /* inputEvent.c in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9372B15DB6000CAF4C0 /* inputEvent.c */; };
+		AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */; };
 		AB46FC1D2A35532000E6951B /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB6DF34B2A354270001081EA /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB60A70E2A6CFBE0001D4DB2 /* main.swift */; };
 		AB6794C32A5E6B9400FF94B9 /* swapchain.c in Sources */ = {isa = PBXBuildFile; fileRef = AB6794C12A5E6B9400FF94B9 /* swapchain.c */; };
@@ -63,6 +64,7 @@
 		AB1511ED2A35117400A6D87E /* libvulkan.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.dylib; path = ../../../VulkanSDK/1.3.250.0/macOS/lib/libvulkan.1.dylib; sourceTree = "<group>"; };
 		AB42D9362B15DB6000CAF4C0 /* queue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = queue.c; path = ../src/queue.c; sourceTree = "<group>"; };
 		AB42D9372B15DB6000CAF4C0 /* inputEvent.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = inputEvent.c; path = ../src/inputEvent.c; sourceTree = "<group>"; };
+		AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindow.swift; sourceTree = "<group>"; };
 		AB60A70E2A6CFBE0001D4DB2 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		AB6794C12A5E6B9400FF94B9 /* swapchain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = swapchain.c; path = ../src/swapchain.c; sourceTree = "<group>"; };
 		AB6794C22A5E6B9400FF94B9 /* renderloop.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = renderloop.c; path = ../src/renderloop.c; sourceTree = "<group>"; };
@@ -166,6 +168,7 @@
 				AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */,
 				ABE1DF292A40C18800A963A6 /* AppDelegate.swift */,
 				AB60A70E2A6CFBE0001D4DB2 /* main.swift */,
+				AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */,
 			);
 			path = modeler;
 			sourceTree = "<group>";
@@ -260,6 +263,7 @@
 				AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */,
 				AB6794C42A5E6B9400FF94B9 /* renderloop.c in Sources */,
 				ABE1DF0C2A3C0A8400A963A6 /* instance.c in Sources */,
+				AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */,
 				ABE1DF0D2A3C0A8400A963A6 /* surface_metal.c in Sources */,
 				ABE1DF0F2A3C0A8400A963A6 /* device.c in Sources */,
 				ABE1DF102A3C0A8400A963A6 /* physical_device.c in Sources */,
