@@ -14,6 +14,7 @@
 #include "physical_device.h"
 #include "device.h"
 #include "swapchain.h"
+#include "imageView.h"
 #include "utils.h"
 
 #include "renderloop.h"
@@ -97,7 +98,12 @@ void *threadProc(void *arg)
 		return false;
 	}
 
-	draw(device, swapchainInfo.swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue);
+	VkImageView *imageViews;
+	if (!createImageViews(device, &swapchainInfo, &imageViews, error)) {
+		return false;
+	}
+
+	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue);
 
 	return true;
 }

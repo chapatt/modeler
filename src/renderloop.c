@@ -10,46 +10,7 @@
 
 #include "renderloop.h"
 
-void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue) {
-//
-//fetch image from swapchain
-//
-	uint32_t swap_image_count = 0;
-	vkGetSwapchainImagesKHR(dev, swap, &swap_image_count, NULL);
-	VkImage swap_images[swap_image_count];
-	vkGetSwapchainImagesKHR(dev, swap, &swap_image_count, swap_images);
-	printf("%d images fetched from swapchain.\n", swap_image_count);
-//
-//create image view
-//
-	VkImageView image_views[swap_image_count];
-	VkImageViewCreateInfo image_view_cre_infos[swap_image_count];
-
-	VkComponentMapping image_view_rgba_comp;
-	image_view_rgba_comp.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-	image_view_rgba_comp.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-	image_view_rgba_comp.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-	image_view_rgba_comp.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-
-	VkImageSubresourceRange image_view_subres;
-	image_view_subres.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	image_view_subres.baseMipLevel = 0;
-	image_view_subres.levelCount = 1;
-	image_view_subres.baseArrayLayer = 0;
-	image_view_subres.layerCount = 1;
-
-	for (uint32_t i = 0; i < swap_image_count; i++) {
-		image_view_cre_infos[i].sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		image_view_cre_infos[i].pNext = NULL;
-		image_view_cre_infos[i].flags = 0;
-		image_view_cre_infos[i].image = swap_images[i];
-		image_view_cre_infos[i].viewType = VK_IMAGE_VIEW_TYPE_2D;
-		image_view_cre_infos[i].format = VK_FORMAT_B8G8R8A8_SRGB;
-		image_view_cre_infos[i].components = image_view_rgba_comp;
-		image_view_cre_infos[i].subresourceRange = image_view_subres;
-		vkCreateImageView(dev, &image_view_cre_infos[i], NULL, &image_views[i]);
-		printf("image view %d created.\n", i);
-	}
+void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue) {
 //
 //
 //render pass creation part		line_477 to line_574
@@ -384,11 +345,11 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue gr
 //
 //create framebuffer
 //
-	VkFramebufferCreateInfo frame_buff_cre_infos[swap_image_count];
-	VkFramebuffer frame_buffs[swap_image_count];
-	VkImageView image_attachs[swap_image_count];
-	for (uint32_t i = 0; i < swap_image_count; i++) {
-		image_attachs[i] = image_views[i];
+	VkFramebufferCreateInfo frame_buff_cre_infos[imageViewCount];
+	VkFramebuffer frame_buffs[imageViewCount];
+	VkImageView image_attachs[imageViewCount];
+	for (uint32_t i = 0; i < imageViewCount; i++) {
+		image_attachs[i] = imageViews[i];
 		frame_buff_cre_infos[i].sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		frame_buff_cre_infos[i].pNext = NULL;
 		frame_buff_cre_infos[i].flags = 0;
@@ -425,23 +386,23 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue gr
 	cmd_buff_alloc_info.pNext = NULL;
 	cmd_buff_alloc_info.commandPool = cmd_pool;
 	cmd_buff_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	cmd_buff_alloc_info.commandBufferCount = swap_image_count;
+	cmd_buff_alloc_info.commandBufferCount = imageViewCount;
 
-	VkCommandBuffer cmd_buffers[swap_image_count];
+	VkCommandBuffer cmd_buffers[imageViewCount];
 	vkAllocateCommandBuffers(dev, &cmd_buff_alloc_info, cmd_buffers);
 	printf("command buffers allocated.\n");
 //
 //
 //render preparation		line1002 to line1062
 //
-	VkCommandBufferBeginInfo cmd_buff_begin_infos[swap_image_count];
-	VkRenderPassBeginInfo rendp_begin_infos[swap_image_count];
+	VkCommandBufferBeginInfo cmd_buff_begin_infos[imageViewCount];
+	VkRenderPassBeginInfo rendp_begin_infos[imageViewCount];
 	VkRect2D rendp_area;
 	rendp_area.offset.x = 0;
 	rendp_area.offset.y = 0;
 	rendp_area.extent = windowExtent;
 	VkClearValue clear_val = {0.0f, 0.0f, 0.0f, 0.5f};
-	for (uint32_t i = 0; i < swap_image_count; i++) {
+	for (uint32_t i = 0; i < imageViewCount; i++) {
 
 
 		cmd_buff_begin_infos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -500,8 +461,8 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkExtent2D windowExtent, VkQueue gr
 	printf("semaphores and fences created.\n");
 
 	uint32_t cur_frame = 0;
-	VkFence fens_img[swap_image_count];
-	for (uint32_t i = 0; i < swap_image_count; i++) {
+	VkFence fens_img[imageViewCount];
+	for (uint32_t i = 0; i < imageViewCount; i++) {
 		fens_img[i] = VK_NULL_HANDLE;
 	}
 //
