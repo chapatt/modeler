@@ -15,8 +15,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let rect = NSRect(
             x: 0,
             y: 0,
-            width: NSScreen.main!.frame.midX,
-            height: NSScreen.main!.frame.midY)
+            width: 600,
+            height: 400)
     
         window = ModelerWindow(
             contentRect: rect,
