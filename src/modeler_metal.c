@@ -92,12 +92,12 @@ void *threadProc(void *arg)
 		return false;
 	}
 
-	VkSwapchainKHR swapchain;
-	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchain, error)) {
+	SwapchainInfo swapchainInfo = {};
+	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchainInfo, error)) {
 		return false;
 	}
 
-	draw(device, swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue);
+	draw(device, swapchainInfo.swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue);
 
 	return true;
 }

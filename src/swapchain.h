@@ -6,7 +6,15 @@
 
 #include "physical_device.h"
 
-bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, VkSwapchainKHR *swapchain, char **error);
+typedef struct swapchain_info_t {
+	VkSwapchainKHR swapchain;
+	uint32_t imageCount;
+	VkImage *images;
+	VkSurfaceFormatKHR surfaceFormat;
+	VkExtent2D extent;
+} SwapchainInfo;
+
+bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, SwapchainInfo *swapchainInfo, char **error);
 
 void destroySwapchain(VkDevice device, VkSwapchainKHR swapchain);
 

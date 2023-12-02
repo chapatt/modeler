@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "swapchain.h"
 #include "utils.h"
@@ -10,20 +11,20 @@ VkSurfaceFormatKHR chooseSwapchainSurfaceFormat(VkSurfaceFormatKHR *surfaceForma
 VkPresentModeKHR chooseSwapchainPresentMode(VkPresentModeKHR *presentModes, uint32_t presentModeCount);
 VkExtent2D chooseSwapchainExtent(VkSurfaceCapabilitiesKHR capabilities, VkExtent2D windowExtent, char **error);
 
-bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, VkSwapchainKHR *swapchain, char **error) {
-	VkSurfaceFormatKHR surfaceFormat = chooseSwapchainSurfaceFormat(surfaceCharacteristics.formats, surfaceCharacteristics.formatCount);
+bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, SwapchainInfo *swapchainInfo, char **error) {
+	swapchainInfo->surfaceFormat = chooseSwapchainSurfaceFormat(surfaceCharacteristics.formats, surfaceCharacteristics.formatCount);
 	VkPresentModeKHR presentMode = chooseSwapchainPresentMode(surfaceCharacteristics.presentModes, surfaceCharacteristics.presentModeCount);
-	VkExtent2D extent = chooseSwapchainExtent(surfaceCharacteristics.capabilities, windowExtent, error);
-	if (extent.width == 0 || extent.height == 0) {
+	swapchainInfo->extent = chooseSwapchainExtent(surfaceCharacteristics.capabilities, windowExtent, error);
+	if (swapchainInfo->extent.width == 0 || swapchainInfo->extent.height == 0) {
 		return false;
 	}
 
 	VkSwapchainCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 	createInfo.surface = surface;
-	createInfo.imageFormat = surfaceFormat.format;
-	createInfo.imageColorSpace = surfaceFormat.colorSpace;
-	createInfo.imageExtent = extent;
+	createInfo.imageFormat = swapchainInfo->surfaceFormat.format;
+	createInfo.imageColorSpace = swapchainInfo->surfaceFormat.colorSpace;
+	createInfo.imageExtent = swapchainInfo->extent;
 	createInfo.imageArrayLayers = 1;
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	createInfo.preTransform = surfaceCharacteristics.capabilities.currentTransform;
@@ -32,10 +33,11 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 	createInfo.clipped = VK_TRUE;
 	createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-	createInfo.minImageCount = surfaceCharacteristics.capabilities.minImageCount + 1;
-	if (surfaceCharacteristics.capabilities.maxImageCount > 0 && createInfo.minImageCount > surfaceCharacteristics.capabilities.maxImageCount) {
-		createInfo.minImageCount = surfaceCharacteristics.capabilities.maxImageCount;
+	swapchainInfo->imageCount = surfaceCharacteristics.capabilities.minImageCount + 1;
+	if (surfaceCharacteristics.capabilities.maxImageCount > 0 && swapchainInfo->imageCount > surfaceCharacteristics.capabilities.maxImageCount) {
+		swapchainInfo->imageCount = surfaceCharacteristics.capabilities.maxImageCount;
 	}
+	createInfo.minImageCount = swapchainInfo->imageCount;
 
 	uint32_t queueFamilyIndexes[] = {graphicsQueueFamilyIndex, presentationQueueFamilyIndex};
 
@@ -48,10 +50,14 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 	}
 
 	VkResult result;
-	if ((result = vkCreateSwapchainKHR(device, &createInfo, NULL, swapchain)) != VK_SUCCESS) {
+	if ((result = vkCreateSwapchainKHR(device, &createInfo, NULL, &swapchainInfo->swapchain)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create swapchain: %s", string_VkResult(result));
 		return false;
 	}
+
+	vkGetSwapchainImagesKHR(device, swapchainInfo->swapchain, &swapchainInfo->imageCount, NULL);
+	swapchainInfo->images = (VkImage *) malloc(sizeof(VkImage) * swapchainInfo->imageCount);
+	vkGetSwapchainImagesKHR(device, swapchainInfo->swapchain, &swapchainInfo->imageCount, swapchainInfo->images);
 
 	return true;
 }
