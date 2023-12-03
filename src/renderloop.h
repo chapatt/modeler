@@ -6,6 +6,6 @@
 #include "queue.h"
 #include "inputEvent.h"
 
-void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue);
+void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo);
 
 #endif // MODELER_RENDERLOOP_H

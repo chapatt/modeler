@@ -6,11 +6,24 @@
 #include <windows.h>
 #endif
 
+#include "imgui/cimgui.h"
+#include "imgui/cimgui_impl_vulkan.h"
+#include "imgui/imgui_impl_modeler.h"
+
 #include "utils.h"
+#include "vulkan_utils.h"
 
 #include "renderloop.h"
 
-void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue) {
+static void imVkCheck(VkResult result)
+{
+	if (result != VK_SUCCESS) {
+		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
+		return;
+	}
+}
+
+void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo) {
 //
 //
 //render pass creation part		line_477 to line_574
@@ -77,7 +90,7 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 	rendp_cre_info.pDependencies = &subp_dep;
 
 	VkRenderPass rendp;
-	vkCreateRenderPass(dev, &rendp_cre_info, NULL, &rendp);
+	vkCreateRenderPass(device, &rendp_cre_info, NULL, &rendp);
 	printf("render pass created.\n");
 //
 //
@@ -135,9 +148,9 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 
 	VkShaderModule vert_shad_mod;
 	VkShaderModule frag_shad_mod;
-	vkCreateShaderModule(dev, &vert_shad_mod_cre_info, NULL, &vert_shad_mod);
+	vkCreateShaderModule(device, &vert_shad_mod_cre_info, NULL, &vert_shad_mod);
 	printf("vertex shader module created.\n");
-	vkCreateShaderModule(dev, &frag_shad_mod_cre_info, NULL, &frag_shad_mod);
+	vkCreateShaderModule(device, &frag_shad_mod_cre_info, NULL, &frag_shad_mod);
 	printf("fragment shader module created.\n");
 //
 //fill shader stage info
@@ -298,7 +311,7 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 	pipe_lay_cre_info.pPushConstantRanges = NULL;
 
 	VkPipelineLayout pipe_layout;
-	vkCreatePipelineLayout(dev, &pipe_lay_cre_info, NULL, &pipe_layout);
+	vkCreatePipelineLayout(device, &pipe_lay_cre_info, NULL, &pipe_layout);
 	printf("pipeline layout created.\n");
 //
 //create pipeline
@@ -326,14 +339,14 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 	pipe_cre_info.basePipelineIndex = -1;
 
 	VkPipeline pipe;
-	vkCreateGraphicsPipelines(dev, VK_NULL_HANDLE, 1, &pipe_cre_info, NULL, &pipe);
+	vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipe_cre_info, NULL, &pipe);
 	printf("graphics pipeline created.\n");
 //
 //destroy shader module
 //
-	vkDestroyShaderModule(dev, frag_shad_mod, NULL);
+	vkDestroyShaderModule(device, frag_shad_mod, NULL);
 	printf("fragment shader module destroyed.\n");
-	vkDestroyShaderModule(dev, vert_shad_mod, NULL);
+	vkDestroyShaderModule(device, vert_shad_mod, NULL);
 	printf("vertex shader module destroyed.\n");
 	free(p_frag_code);
 	printf("fragment shader binaries released.\n");
@@ -360,7 +373,7 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 		frame_buff_cre_infos[i].height = windowExtent.height;
 		frame_buff_cre_infos[i].layers = 1;
 
-		vkCreateFramebuffer(dev, &(frame_buff_cre_infos[i]), NULL, &(frame_buffs[i]));
+		vkCreateFramebuffer(device, &(frame_buff_cre_infos[i]), NULL, &(frame_buffs[i]));
 		printf("framebuffer %d created.\n", i);
 	}
 //
@@ -376,7 +389,7 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 	cmd_pool_cre_info.queueFamilyIndex = graphicsQueueFamilyIndex;
 
 	VkCommandPool cmd_pool;
-	vkCreateCommandPool(dev, &cmd_pool_cre_info, NULL, &cmd_pool);
+	vkCreateCommandPool(device, &cmd_pool_cre_info, NULL, &cmd_pool);
 	printf("command pool created.\n");
 //
 //allocate command buffers
@@ -389,8 +402,13 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 	cmd_buff_alloc_info.commandBufferCount = imageViewCount;
 
 	VkCommandBuffer cmd_buffers[imageViewCount];
-	vkAllocateCommandBuffers(dev, &cmd_buff_alloc_info, cmd_buffers);
+	vkAllocateCommandBuffers(device, &cmd_buff_alloc_info, cmd_buffers);
 	printf("command buffers allocated.\n");
+//
+//
+//imgui init
+//
+	cImGui_ImplVulkan_Init(&imVulkanInitInfo, rendp);
 //
 //
 //render preparation		line1002 to line1062
@@ -428,6 +446,20 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 
 		vkCmdDraw(cmd_buffers[i], 3, 1, 0, 0);
 
+
+
+		cImGui_ImplVulkan_NewFrame();
+		ImGui_ImplModeler_NewFrame();
+		ImGui_NewFrame();
+		ImGui_Begin("A Window", NULL, 0);
+		ImGui_Text("Hello, Window!");
+		ImGui_End();
+		ImGui_Render();
+		ImDrawData *drawData = ImGui_GetDrawData();
+		cImGui_ImplVulkan_RenderDrawData(drawData, cmd_buffers[i]);
+
+
+
 		vkCmdEndRenderPass(cmd_buffers[i]);
 
 		vkEndCommandBuffer(cmd_buffers[i]);
@@ -454,9 +486,9 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 	fen_cre_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 	for (uint32_t i = 0; i < max_frames; i++) {
-		vkCreateSemaphore(dev, &semp_cre_info, NULL, &(semps_img_avl[i]));
-		vkCreateSemaphore(dev, &semp_cre_info, NULL, &(semps_rend_fin[i]));
-		vkCreateFence(dev, &fen_cre_info, NULL, &(fens[i]));
+		vkCreateSemaphore(device, &semp_cre_info, NULL, &(semps_img_avl[i]));
+		vkCreateSemaphore(device, &semp_cre_info, NULL, &(semps_rend_fin[i]));
+		vkCreateFence(device, &fen_cre_info, NULL, &(fens[i]));
 	}
 	printf("semaphores and fences created.\n");
 
@@ -491,13 +523,13 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 //
 //submit
 //
-		vkWaitForFences(dev, 1, &(fens[cur_frame]), VK_TRUE, UINT64_MAX);
+		vkWaitForFences(device, 1, &(fens[cur_frame]), VK_TRUE, UINT64_MAX);
 
 		uint32_t img_index = 0;
-		vkAcquireNextImageKHR(dev, swap, UINT64_MAX, semps_img_avl[cur_frame], VK_NULL_HANDLE, &img_index);
+		vkAcquireNextImageKHR(device, swap, UINT64_MAX, semps_img_avl[cur_frame], VK_NULL_HANDLE, &img_index);
 
 		if (fens_img[img_index] != VK_NULL_HANDLE) {
-			vkWaitForFences(dev, 1, &(fens_img[img_index]), VK_TRUE, UINT64_MAX);
+			vkWaitForFences(device, 1, &(fens_img[img_index]), VK_TRUE, UINT64_MAX);
 		}
 
 		fens_img[img_index] = fens[cur_frame];
@@ -523,7 +555,7 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 		sub_info.signalSemaphoreCount = 1;
 		sub_info.pSignalSemaphores = &(semps_sig[0]);
 
-		vkResetFences(dev, 1, &(fens[cur_frame]));
+		vkResetFences(device, 1, &(fens[cur_frame]));
 
 		vkQueueSubmit(graphicsQueue, 1, &sub_info, fens[cur_frame]);
 //
@@ -547,5 +579,5 @@ void draw(VkDevice dev, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t i
 
 		cur_frame = (cur_frame + 1) % max_frames;
 	}
-	vkDeviceWaitIdle(dev);
+	vkDeviceWaitIdle(device);
 }

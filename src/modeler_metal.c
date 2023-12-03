@@ -2,10 +2,15 @@
 #define VK_USE_PLATFORM_METAL_EXT
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_metal.h>
+
+#include "imgui/cimgui.h"
+#include "imgui/cimgui_impl_vulkan.h"
+#include "imgui/imgui_impl_modeler.h"
 
 #include "modeler_metal.h"
 #include "instance.h"
@@ -16,6 +21,7 @@
 #include "swapchain.h"
 #include "imageView.h"
 #include "utils.h"
+#include "vulkan_utils.h"
 
 #include "renderloop.h"
 
@@ -48,6 +54,14 @@ bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *reso
 	}
 
 	return true;
+}
+
+static void imVkCheck(VkResult result)
+{
+	if (result != VK_SUCCESS) {
+		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
+		return;
+	}
 }
 
 void *threadProc(void *arg)
@@ -103,7 +117,43 @@ void *threadProc(void *arg)
 		return false;
 	}
 
-	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue);
+	VkDescriptorPool imDescriptorPool;
+	VkDescriptorPoolSize pool_sizes[] =
+	{
+		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+	};
+	VkDescriptorPoolCreateInfo pool_info = {
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+		.maxSets = 1,
+		.poolSizeCount = (uint32_t) IM_ARRAYSIZE(pool_sizes),
+		.pPoolSizes = pool_sizes
+	};
+	VkResult result;
+	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, &imDescriptorPool)) != VK_SUCCESS) {
+		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
+		return false;
+	}
+	ImGui_CreateContext(NULL);
+	ImGui_ImplModeler_Init(windowExtent);
+	ImGui_StyleColorsDark(NULL);
+	ImGui_ImplVulkan_InitInfo imVulkanInitInfo = {
+		.Instance = instance,
+		.PhysicalDevice = physicalDevice,
+		.Device = device,
+		.QueueFamily = queueInfo.graphicsQueueFamilyIndex,
+		.Queue = queueInfo.graphicsQueue,
+		.PipelineCache = VK_NULL_HANDLE,
+		.DescriptorPool = imDescriptorPool,
+		.Subpass = 0,
+		.MinImageCount = surfaceCharacteristics.capabilities.minImageCount,
+		.ImageCount = swapchainInfo.imageCount,
+		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+		.Allocator = NULL,
+		.CheckVkResultFn = imVkCheck
+	};
+
+	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, imVulkanInitInfo);
 
 	return true;
 }

@@ -13,7 +13,16 @@
 		AB42D9382B15DB6000CAF4C0 /* queue.c in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9362B15DB6000CAF4C0 /* queue.c */; };
 		AB42D9392B15DB6000CAF4C0 /* inputEvent.c in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9372B15DB6000CAF4C0 /* inputEvent.c */; };
 		AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */; };
+		AB42D9542B1883FC00CAF4C0 /* imgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB42D94C2B18833600CAF4C0 /* imgui.cpp */; };
+		AB42D9552B1883FC00CAF4C0 /* cimgui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB42D94D2B18833600CAF4C0 /* cimgui.cpp */; };
+		AB42D9562B18841C00CAF4C0 /* imgui_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9532B18833600CAF4C0 /* imgui_draw.cpp */; };
+		AB42D9572B18844E00CAF4C0 /* imgui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9402B18833600CAF4C0 /* imgui_widgets.cpp */; };
+		AB42D9582B18845A00CAF4C0 /* imgui_tables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9502B18833600CAF4C0 /* imgui_tables.cpp */; };
+		AB42D9592B18846E00CAF4C0 /* imgui_demo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9522B18833600CAF4C0 /* imgui_demo.cpp */; };
 		AB42D95B2B1B1D9400CAF4C0 /* imageView.c in Sources */ = {isa = PBXBuildFile; fileRef = AB42D95A2B1B1D9400CAF4C0 /* imageView.c */; };
+		AB42D9612B1BE73600CAF4C0 /* imgui_impl_vulkan.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB42D95F2B1BE73500CAF4C0 /* imgui_impl_vulkan.cpp */; };
+		AB42D9622B1BE73600CAF4C0 /* cimgui_impl_vulkan.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9602B1BE73500CAF4C0 /* cimgui_impl_vulkan.cpp */; };
+		AB42D9642B1C7EB200CAF4C0 /* imgui_impl_modeler.c in Sources */ = {isa = PBXBuildFile; fileRef = AB42D9632B1C7EB200CAF4C0 /* imgui_impl_modeler.c */; };
 		AB46FC1D2A35532000E6951B /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB6DF34B2A354270001081EA /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB60A70E2A6CFBE0001D4DB2 /* main.swift */; };
 		AB6794C32A5E6B9400FF94B9 /* swapchain.c in Sources */ = {isa = PBXBuildFile; fileRef = AB6794C12A5E6B9400FF94B9 /* swapchain.c */; };
@@ -66,7 +75,16 @@
 		AB42D9362B15DB6000CAF4C0 /* queue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = queue.c; path = ../src/queue.c; sourceTree = "<group>"; };
 		AB42D9372B15DB6000CAF4C0 /* inputEvent.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = inputEvent.c; path = ../src/inputEvent.c; sourceTree = "<group>"; };
 		AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindow.swift; sourceTree = "<group>"; };
+		AB42D9402B18833600CAF4C0 /* imgui_widgets.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_widgets.cpp; sourceTree = "<group>"; };
+		AB42D94C2B18833600CAF4C0 /* imgui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui.cpp; sourceTree = "<group>"; };
+		AB42D94D2B18833600CAF4C0 /* cimgui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cimgui.cpp; sourceTree = "<group>"; };
+		AB42D9502B18833600CAF4C0 /* imgui_tables.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_tables.cpp; sourceTree = "<group>"; };
+		AB42D9522B18833600CAF4C0 /* imgui_demo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_demo.cpp; sourceTree = "<group>"; };
+		AB42D9532B18833600CAF4C0 /* imgui_draw.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_draw.cpp; sourceTree = "<group>"; };
 		AB42D95A2B1B1D9400CAF4C0 /* imageView.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = imageView.c; path = ../src/imageView.c; sourceTree = "<group>"; };
+		AB42D95F2B1BE73500CAF4C0 /* imgui_impl_vulkan.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = imgui_impl_vulkan.cpp; sourceTree = "<group>"; };
+		AB42D9602B1BE73500CAF4C0 /* cimgui_impl_vulkan.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = cimgui_impl_vulkan.cpp; sourceTree = "<group>"; };
+		AB42D9632B1C7EB200CAF4C0 /* imgui_impl_modeler.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = imgui_impl_modeler.c; sourceTree = "<group>"; };
 		AB60A70E2A6CFBE0001D4DB2 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		AB6794C12A5E6B9400FF94B9 /* swapchain.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = swapchain.c; path = ../src/swapchain.c; sourceTree = "<group>"; };
 		AB6794C22A5E6B9400FF94B9 /* renderloop.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = renderloop.c; path = ../src/renderloop.c; sourceTree = "<group>"; };
@@ -121,9 +139,27 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		AB42D93C2B18833600CAF4C0 /* imgui */ = {
+			isa = PBXGroup;
+			children = (
+				AB42D9632B1C7EB200CAF4C0 /* imgui_impl_modeler.c */,
+				AB42D9602B1BE73500CAF4C0 /* cimgui_impl_vulkan.cpp */,
+				AB42D95F2B1BE73500CAF4C0 /* imgui_impl_vulkan.cpp */,
+				AB42D9402B18833600CAF4C0 /* imgui_widgets.cpp */,
+				AB42D94C2B18833600CAF4C0 /* imgui.cpp */,
+				AB42D94D2B18833600CAF4C0 /* cimgui.cpp */,
+				AB42D9502B18833600CAF4C0 /* imgui_tables.cpp */,
+				AB42D9522B18833600CAF4C0 /* imgui_demo.cpp */,
+				AB42D9532B18833600CAF4C0 /* imgui_draw.cpp */,
+			);
+			name = imgui;
+			path = ../src/imgui;
+			sourceTree = "<group>";
+		};
 		ABE1DF142A3C0A9700A963A6 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				AB42D93C2B18833600CAF4C0 /* imgui */,
 				AB42D9362B15DB6000CAF4C0 /* queue.c */,
 				AB42D95A2B1B1D9400CAF4C0 /* imageView.c */,
 				AB42D9372B15DB6000CAF4C0 /* inputEvent.c */,
@@ -259,7 +295,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB42D9642B1C7EB200CAF4C0 /* imgui_impl_modeler.c in Sources */,
+				AB42D9612B1BE73600CAF4C0 /* imgui_impl_vulkan.cpp in Sources */,
+				AB42D9622B1BE73600CAF4C0 /* cimgui_impl_vulkan.cpp in Sources */,
 				AB42D95B2B1B1D9400CAF4C0 /* imageView.c in Sources */,
+				AB42D9592B18846E00CAF4C0 /* imgui_demo.cpp in Sources */,
+				AB42D9582B18845A00CAF4C0 /* imgui_tables.cpp in Sources */,
+				AB42D9572B18844E00CAF4C0 /* imgui_widgets.cpp in Sources */,
+				AB42D9562B18841C00CAF4C0 /* imgui_draw.cpp in Sources */,
+				AB42D9542B1883FC00CAF4C0 /* imgui.cpp in Sources */,
+				AB42D9552B1883FC00CAF4C0 /* cimgui.cpp in Sources */,
 				AB42D9382B15DB6000CAF4C0 /* queue.c in Sources */,
 				AB42D9392B15DB6000CAF4C0 /* inputEvent.c in Sources */,
 				AB6794CA2A68FA2400FF94B9 /* surface.c in Sources */,
