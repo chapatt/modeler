@@ -33,7 +33,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	wc.cbWndExtra = 0;
 	wc.hInstance = hInstance;
 	wc.hIcon = NULL;
-	wc.hCursor = NULL;
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = NULL;
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = CLASS_NAME;
