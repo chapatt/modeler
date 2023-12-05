@@ -503,23 +503,11 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 //
 	printf("\n");
 	for (;;) {
-#ifdef __APPLE__
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
 			printf("thread: %d\n", inputEvent->type);
 			free(inputEvent);
 		}
-#elif defined _WIN32 || defined _WIN64
-		MSG msg = {};
-		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
-			if (msg.message == WM_QUIT) {
-				break;
-			}
-
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-#endif
 //
 //submit
 //

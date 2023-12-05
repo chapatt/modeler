@@ -31,7 +31,7 @@ typedef struct queue {
 } Queue;
 
 Queue *createQueue(void);
-void initialize(Queue *queue);
+void initializeQueue(Queue *queue);
 void enqueue(Queue *queue, void *value);
 bool dequeue(Queue *queue, void **value);
 

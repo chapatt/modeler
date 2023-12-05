@@ -6,6 +6,7 @@
 #include <windows.h>
 
 #include "queue.h"
+#include "input_event.h"
 
 #include "modeler_win32.h"
 
@@ -17,6 +18,13 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
+	#ifdef DEBUG
+	if (AllocConsole()) {
+		FILE* fi = 0;
+		freopen_s(&fi, "CONOUT$", "w", stdout);
+	}
+	#endif /* DEBUG */
+
 	WNDCLASSEXW wc = {};
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_OWNDC;
@@ -57,6 +65,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	char *error;
 	Queue inputQueue;
+	initializeQueue(&inputQueue);
+	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) &inputQueue);
 	if (!initVulkanWin32(hInstance, hwnd, &inputQueue, &error)) {
 		handleFatalError(hwnd, error);
 	}
@@ -73,17 +83,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-//	switch (uMsg) {
-//	case WM_CREATE:
-//		return 0;
-//	case WM_DESTROY:
-//		PostQuitMessage(0);
-//		return 0;
-//	case WM_PAINT:
-//		return 0;
-//	}
+	Queue *inputQueue = (Queue *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	switch (uMsg) {
+	case WM_LBUTTONDOWN:
+		enqueueInputEvent(inputQueue, MOUSE_DOWN);
+		return 0;
+	default:
+		return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	}
 
-	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 void handleFatalError(HWND hwnd, char *message)

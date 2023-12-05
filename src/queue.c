@@ -5,7 +5,7 @@
 Queue *createQueue(void)
 {
 	Queue *queue = (Queue *) malloc(sizeof(Queue));
-	initialize(queue);
+	initializeQueue(queue);
 	return queue;
 }
 
@@ -16,7 +16,7 @@ Queue *createQueue(void)
  * 	Q->Head = Q->Tail = node	// Both Head and Tail point to it
  * 	Q->H_lock = Q->T_lock = FREE	// Locks are initially free
  */
-void initialize(Queue *queue)
+void initializeQueue(Queue *queue)
 {
 	Node *node = (struct node *) malloc(sizeof(struct node));
 	*node = (Node) {
