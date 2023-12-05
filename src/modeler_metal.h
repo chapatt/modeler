@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #include "queue.h"
-#include "inputEvent.h"
+#include "input_event.h"
 
 bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error);
 

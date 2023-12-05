@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "inputEvent.h"
+#include "input_event.h"
 
 void enqueueInputEvent(Queue *queue, InputEventType type)
 {

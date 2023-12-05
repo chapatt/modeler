@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "imageView.h"
+#include "image_view.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
