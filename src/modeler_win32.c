@@ -4,8 +4,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <vulkan/vulkan.h>
-#include <windows.h>
 
 #include "imgui/cimgui.h"
 #include "imgui/cimgui_impl_vulkan.h"
@@ -24,6 +24,32 @@
 
 #include "renderloop.h"
 
+struct threadArguments {
+	HINSTANCE hinstance;
+	HWND hwnd;
+	Queue *inputQueue;
+	char **error;
+};
+
+void *threadProc(void *arg);
+
+bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error)
+{
+	pthread_t thread;
+	struct threadArguments *threadArgs = (struct threadArguments *) malloc(sizeof(struct threadArguments));
+	threadArgs->hinstance = hinstance;
+	threadArgs->hwnd = hwnd;
+	threadArgs->inputQueue = inputQueue;
+	threadArgs->error = error;
+
+	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
+		free(threadArgs);
+		return false;
+	}
+
+	return true;
+}
+
 static void imVkCheck(VkResult result)
 {
 	if (result != VK_SUCCESS) {
@@ -32,8 +58,14 @@ static void imVkCheck(VkResult result)
 	}
 }
 
-bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error)
+void *threadProc(void *arg)
 {
+	struct threadArguments *threadArgs = (struct threadArguments *) arg;
+	HINSTANCE hinstance = threadArgs->hinstance;
+	HWND hwnd = threadArgs->hwnd;
+	Queue *inputQueue = threadArgs->inputQueue;
+	char **error = threadArgs->error;
+
 	RECT rect;
 	if (!GetClientRect(hwnd, &rect)) {
 		asprintf(error, "Failed to get window extent");
