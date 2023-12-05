@@ -4,6 +4,9 @@
 
 #include <stdio.h>
 #include <windows.h>
+
+#include "queue.h"
+
 #include "modeler_win32.h"
 
 const LPCTSTR CLASS_NAME = L"Modeler Window Class";
@@ -53,7 +56,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	}
 
 	char *error;
-	if (!initVulkanWin32(hInstance, hwnd, &error)) {
+	Queue inputQueue;
+	if (!initVulkanWin32(hInstance, hwnd, &inputQueue, &error)) {
 		handleFatalError(hwnd, error);
 	}
 

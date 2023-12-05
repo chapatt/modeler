@@ -1,6 +1,7 @@
 .DS_Store
 xcuserdata/
 
+*.a
 *.o
 *.exe
 xdg-shell-client-protocol.h

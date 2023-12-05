@@ -7,6 +7,10 @@
 #include <vulkan/vulkan.h>
 #include <windows.h>
 
+#include "imgui/cimgui.h"
+#include "imgui/cimgui_impl_vulkan.h"
+#include "imgui/imgui_impl_modeler.h"
+
 #include "modeler_win32.h"
 #include "instance.h"
 #include "surface.h"
@@ -14,11 +18,21 @@
 #include "physical_device.h"
 #include "device.h"
 #include "swapchain.h"
+#include "image_view.h"
 #include "utils.h"
+#include "vulkan_utils.h"
 
 #include "renderloop.h"
 
-bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
+static void imVkCheck(VkResult result)
+{
+	if (result != VK_SUCCESS) {
+		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
+		return;
+	}
+}
+
+bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error)
 {
 	RECT rect;
 	if (!GetClientRect(hwnd, &rect)) {
@@ -58,12 +72,55 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, char **error)
 		return false;
 	}
 
-	VkSwapchainKHR swapchain;
-	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchain, error)) {
+	SwapchainInfo swapchainInfo = {};
+	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchainInfo, error)) {
 		return false;
 	}
 
-	draw(device, swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".");
+	VkImageView *imageViews;
+	if (!createImageViews(device, &swapchainInfo, &imageViews, error)) {
+		return false;
+	}
+
+	VkDescriptorPool imDescriptorPool;
+	VkDescriptorPoolSize pool_sizes[] =
+	{
+		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+	};
+	VkDescriptorPoolCreateInfo pool_info = {
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+		.maxSets = 1,
+		.poolSizeCount = (uint32_t) IM_ARRAYSIZE(pool_sizes),
+		.pPoolSizes = pool_sizes
+	};
+	VkResult result;
+	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, &imDescriptorPool)) != VK_SUCCESS) {
+		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
+		return false;
+	}
+	ImGui_CreateContext(NULL);
+	ImGuiIO *io = ImGui_GetIO();
+	io->IniFilename = NULL;
+	ImGui_ImplModeler_Init(windowExtent);
+	ImGui_StyleColorsDark(NULL);
+	ImGui_ImplVulkan_InitInfo imVulkanInitInfo = {
+		.Instance = instance,
+		.PhysicalDevice = physicalDevice,
+		.Device = device,
+		.QueueFamily = queueInfo.graphicsQueueFamilyIndex,
+		.Queue = queueInfo.graphicsQueue,
+		.PipelineCache = VK_NULL_HANDLE,
+		.DescriptorPool = imDescriptorPool,
+		.Subpass = 0,
+		.MinImageCount = surfaceCharacteristics.capabilities.minImageCount,
+		.ImageCount = swapchainInfo.imageCount,
+		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+		.Allocator = NULL,
+		.CheckVkResultFn = imVkCheck
+	};
+
+	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
 
 	return true;
 }
