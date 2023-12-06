@@ -2,6 +2,9 @@
 #define VK_USE_PLATFORM_METAL_EXT
 #endif
 
+#include "objc/message.h"
+#include "objc/runtime.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -34,7 +37,9 @@ struct threadArguments {
 	char **error;
 };
 
-void *threadProc(void *arg);
+static void *threadProc(void *arg);
+static void sendThreadFailureSignal(void);
+static void sendNSNotification(char *message);
 
 bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error)
 {
@@ -50,6 +55,7 @@ bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *reso
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
 		free(threadArgs->resourcePath);
 		free(threadArgs);
+		asprintf(error, "Failed to start Vulkan thread");
 		return false;
 	}
 
@@ -60,11 +66,10 @@ static void imVkCheck(VkResult result)
 {
 	if (result != VK_SUCCESS) {
 		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
-		return;
 	}
 }
 
-void *threadProc(void *arg)
+static void *threadProc(void *arg)
 {
 	struct threadArguments *threadArgs = (struct threadArguments *) arg;
 	void *surfaceLayer = threadArgs->surfaceLayer;
@@ -86,35 +91,35 @@ void *threadProc(void *arg)
 	};
 	VkInstance instance;
 	if (!createInstance(instanceExtensions, 3, &instance, error)) {
-		return false;
+		sendThreadFailureSignal();
 	}
 
 	VkSurfaceKHR surface;
 	if (!createSurfaceMetal(instance, surfaceLayer, &surface, error)) {
-		return false;
+		sendThreadFailureSignal();
 	}
 
 	VkPhysicalDevice physicalDevice;
 	PhysicalDeviceCharacteristics characteristics;
 	PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics;
 	if (!choosePhysicalDevice(instance, surface, &physicalDevice, &characteristics, &surfaceCharacteristics, error)) {
-		return false;
+		sendThreadFailureSignal();
 	}
 
 	VkDevice device;
 	QueueInfo queueInfo = {};
 	if (!createDevice(physicalDevice, surface, characteristics, surfaceCharacteristics, &device, &queueInfo, error)) {
-		return false;
+		sendThreadFailureSignal();
 	}
 
 	SwapchainInfo swapchainInfo = {};
 	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchainInfo, error)) {
-		return false;
+		sendThreadFailureSignal();
 	}
 
 	VkImageView *imageViews;
 	if (!createImageViews(device, &swapchainInfo, &imageViews, error)) {
-		return false;
+		sendThreadFailureSignal();
 	}
 
 	VkDescriptorPool imDescriptorPool;
@@ -132,7 +137,7 @@ void *threadProc(void *arg)
 	VkResult result;
 	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, &imDescriptorPool)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
-		return false;
+		sendThreadFailureSignal();
 	}
 	ImGui_CreateContext(NULL);
 	ImGui_ImplModeler_Init(windowExtent);
@@ -155,5 +160,35 @@ void *threadProc(void *arg)
 
 	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, imVulkanInitInfo);
 
-	return true;
+	return NULL;
+}
+
+static void sendThreadFailureSignal(void)
+{
+	sendNSNotification(FAILURE_NOTIFICATION_NAME);
+}
+
+static void sendNSNotification(char *message)
+{
+	id (*postNotification)(id, SEL, id) = (id (*)(id, SEL, id)) objc_msgSend;
+	id (*notificationWithNameObject)(Class, SEL, id, id) = (id (*)(Class, SEL, id, id)) objc_msgSend;
+	id (*stringWithUTF8String)(Class, SEL, char *) = (id (*)(Class, SEL, char *)) objc_msgSend;
+	id (*defaultCenter)(Class, SEL) = (id (*)(Class, SEL)) objc_msgSend;
+
+	Class NSStringClass = objc_getClass("NSString");
+	SEL stringWithUTF8StringSelector = sel_registerName("stringWithUTF8String:");
+	id name = stringWithUTF8String(NSStringClass, stringWithUTF8StringSelector, message);
+
+	Class NSNotificationClass = objc_getClass("NSNotification");
+	SEL notifcationWithNameObjectSelector = sel_registerName("notificationWithName:object:");
+	id notification = notificationWithNameObject(NSNotificationClass, notifcationWithNameObjectSelector, name, NULL);
+
+	Class NSNotificationCenterClass = objc_getClass("NSNotificationCenter");
+	SEL defaultCenterSelector = sel_registerName("defaultCenter");
+	id notificationCenter = defaultCenter(NSNotificationCenterClass, defaultCenterSelector);
+
+	SEL postNotificationSelector = sel_registerName("postNotification:");
+	postNotification(notificationCenter, postNotificationSelector, notification);
+
+	pthread_exit(NULL);
 }

@@ -3,6 +3,7 @@ import AppKit
 class ModelerView: NSView, CALayerDelegate {
     private var trackingArea: NSTrackingArea!
     private var inputQueue: UnsafeMutablePointer<Queue>
+    private var errorPointerPointer: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
 
     override init(frame frameRect: NSRect) {
         self.inputQueue = createQueue()
@@ -12,6 +13,10 @@ class ModelerView: NSView, CALayerDelegate {
         self.layer = layer
         layer.delegate = self
         layer.setNeedsDisplay()
+        
+        errorPointerPointer = UnsafeMutablePointer.allocate(capacity: 1)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleErrorNotification), name: Notification.Name("THREAD_FAILURE"), object: nil)
     }
     
     required init?(coder: NSCoder) {
@@ -24,7 +29,6 @@ class ModelerView: NSView, CALayerDelegate {
         self.addTrackingArea(trackingArea)
         
         let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
-        let errorPointerPointer: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>? = UnsafeMutablePointer.allocate(capacity: 1)
             
         let frame: CGRect = layer.frame
         let width = Int32(frame.size.width)
@@ -64,14 +68,24 @@ class ModelerView: NSView, CALayerDelegate {
             print("mouseDragged")
         }
     }
+
+    @objc func handleErrorNotification(notification: NSNotification) {
+        if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
+            if let error: String = String(validatingUTF8: pointer) {
+                handleFatalError(message: error)
+            }
+        }
+    }
     
     func handleFatalError(message: String) {
-        let alert = NSAlert()
-        alert.messageText = "Modeler Error"
-        alert.informativeText = message
-        alert.addButton(withTitle: "OK")
-        alert.alertStyle = .critical
-        alert.runModal()
-        NSApplication.shared.terminate(nil)
+        DispatchQueue.main.async {
+            let alert = NSAlert()
+            alert.messageText = "Modeler Error"
+            alert.informativeText = message
+            alert.addButton(withTitle: "OK")
+            alert.alertStyle = .critical
+            alert.runModal()
+            NSApplication.shared.terminate(nil)
+        }
     }
 }
