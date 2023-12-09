@@ -4,7 +4,7 @@
 
 Queue *createQueue(void)
 {
-	Queue *queue = (Queue *) malloc(sizeof(Queue));
+	Queue *queue = malloc(sizeof(*queue));
 	initializeQueue(queue);
 	return queue;
 }
@@ -18,7 +18,7 @@ Queue *createQueue(void)
  */
 void initializeQueue(Queue *queue)
 {
-	Node *node = (struct node *) malloc(sizeof(struct node));
+	Node *node = malloc(sizeof(*node));
 	*node = (Node) {
 		.value = NULL,
 		.next = NULL
@@ -43,7 +43,7 @@ void initializeQueue(Queue *queue)
  */
 void enqueue(Queue *queue, void *value)
 {
-	Node *node = (struct node *) malloc(sizeof(struct node));
+	Node *node = malloc(sizeof(*node));
 	*node = (Node) {
 		.value = value,
 		.next = NULL

@@ -117,8 +117,8 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 	uint32_t vert_size = ftell(fp_vert);
 	uint32_t frag_size = ftell(fp_frag);
 
-	char *p_vert_code = (char *) malloc(vert_size * sizeof(char));
-	char *p_frag_code = (char *) malloc(frag_size * sizeof(char));
+	char *p_vert_code = malloc(sizeof(*p_vert_code) * vert_size);
+	char *p_frag_code = malloc(sizeof(*p_frag_code) * frag_size);
 
 	rewind(fp_vert);
 	rewind(fp_frag);

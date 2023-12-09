@@ -5,7 +5,7 @@
 #include "vulkan_utils.h"
 
 bool createImageViews(VkDevice device, SwapchainInfo *swapchainInfo, VkImageView **imageViews, char **error) {
-	*imageViews = (VkImageView *) malloc(sizeof(VkImageView) * swapchainInfo->imageCount);
+	*imageViews = malloc(sizeof(*imageViews) * swapchainInfo->imageCount);
 	VkImageViewCreateInfo createInfoTemplate = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		.viewType = VK_IMAGE_VIEW_TYPE_2D,

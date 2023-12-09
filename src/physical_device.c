@@ -27,7 +27,7 @@ bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface,
 		return false;
 	}
     
-	VkPhysicalDevice *devices = (VkPhysicalDevice *) malloc(sizeof(VkPhysicalDevice) * deviceCount);
+	VkPhysicalDevice *devices = malloc(sizeof(*devices) * deviceCount);
 	if ((result = vkEnumeratePhysicalDevices(instance, &deviceCount, devices)) != VK_SUCCESS) {
 		asprintf(error, "Failed to get physical devices: %s", string_VkResult(result));
 		return false;
@@ -143,7 +143,7 @@ bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurface
 
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &characteristics->queueFamilyCount, NULL);
 
-	characteristics->queueFamilies = (VkQueueFamilyProperties *) malloc(sizeof(VkQueueFamilyProperties) * characteristics->queueFamilyCount);
+	characteristics->queueFamilies = malloc(sizeof(*characteristics->queueFamilies) * characteristics->queueFamilyCount);
 	vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &characteristics->queueFamilyCount, characteristics->queueFamilies);
 
 	VkResult result;
@@ -153,7 +153,7 @@ bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurface
 		return false;
 	}
 
-	characteristics->extensions = (VkExtensionProperties *) malloc(sizeof(VkExtensionProperties) * characteristics->extensionCount);
+	characteristics->extensions = malloc(sizeof(*characteristics->extensions) * characteristics->extensionCount);
 	if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, NULL, &characteristics->extensionCount, characteristics->extensions)) != VK_SUCCESS) {
 		asprintf(error, "Failed to get available device extensions: %s", string_VkResult(result));
 		return false;
@@ -186,7 +186,7 @@ bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, Vk
 		return false;
 	}
 
-	characteristics->formats = (VkSurfaceFormatKHR *) malloc(sizeof(VkSurfaceFormatKHR) * characteristics->formatCount);
+	characteristics->formats = malloc(sizeof(*characteristics->formats) * characteristics->formatCount);
 	if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &characteristics->formatCount, characteristics->formats)) != VK_SUCCESS) {
 		asprintf(error, "Failed to get physical device surface formats: %s", string_VkResult(result));
 		return false;
@@ -197,7 +197,7 @@ bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, Vk
 		return false;
 	}
 
-	characteristics->presentModes = (VkPresentModeKHR *) malloc(sizeof(VkPresentModeKHR) * characteristics->presentModeCount);
+	characteristics->presentModes = malloc(sizeof(*characteristics->presentModes) * characteristics->presentModeCount);
 	if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &characteristics->presentModeCount, characteristics->presentModes)) != VK_SUCCESS) {
 		asprintf(error, "Failed to get physical device surface present modes: %s", string_VkResult(result));
 		return false;

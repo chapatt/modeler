@@ -5,7 +5,7 @@
 
 void enqueueInputEvent(Queue *queue, InputEventType type)
 {
-	InputEvent *event = (InputEvent *) malloc(sizeof(InputEvent));
+	InputEvent *event = malloc(sizeof(*event));
 	event->type = type;
 
 	enqueue(queue, (void *) event);

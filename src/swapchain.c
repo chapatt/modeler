@@ -56,7 +56,7 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 	}
 
 	vkGetSwapchainImagesKHR(device, swapchainInfo->swapchain, &swapchainInfo->imageCount, NULL);
-	swapchainInfo->images = (VkImage *) malloc(sizeof(VkImage) * swapchainInfo->imageCount);
+	swapchainInfo->images = malloc(sizeof(*swapchainInfo->images) * swapchainInfo->imageCount);
 	vkGetSwapchainImagesKHR(device, swapchainInfo->swapchain, &swapchainInfo->imageCount, swapchainInfo->images);
 
 	return true;

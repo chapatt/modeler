@@ -36,7 +36,7 @@ void *threadProc(void *arg);
 bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error)
 {
 	pthread_t thread;
-	struct threadArguments *threadArgs = (struct threadArguments *) malloc(sizeof(struct threadArguments));
+	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
 	threadArgs->hinstance = hinstance;
 	threadArgs->hwnd = hwnd;
 	threadArgs->inputQueue = inputQueue;

@@ -114,7 +114,7 @@ void handleFatalError(HWND hwnd, char *message)
 wchar_t *utf8ToUtf16(const char *utf8)
 {
 	int outputSize = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0);
-	wchar_t *output = (wchar_t *) malloc(outputSize * sizeof(wchar_t));
+	wchar_t *output = malloc(outputSize * sizeof(wchar_t));
 
 	MultiByteToWideChar(CP_UTF8, 0, utf8, -1, output, outputSize);
  
