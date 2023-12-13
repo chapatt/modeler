@@ -157,8 +157,9 @@ void *threadProc(void *arg)
 	return true;
 }
 
-void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics)
+void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics)
 {
+	destroyImageViews(device, imageViews, imageViewCount);
 	destroySwapchain(device, swapchain);
 	destroyDevice(device);
 	freePhysicalDeviceCharacteristics(characteristics);
