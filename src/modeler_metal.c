@@ -38,6 +38,7 @@ struct threadArguments {
 };
 
 static void *threadProc(void *arg);
+static void imVkCheck(VkResult result);
 static void sendThreadFailureSignal(void);
 static void sendNSNotification(char *message);
 
@@ -165,7 +166,8 @@ static void *threadProc(void *arg)
 
 static void sendThreadFailureSignal(void)
 {
-	sendNSNotification(FAILURE_NOTIFICATION_NAME);
+	sendNSNotification(THREAD_FAILURE_NOTIFICATION_NAME);
+	pthread_exit(NULL);
 }
 
 static void sendNSNotification(char *message)
@@ -189,6 +191,4 @@ static void sendNSNotification(char *message)
 
 	SEL postNotificationSelector = sel_registerName("postNotification:");
 	postNotification(notificationCenter, postNotificationSelector, notification);
-
-	pthread_exit(NULL);
 }

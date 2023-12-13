@@ -6,7 +6,7 @@
 #include "queue.h"
 #include "input_event.h"
 
-#define FAILURE_NOTIFICATION_NAME "THREAD_FAILURE"
+#define THREAD_FAILURE_NOTIFICATION_NAME "THREAD_FAILURE"
 
 bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error);
 

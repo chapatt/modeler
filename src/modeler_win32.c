@@ -31,7 +31,10 @@ struct threadArguments {
 	char **error;
 };
 
-void *threadProc(void *arg);
+static void *threadProc(void *arg);
+static void imVkCheck(VkResult result);
+static void sendThreadFailureSignal(HWND hwnd);
+static void imVkCheck(VkResult result);
 
 bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error)
 {
@@ -54,11 +57,10 @@ static void imVkCheck(VkResult result)
 {
 	if (result != VK_SUCCESS) {
 		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
-		return;
 	}
 }
 
-void *threadProc(void *arg)
+static void *threadProc(void *arg)
 {
 	struct threadArguments *threadArgs = (struct threadArguments *) arg;
 	HINSTANCE hinstance = threadArgs->hinstance;
@@ -69,7 +71,7 @@ void *threadProc(void *arg)
 	RECT rect;
 	if (!GetClientRect(hwnd, &rect)) {
 		asprintf(error, "Failed to get window extent");
-		return false;
+		sendThreadFailureSignal(hwnd);
 	}
 	VkExtent2D windowExtent = {
 		.width = rect.right - rect.left,
@@ -83,35 +85,35 @@ void *threadProc(void *arg)
 	};
 	VkInstance instance;
 	if (!createInstance(instanceExtensions, 3, &instance, error)) {
-		return false;
+		sendThreadFailureSignal(hwnd);
 	}
 
 	VkSurfaceKHR surface;
 	if (!createSurfaceWin32(instance, hinstance, hwnd, &surface, error)) {
-		return false;
+		sendThreadFailureSignal(hwnd);
 	}
 
 	VkPhysicalDevice physicalDevice;
 	PhysicalDeviceCharacteristics characteristics;
 	PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics;
 	if (!choosePhysicalDevice(instance, surface, &physicalDevice, &characteristics, &surfaceCharacteristics, error)) {
-		return false;
+		sendThreadFailureSignal(hwnd);
 	}
 
 	VkDevice device;
 	QueueInfo queueInfo = {};
 	if (!createDevice(physicalDevice, surface, characteristics, surfaceCharacteristics, &device, &queueInfo, error)) {
-		return false;
+		sendThreadFailureSignal(hwnd);
 	}
 
 	SwapchainInfo swapchainInfo = {};
 	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchainInfo, error)) {
-		return false;
+		sendThreadFailureSignal(hwnd);
 	}
 
 	VkImageView *imageViews;
 	if (!createImageViews(device, &swapchainInfo, &imageViews, error)) {
-		return false;
+		sendThreadFailureSignal(hwnd);
 	}
 
 	VkDescriptorPool imDescriptorPool;
@@ -129,7 +131,7 @@ void *threadProc(void *arg)
 	VkResult result;
 	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, &imDescriptorPool)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
-		return false;
+		sendThreadFailureSignal(hwnd);
 	}
 	ImGui_CreateContext(NULL);
 	ImGuiIO *io = ImGui_GetIO();
@@ -154,7 +156,12 @@ void *threadProc(void *arg)
 
 	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
 
-	return true;
+	return NULL;
+}
+
+static void sendThreadFailureSignal(HWND hwnd) {
+	PostMessageW(hwnd, THREAD_FAILURE_NOTIFICATION_MESSAGE, 0, 0);
+	pthread_exit(NULL);
 }
 
 void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics)

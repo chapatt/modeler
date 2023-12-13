@@ -16,6 +16,8 @@ void handleFatalError(HWND hwnd, char *message);
 
 LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+static char *error = NULL;
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
 	#ifdef DEBUG
@@ -63,7 +65,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		handleFatalError(NULL, "Can't show window.");
 	}
 
-	char *error;
 	Queue inputQueue;
 	initializeQueue(&inputQueue);
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) &inputQueue);
@@ -85,6 +86,8 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	Queue *inputQueue = (Queue *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	switch (uMsg) {
+	case THREAD_FAILURE_NOTIFICATION_MESSAGE:
+		handleFatalError(hwnd, error);
 	case WM_LBUTTONDOWN:
 		enqueueInputEvent(inputQueue, MOUSE_DOWN);
 		return 0;
