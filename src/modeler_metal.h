@@ -8,6 +8,7 @@
 
 #define THREAD_FAILURE_NOTIFICATION_NAME "THREAD_FAILURE"
 
-bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error);
+pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error);
+void terminateVulkanMetal(Queue *queue, pthread_t thread);
 
 #endif /* MODELER_METAL_H */

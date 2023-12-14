@@ -505,8 +505,16 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 	for (;;) {
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
-			printf("thread: %d\n", inputEvent->type);
+			InputEventType type = inputEvent->type;
+
 			free(inputEvent);
+
+			printf("thread: %d\n", type);
+
+			switch(type) {
+			case TERMINATE:
+				goto cancelMainLoop;
+			}
 		}
 //
 //submit
@@ -567,5 +575,7 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 
 		cur_frame = (cur_frame + 1) % max_frames;
 	}
+
+cancelMainLoop:
 	vkDeviceWaitIdle(device);
 }

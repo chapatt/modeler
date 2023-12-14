@@ -25,6 +25,7 @@
 #include "image_view.h"
 #include "utils.h"
 #include "vulkan_utils.h"
+#include "queue.h"
 
 #include "renderloop.h"
 
@@ -41,8 +42,9 @@ static void *threadProc(void *arg);
 static void imVkCheck(VkResult result);
 static void sendThreadFailureSignal(void);
 static void sendNSNotification(char *message);
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics);
 
-bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error)
+pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
@@ -57,10 +59,16 @@ bool initVulkanMetal(void *surfaceLayer, int width, int height, const char *reso
 		free(threadArgs->resourcePath);
 		free(threadArgs);
 		asprintf(error, "Failed to start Vulkan thread");
-		return false;
+		return NULL;
 	}
 
-	return true;
+	return thread;
+}
+
+void terminateVulkanMetal(Queue *inputQueue, pthread_t thread)
+{
+	enqueueInputEvent(inputQueue, TERMINATE);
+	pthread_join(thread, NULL);
 }
 
 static void imVkCheck(VkResult result)
@@ -161,6 +169,8 @@ static void *threadProc(void *arg)
 
 	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, imVulkanInitInfo);
 
+	cleanupVulkan(instance, surface, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, &characteristics, &surfaceCharacteristics);
+
 	return NULL;
 }
 
@@ -191,4 +201,15 @@ static void sendNSNotification(char *message)
 
 	SEL postNotificationSelector = sel_registerName("postNotification:");
 	postNotification(notificationCenter, postNotificationSelector, notification);
+}
+
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics)
+{
+	destroyImageViews(device, imageViews, imageViewCount);
+	destroySwapchain(device, swapchain);
+	destroyDevice(device);
+	freePhysicalDeviceCharacteristics(characteristics);
+	freePhysicalDeviceSurfaceCharacteristics(surfaceCharacteristics);
+	destroySurface(instance, surface);
+	destroyInstance(instance);
 }

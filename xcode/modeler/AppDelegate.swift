@@ -2,26 +2,24 @@ import Cocoa
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow!
+    
+    let windowController = ModelerWindowController(
+        window: ModelerWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 400),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false))
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        createWindow()
+        windowController.window?.delegate = windowController
+        windowController.showWindow(self)
     }
     
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
     }
     
-    func createWindow() {
-        let rect = NSRect(
-            x: 0,
-            y: 0,
-            width: 600,
-            height: 400)
-    
-        window = ModelerWindow(
-            contentRect: rect,
-            styleMask: [.borderless],
-            backing: .buffered,
-            defer: false)
+    func applicationWillTerminate(_ notification: Notification) {
+        print("terminating")
     }
 }

@@ -5,7 +5,8 @@
 
 typedef enum input_event_type_t {
 	MOUSE_DOWN,
-	MOUSE_UP
+	MOUSE_UP,
+	TERMINATE
 } InputEventType;
 
 typedef struct input_event_t {

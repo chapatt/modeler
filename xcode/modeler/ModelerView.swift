@@ -3,6 +3,7 @@ import AppKit
 class ModelerView: NSView, CALayerDelegate {
     private var trackingArea: NSTrackingArea!
     private var inputQueue: UnsafeMutablePointer<Queue>
+    private var thread: pthread_t?
     private var errorPointerPointer: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
 
     override init(frame frameRect: NSRect) {
@@ -35,9 +36,11 @@ class ModelerView: NSView, CALayerDelegate {
         let height = Int32(frame.size.height)
         
         let resourcePath = Bundle.main.resourcePath!
-        
+
         resourcePath.withCString { resourcePathCString in
-            if (!initVulkanMetal(layerPointer, width, height, resourcePathCString, inputQueue, errorPointerPointer)) {
+            thread = initVulkanMetal(layerPointer, width, height, resourcePathCString, inputQueue, errorPointerPointer)
+            
+            if (thread == nil) {
                 if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
                     if let error: String = String(validatingUTF8: pointer) {
                         self.handleFatalError(message: error)
@@ -45,6 +48,10 @@ class ModelerView: NSView, CALayerDelegate {
                 }
             }
         }
+    }
+    
+    func terminateVulkan() {
+        terminateVulkanMetal(inputQueue, thread)
     }
     
     override func mouseDown(with event: NSEvent) {

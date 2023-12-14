@@ -15,12 +15,13 @@ class ModelerWindow: NSWindow {
             styleMask: [.borderless],
             backing: .buffered,
             defer: false)
+        
+        self.contentView = ModelerView()
 
         self.title = "Modeler"
         self.isOpaque = false
         self.center()
         self.backgroundColor = NSColor.clear
-        self.contentView = ModelerView()
         self.makeKeyAndOrderFront(nil)
         self.acceptsMouseMovedEvents = true
     }
