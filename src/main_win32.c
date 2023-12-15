@@ -17,6 +17,7 @@ void handleFatalError(HWND hwnd, char *message);
 LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static char *error = NULL;
+static pthread_t thread = 0;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -68,7 +69,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	Queue inputQueue;
 	initializeQueue(&inputQueue);
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) &inputQueue);
-	if (!initVulkanWin32(hInstance, hwnd, &inputQueue, &error)) {
+	if (!(thread = initVulkanWin32(hInstance, hwnd, &inputQueue, &error))) {
 		handleFatalError(hwnd, error);
 	}
 
@@ -88,6 +89,11 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch (uMsg) {
 	case THREAD_FAILURE_NOTIFICATION_MESSAGE:
 		handleFatalError(hwnd, error);
+	case WM_CLOSE:
+		terminateVulkanWin32(inputQueue, thread);
+		DestroyWindow(hwnd);
+		PostQuitMessage(0);
+		return 0;
 	case WM_LBUTTONDOWN:
 		enqueueInputEvent(inputQueue, MOUSE_DOWN);
 		return 0;

@@ -36,7 +36,7 @@ static void imVkCheck(VkResult result);
 static void sendThreadFailureSignal(HWND hwnd);
 static void imVkCheck(VkResult result);
 
-bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error)
+pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
@@ -47,10 +47,17 @@ bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **e
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
 		free(threadArgs);
-		return false;
+		asprintf(error, "Failed to start Vulkan thread");
+		return 0;
 	}
 
-	return true;
+	return thread;
+}
+
+void terminateVulkanWin32(Queue *inputQueue, pthread_t thread)
+{
+	enqueueInputEvent(inputQueue, TERMINATE);
+	pthread_join(thread, NULL);
 }
 
 static void imVkCheck(VkResult result)

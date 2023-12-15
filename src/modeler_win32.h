@@ -9,6 +9,7 @@
 
 #define THREAD_FAILURE_NOTIFICATION_MESSAGE (WM_USER + 0)
 
-bool initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error);
+pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error);
+void terminateVulkanWin32(Queue *inputQueue, pthread_t thread);
 
 #endif /* MODELER_WIN32_H */

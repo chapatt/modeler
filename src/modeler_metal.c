@@ -59,7 +59,7 @@ pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char 
 		free(threadArgs->resourcePath);
 		free(threadArgs);
 		asprintf(error, "Failed to start Vulkan thread");
-		return NULL;
+		return 0;
 	}
 
 	return thread;
