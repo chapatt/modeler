@@ -10,6 +10,7 @@ ifeq ($(OS),Windows_NT)
 	LDLIBS+=-lvulkan-1
 	ALL_TARGET=modeler.exe
 	RM=/msys64/usr/bin/rm
+	GLSLC=/VulkanSDK/1.3.250.0/Bin/glslc
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
@@ -21,6 +22,7 @@ else
 		CC=clang
 		ALL_TARGET=modeler.a
 	endif
+	GLSLC=glslc
 endif
 
 all: $(ALL_TARGET)
@@ -112,6 +114,12 @@ xdg-shell-protocol.c:
 
 xdg-shell-client-protocol.h:
 	wayland-scanner client-header < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-client-protocol.h
+
+vert.spv:
+	$(GLSLC) src/shader.vert -o vert.spv
+
+frag.spv:
+	$(GLSLC) src/shader.frag -o frag.spv
 
 clean:
 	$(RM) -rf instance.o physical_device.o device.o utils.o \
