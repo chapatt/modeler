@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <dwmapi.h>
 
 #include "queue.h"
 #include "input_event.h"
@@ -30,7 +31,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	WNDCLASSEXW wc = {};
 	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.style = CS_OWNDC;
+	wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = windowProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
@@ -50,7 +51,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		0,
 		CLASS_NAME,
 		L"Modeler",
-		WS_POPUP,
+		WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
 		500, 500, 500, 300,
 		NULL,
 		NULL,
@@ -60,6 +61,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	if (!hwnd) {
 		handleFatalError(NULL, "Can't create window.");
+	}
+
+	MARGINS margins = {
+		.cxLeftWidth = -1,
+		.cxRightWidth = -1,
+		.cyBottomHeight = -1,
+		.cyTopHeight = -1
+	};
+	if (DwmExtendFrameIntoClientArea(hwnd, &margins) != S_OK) {
+		handleFatalError(NULL, "Can't extend frame into client area.");
 	}
 
 	if (ShowWindow(hwnd, nCmdShow) != 0) {
@@ -96,6 +107,8 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_LBUTTONDOWN:
 		enqueueInputEvent(inputQueue, MOUSE_DOWN);
+		return 0;
+	case WM_NCCALCSIZE:
 		return 0;
 	default:
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);

@@ -13,15 +13,12 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
-#include "renderloop.h"
+#ifdef EMBED_SHADERS
+#include "../shader_vert.h"
+#include "../shader_frag.h"
+#endif /* EMBED_SHADERS */
 
-static void imVkCheck(VkResult result)
-{
-	if (result != VK_SUCCESS) {
-		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
-		return;
-	}
-}
+#include "renderloop.h"
 
 void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo) {
 //
@@ -98,6 +95,7 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 //
 //load shader
 //
+#ifndef EMBED_SHADERS
 	FILE *fp_vert = NULL;
 	FILE *fp_frag = NULL;
 
@@ -107,28 +105,27 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 	asprintf(&fragPath, "%s/%s", resourcePath, "frag.spv");
 	fp_vert = fopen(vertPath, "rb");
 	fp_frag = fopen(fragPath, "rb");
-	char shader_loaded = 1;
 	if (fp_vert == NULL || fp_frag == NULL) {
-		shader_loaded = 0;
 		printf("can't find SPIR-V binaries.\n");
 	}
 	fseek(fp_vert, 0, SEEK_END);
 	fseek(fp_frag, 0, SEEK_END);
-	uint32_t vert_size = ftell(fp_vert);
-	uint32_t frag_size = ftell(fp_frag);
+	uint32_t vertexShaderSize = ftell(fp_vert);
+	uint32_t fragmentShaderSize = ftell(fp_frag);
 
-	char *p_vert_code = malloc(sizeof(*p_vert_code) * vert_size);
-	char *p_frag_code = malloc(sizeof(*p_frag_code) * frag_size);
+	char *vertexShaderBytes = malloc(sizeof(*vertexShaderBytes) * vertexShaderSize);
+	char *fragmentShaderBytes = malloc(sizeof(*fragmentShaderBytes) * fragmentShaderSize);
 
 	rewind(fp_vert);
 	rewind(fp_frag);
-	fread(p_vert_code, 1, vert_size, fp_vert);
+	fread(vertexShaderBytes, 1, vertexShaderSize, fp_vert);
 	printf("vertex shader binaries loaded.\n");
-	fread(p_frag_code, 1, frag_size, fp_frag);
+	fread(fragmentShaderBytes, 1, fragmentShaderSize, fp_frag);
 	printf("fragment shader binaries loaded.\n");
 
 	fclose(fp_vert);
 	fclose(fp_frag);
+#endif /* EMBED_SHADERS */
 //
 //create shader modules
 //
@@ -136,15 +133,15 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 	vert_shad_mod_cre_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	vert_shad_mod_cre_info.pNext = NULL;
 	vert_shad_mod_cre_info.flags = 0;
-	vert_shad_mod_cre_info.codeSize = shader_loaded ? vert_size : 0;
-	vert_shad_mod_cre_info.pCode = shader_loaded ? (const uint32_t *) p_vert_code : NULL;
+	vert_shad_mod_cre_info.codeSize = vertexShaderSize;
+	vert_shad_mod_cre_info.pCode = (const uint32_t *) vertexShaderBytes;
 
 	VkShaderModuleCreateInfo frag_shad_mod_cre_info;
 	frag_shad_mod_cre_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 	frag_shad_mod_cre_info.pNext = NULL;
 	frag_shad_mod_cre_info.flags = 0;
-	frag_shad_mod_cre_info.codeSize = shader_loaded ? frag_size : 0;
-	frag_shad_mod_cre_info.pCode = shader_loaded ? (const uint32_t *) p_frag_code : NULL;
+	frag_shad_mod_cre_info.codeSize = fragmentShaderSize;
+	frag_shad_mod_cre_info.pCode = (const uint32_t *) fragmentShaderBytes;
 
 	VkShaderModule vert_shad_mod;
 	VkShaderModule frag_shad_mod;
@@ -348,10 +345,12 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 	printf("fragment shader module destroyed.\n");
 	vkDestroyShaderModule(device, vert_shad_mod, NULL);
 	printf("vertex shader module destroyed.\n");
-	free(p_frag_code);
+#ifndef EMBED_SHADERS
+	free(fragmentShaderBytes);
 	printf("fragment shader binaries released.\n");
-	free(p_vert_code);
+	free(vertexShaderBytes);
 	printf("vertex shader binaries released.\n");
+#endif /* EMBED_SHADERS */
 //
 //
 //framebuffer creation		line_936 to line_967
@@ -419,7 +418,7 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 	rendp_area.offset.x = 0;
 	rendp_area.offset.y = 0;
 	rendp_area.extent = windowExtent;
-	VkClearValue clear_val = {0.0f, 0.0f, 0.0f, 0.5f};
+	VkClearValue clear_val = {0.1f, 0.3f, 0.3f, 1.0f};
 	for (uint32_t i = 0; i < imageViewCount; i++) {
 
 
@@ -448,15 +447,15 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 
 
 
-		cImGui_ImplVulkan_NewFrame();
-		ImGui_ImplModeler_NewFrame();
-		ImGui_NewFrame();
-		ImGui_Begin("A Window", NULL, 0);
-		ImGui_Text("Hello, Window!");
-		ImGui_End();
-		ImGui_Render();
-		ImDrawData *drawData = ImGui_GetDrawData();
-		cImGui_ImplVulkan_RenderDrawData(drawData, cmd_buffers[i]);
+		// cImGui_ImplVulkan_NewFrame();
+		// ImGui_ImplModeler_NewFrame();
+		// ImGui_NewFrame();
+		// ImGui_Begin("A Window", NULL, 0);
+		// ImGui_Text("Hello, Window!");
+		// ImGui_End();
+		// ImGui_Render();
+		// ImDrawData *drawData = ImGui_GetDrawData();
+		// cImGui_ImplVulkan_RenderDrawData(drawData, cmd_buffers[i]);
 
 
 

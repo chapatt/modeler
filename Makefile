@@ -1,16 +1,17 @@
-CFLAGS=-m64 -g
+CFLAGS=-m64
 LDFLAGS=
 LDLIBS=
 
 ifeq ($(OS),Windows_NT)
 	CC=/msys64/mingw64/bin/gcc
 	CXX=/msys64/mingw64/bin/g++
+	RM=/msys64/usr/bin/rm
+	HEXDUMP=/msys64/usr/bin/hexdump
+	GLSLC=/VulkanSDK/1.3.250.0/Bin/glslc
 	CFLAGS+=-I/VulkanSDK/1.3.250.0/Include -mwindows -municode
 	LDFLAGS+=-L/VulkanSDK/1.3.250.0/Lib
-	LDLIBS+=-lvulkan-1
+	LDLIBS+=-lvulkan-1 -ldwmapi
 	ALL_TARGET=modeler.exe
-	RM=/msys64/usr/bin/rm
-	GLSLC=/VulkanSDK/1.3.250.0/Bin/glslc
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
@@ -25,19 +26,23 @@ else
 	GLSLC=glslc
 endif
 
+ifdef DEBUG
+	CFLAGS += -DDEBUG -g
+else
+	CFLAGS += -DEMBED_SHADERS -O3
+	LDFLAGS += -static
+endif
+
 all: $(ALL_TARGET)
 
-debug: CFLAGS += -DDEBUG -g
-debug: all
-
-renderloop.o: src/renderloop.c src/renderloop.h
+renderloop.o: src/renderloop.c src/renderloop.h shader_vert.h shader_frag.h
 	$(CC) $(CFLAGS) -c src/renderloop.c
 
 modeler: main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o $(LDLIBS)
 
-modeler.exe: main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o renderloop.o imgui.a
-	$(CXX) $(CFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o renderloop.o imgui.a $(LDLIBS)
+modeler.exe: main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o imgui.a
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o imgui.a $(LDLIBS)
 
 main_wayland.o: src/main_wayland.c src/modeler_wayland.h xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
@@ -74,6 +79,9 @@ swapchain.o: src/swapchain.c src/swapchain.h
 
 image_view.o: src/image_view.c src/image_view.h src/swapchain.h
 	$(CC) $(CFLAGS) -c src/image_view.c
+
+pipeline.o: src/pipeline.c src/pipeline.h
+	$(CC) $(CFLAGS) -c src/pipeline.c
 
 input_event.o: src/input_event.c src/input_event.h src/queue.h
 	$(CC) $(CFLAGS) -c src/input_event.c
@@ -116,10 +124,16 @@ xdg-shell-client-protocol.h:
 	wayland-scanner client-header < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-client-protocol.h
 
 vert.spv:
-	$(GLSLC) src/shader.vert -o vert.spv
+	$(GLSLC) src/shader.vert -o $@
 
 frag.spv:
-	$(GLSLC) src/shader.frag -o frag.spv
+	$(GLSLC) src/shader.frag -o $@
+
+shader_vert.h: vert.spv
+	./hexdump_include.sh vertexShaderBytes vertexShaderSize vert.spv > $@
+
+shader_frag.h: frag.spv
+	./hexdump_include.sh fragmentShaderBytes fragmentShaderSize frag.spv > $@
 
 clean:
 	$(RM) -rf instance.o physical_device.o device.o utils.o \
@@ -127,5 +141,6 @@ clean:
 		modeler main_wayland.o  modeler_wayland.o  surface_wayland.o \
 		swapchain.o image_view.o input_event.o queue.o \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
+		vert.spv frag.spv shader_vert.h shader_frag.h \
 		imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o \
 		renderloop.o

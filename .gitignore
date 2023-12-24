@@ -6,4 +6,7 @@ xcuserdata/
 *.exe
 xdg-shell-client-protocol.h
 xdg-shell-protocol.c
+*.spv
+shader_vert.h
+shader_frag.h
 /modeler

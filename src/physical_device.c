@@ -100,7 +100,7 @@ SuitabilityResult findQueueFamilyWithSurfaceSupport(uint32_t queueFamilyCount, V
 
 bool isPhysicalDeviceSurfaceSupportSuitable(PhysicalDeviceSurfaceCharacteristics characteristics)
 {
-	return characteristics.formatCount && characteristics.presentModeCount;
+	return characteristics.formatCount && characteristics.presentModeCount && (characteristics.capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
 }
 
 SuitabilityResult isPhysicalDeviceSuitable(PhysicalDeviceCharacteristics characteristics, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error)

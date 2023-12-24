@@ -19,6 +19,7 @@
 #include "device.h"
 #include "swapchain.h"
 #include "image_view.h"
+#include "pipeline.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
@@ -120,6 +121,10 @@ static void *threadProc(void *arg)
 
 	VkImageView *imageViews;
 	if (!createImageViews(device, &swapchainInfo, &imageViews, error)) {
+		sendThreadFailureSignal(hwnd);
+	}
+
+	if (!createPipeline()) {
 		sendThreadFailureSignal(hwnd);
 	}
 
