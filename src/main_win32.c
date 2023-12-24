@@ -2,9 +2,10 @@
 #define UNICODE
 #endif 
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <windows.h>
-#include <dwmapi.h>
+#include <windowsx.h>
 
 #include "queue.h"
 #include "input_event.h"
@@ -12,10 +13,11 @@
 #include "modeler_win32.h"
 
 const LPCTSTR CLASS_NAME = L"Modeler Window Class";
-wchar_t *utf8ToUtf16(const char *utf8);
 void handleFatalError(HWND hwnd, char *message);
-
-LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static wchar_t *utf8ToUtf16(const char *utf8);
+static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT calcSize(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT hitTest(HWND hwnd, int x, int y);
 
 static char *error = NULL;
 static pthread_t thread = 0;
@@ -31,7 +33,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	WNDCLASSEXW wc = {};
 	wc.cbSize = sizeof(WNDCLASSEX);
-	wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = windowProc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
@@ -48,7 +50,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	}
 
 	HWND hwnd = CreateWindowEx(
-		0,
+		WS_EX_APPWINDOW,
 		CLASS_NAME,
 		L"Modeler",
 		WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
@@ -61,16 +63,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 	if (!hwnd) {
 		handleFatalError(NULL, "Can't create window.");
-	}
-
-	MARGINS margins = {
-		.cxLeftWidth = -1,
-		.cxRightWidth = -1,
-		.cyBottomHeight = -1,
-		.cyTopHeight = -1
-	};
-	if (DwmExtendFrameIntoClientArea(hwnd, &margins) != S_OK) {
-		handleFatalError(NULL, "Can't extend frame into client area.");
 	}
 
 	if (ShowWindow(hwnd, nCmdShow) != 0) {
@@ -94,7 +86,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	return 0;
 }
 
-LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	Queue *inputQueue = (Queue *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	switch (uMsg) {
@@ -109,11 +101,109 @@ LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		enqueueInputEvent(inputQueue, MOUSE_DOWN);
 		return 0;
 	case WM_NCCALCSIZE:
-		return 0;
+		return calcSize(hwnd, uMsg, wParam, lParam);
+	case WM_NCHITTEST:
+		return hitTest(hwnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 	default:
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
+}
 
+static LRESULT calcSize(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (!wParam) return DefWindowProc(hwnd, uMsg, wParam, lParam);
+
+	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
+	int borderX = GetSystemMetrics(SM_CXFRAME) + padding;
+	int borderY = GetSystemMetrics(SM_CYFRAME) + padding;
+
+	NCCALCSIZE_PARAMS *params = (NCCALCSIZE_PARAMS *) lParam;
+	RECT *clientRect = params->rgrc;
+
+	clientRect->right -= borderX;
+	clientRect->left += borderX;
+	clientRect->bottom -= borderY;
+
+	bool isMaximized = false;
+	if (isMaximized)
+	{
+		clientRect->top += padding;
+	}
+
+	return 0;
+}
+
+static LRESULT hitTest(HWND hwnd, int x, int y)
+{
+	enum regionMask
+	{
+		CLIENT = 0b0000,
+		LEFT = 0b0001,
+		RIGHT = 0b0010,
+		TOP = 0b0100,
+		BOTTOM = 0b1000
+	};
+
+	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
+	int borderX = GetSystemMetrics(SM_CXFRAME) + padding;
+	int borderY = GetSystemMetrics(SM_CYFRAME) + padding;
+
+	RECT windowRect;
+	if (!GetWindowRect(hwnd, &windowRect))
+	{
+		return HTNOWHERE;
+	}
+
+	enum regionMask result = CLIENT;
+
+	if (x < (windowRect.left + borderX))
+	{
+		result |= LEFT;
+	}
+
+	if (x >= (windowRect.right - borderX))
+	{
+		result |= RIGHT;
+	}
+
+	if (y < (windowRect.top + borderY))
+	{
+		result |= TOP;
+	}
+
+	if (y >= (windowRect.bottom - borderY))
+	{
+		result |= BOTTOM;
+	}
+
+	if (result & TOP)
+	{
+		if (result & LEFT)
+			return HTTOPLEFT;
+		if (result & RIGHT)
+			return HTTOPRIGHT;
+		return HTTOP;
+	}
+	else if (result & BOTTOM)
+	{
+		if (result & LEFT)
+			return HTBOTTOMLEFT;
+		if (result & RIGHT)
+			return HTBOTTOMRIGHT;
+		return HTBOTTOM;
+	}
+	else if (result & LEFT)
+	{
+		return HTLEFT;
+	}
+	else if (result & RIGHT)
+	{
+		return HTRIGHT;
+	}
+	else
+	{
+		return HTCAPTION; /* allows click and drag client area to move, return HTCLIENT to pass through */
+	}
 }
 
 void handleFatalError(HWND hwnd, char *message)
@@ -133,7 +223,7 @@ void handleFatalError(HWND hwnd, char *message)
 	exit(1);
 }
 
-wchar_t *utf8ToUtf16(const char *utf8)
+static wchar_t *utf8ToUtf16(const char *utf8)
 {
 	int outputSize = MultiByteToWideChar(CP_UTF8, 0, utf8, -1, NULL, 0);
 	wchar_t *output = malloc(outputSize * sizeof(wchar_t));
