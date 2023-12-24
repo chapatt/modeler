@@ -125,8 +125,7 @@ static LRESULT calcSize(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	clientRect->bottom -= borderY;
 
 	bool isMaximized = false;
-	if (isMaximized)
-	{
+	if (isMaximized) {
 		clientRect->top += padding;
 	}
 
@@ -149,59 +148,42 @@ static LRESULT hitTest(HWND hwnd, int x, int y)
 	int borderY = GetSystemMetrics(SM_CYFRAME) + padding;
 
 	RECT windowRect;
-	if (!GetWindowRect(hwnd, &windowRect))
-	{
+	if (!GetWindowRect(hwnd, &windowRect)) {
 		return HTNOWHERE;
 	}
 
 	enum regionMask result = CLIENT;
 
-	if (x < (windowRect.left + borderX))
-	{
+	if (x < (windowRect.left + borderX)) {
 		result |= LEFT;
 	}
 
-	if (x >= (windowRect.right - borderX))
-	{
+	if (x >= (windowRect.right - borderX)) {
 		result |= RIGHT;
 	}
 
-	if (y < (windowRect.top + borderY))
-	{
+	if (y < (windowRect.top + borderY)) {
 		result |= TOP;
 	}
 
-	if (y >= (windowRect.bottom - borderY))
-	{
+	if (y >= (windowRect.bottom - borderY)) {
 		result |= BOTTOM;
 	}
 
 	if (result & TOP)
 	{
-		if (result & LEFT)
-			return HTTOPLEFT;
-		if (result & RIGHT)
-			return HTTOPRIGHT;
+		if (result & LEFT) return HTTOPLEFT;
+		if (result & RIGHT) return HTTOPRIGHT;
 		return HTTOP;
-	}
-	else if (result & BOTTOM)
-	{
-		if (result & LEFT)
-			return HTBOTTOMLEFT;
-		if (result & RIGHT)
-			return HTBOTTOMRIGHT;
+	} else if (result & BOTTOM) {
+		if (result & LEFT) return HTBOTTOMLEFT;
+		if (result & RIGHT) return HTBOTTOMRIGHT;
 		return HTBOTTOM;
-	}
-	else if (result & LEFT)
-	{
+	} else if (result & LEFT) {
 		return HTLEFT;
-	}
-	else if (result & RIGHT)
-	{
+	} else if (result & RIGHT) {
 		return HTRIGHT;
-	}
-	else
-	{
+	} else {
 		return HTCAPTION; /* allows click and drag client area to move, return HTCLIENT to pass through */
 	}
 }
