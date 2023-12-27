@@ -1,4 +1,5 @@
 CFLAGS=-m64
+CXXFLAGS+=-std=c++11
 LDFLAGS=
 LDLIBS=
 
@@ -16,14 +17,16 @@ else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		CC=gcc
+		GLSLC=glslc
 		LDLIBS+=-lvulkan -lwayland-client
 		ALL_TARGET=modeler
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		CC=clang
+		GLSLC=/Users/chase/VulkanSDK/1.3.250.0/macOS/bin/glslc
+		CFLAGS+=-I/Users/chase/VulkanSDK/1.3.250.0/macOS/include
+		LDLIBS+=-lvulkan
 		ALL_TARGET=modeler.a
 	endif
-	GLSLC=glslc
 endif
 
 ifdef DEBUG
@@ -39,10 +42,13 @@ renderloop.o: src/renderloop.c src/renderloop.h shader_vert.h shader_frag.h
 	$(CC) $(CFLAGS) -c src/renderloop.c
 
 modeler: main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o
-	$(CC) $(CFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o $(LDLIBS)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o $(LDLIBS)
 
 modeler.exe: main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o imgui.a
-	$(CXX) $(CFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o imgui.a $(LDLIBS)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o imgui.a $(LDLIBS)
+	
+modeler.a: modeler_metal.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o
+	$(AR) rvs $@ modeler_metal.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o
 
 main_wayland.o: src/main_wayland.c src/modeler_wayland.h xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
@@ -53,8 +59,11 @@ main_win32.o: src/main_win32.c src/modeler_win32.h
 modeler_wayland.o: src/modeler_wayland.c src/modeler_wayland.h src/instance.h src/surface_wayland.h src/physical_device.h src/device.h
 	$(CC) $(CFLAGS) -c src/modeler_wayland.c
 
-modeler_win32.o: src/modeler_win32.c src/modeler_win32.h src/instance.h src/surface_win32.h src/physical_device.h src/device.h src/swapchain.h src/image_view.h src/input_event.h src/queue.h src/utils.h src/renderloop.h
+modeler_win32.o: src/modeler_win32.c src/modeler_win32.h src/instance.h src/surface_win32.h src/physical_device.h src/device.h src/swapchain.h src/image_view.h src/pipeline.h src/input_event.h src/queue.h src/utils.h src/renderloop.h
 	$(CC) $(CFLAGS) -c src/modeler_win32.c
+
+modeler_metal.o: src/modeler_metal.c src/modeler_metal.h src/instance.h src/surface_metal.h src/physical_device.h src/device.h src/swapchain.h src/image_view.h src/pipeline.h src/input_event.h src/queue.h src/utils.h src/renderloop.h
+	$(CC) $(CFLAGS) -c src/modeler_metal.c
 
 instance.o: src/instance.c src/instance.h
 	$(CC) $(CFLAGS) -c src/instance.c
@@ -67,6 +76,9 @@ surface_wayland.o: src/surface_wayland.c src/surface_wayland.h
 
 surface_win32.o: src/surface_win32.c src/surface_win32.h
 	$(CC) $(CFLAGS) -c src/surface_win32.c
+
+surface_metal.o: src/surface_metal.c src/surface_metal.h
+	$(CC) $(CFLAGS) -c src/surface_metal.c
 
 physical_device.o: src/physical_device.c src/physical_device.h
 	$(CC) $(CFLAGS) -c src/physical_device.c
@@ -93,26 +105,26 @@ utils.o: src/utils.c src/utils.h
 	$(CC) $(CFLAGS) -c src/utils.c
 
 imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
-	$(AR) rvs imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
+	$(AR) rvs $@ cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
 
 cimgui.o:
-	$(CXX) $(CFLAGS) -c src/imgui/cimgui.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/cimgui.cpp
 cimgui_impl_vulkan.o:
-	$(CXX) $(CFLAGS) -c src/imgui/cimgui_impl_vulkan.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/cimgui_impl_vulkan.cpp
 imgui.o:
-	$(CXX) $(CFLAGS) -c src/imgui/imgui.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui.cpp
 imgui_demo.o:
-	$(CXX) $(CFLAGS) -c src/imgui/imgui.cpp src/imgui/imgui_demo.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui.cpp src/imgui/imgui_demo.cpp
 imgui_draw.o:
-	$(CXX) $(CFLAGS) -c src/imgui/imgui_draw.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_draw.cpp
 imgui_impl_modeler.o:
 	$(CC) $(CFLAGS) -c src/imgui/imgui_impl_modeler.c
 imgui_impl_vulkan.o:
-	$(CXX) $(CFLAGS) -c src/imgui/imgui_impl_vulkan.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_impl_vulkan.cpp
 imgui_tables.o:
-	$(CXX) $(CFLAGS) -c src/imgui/imgui_tables.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_tables.cpp
 imgui_widgets.o:
-	$(CXX) $(CFLAGS) -c src/imgui/imgui_widgets.cpp
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_widgets.cpp
 
 xdg-shell-protocol.o: xdg-shell-protocol.c xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c xdg-shell-protocol.c

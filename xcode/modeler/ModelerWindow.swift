@@ -12,7 +12,13 @@ class ModelerWindow: NSWindow {
     override init(contentRect: NSRect, styleMask: NSWindow.StyleMask, backing: NSWindow.BackingStoreType, defer: Bool) {
         super.init(
             contentRect: contentRect,
-            styleMask: [.borderless],
+            styleMask: [
+                .titled,
+                .fullSizeContentView,
+                .closable,
+                .miniaturizable,
+                .resizable
+            ],
             backing: .buffered,
             defer: false)
         
@@ -24,5 +30,7 @@ class ModelerWindow: NSWindow {
         self.backgroundColor = NSColor.clear
         self.makeKeyAndOrderFront(nil)
         self.acceptsMouseMovedEvents = true
+        self.titleVisibility = .hidden
+        self.titlebarAppearsTransparent = true
     }
 }
