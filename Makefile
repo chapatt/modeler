@@ -135,10 +135,10 @@ xdg-shell-protocol.c:
 xdg-shell-client-protocol.h:
 	wayland-scanner client-header < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-client-protocol.h
 
-vert.spv:
+vert.spv: src/shader.vert
 	$(GLSLC) src/shader.vert -o $@
 
-frag.spv:
+frag.spv: src/shader.frag
 	$(GLSLC) src/shader.frag -o $@
 
 shader_vert.h: vert.spv
