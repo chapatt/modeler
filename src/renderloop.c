@@ -1,10 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef __APPLE__
-#elif defined _WIN32 || defined _WIN64
-#include <windows.h>
-#endif
 
 #include "imgui/cimgui.h"
 #include "imgui/cimgui_impl_vulkan.h"
@@ -96,35 +92,21 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 //load shader
 //
 #ifndef EMBED_SHADERS
-	FILE *fp_vert = NULL;
-	FILE *fp_frag = NULL;
+	char *vertexShaderPath;
+	char *fragmentShaderPath;
+	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "vert.spv");
+	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "frag.spv");
+	char *vertexShaderBytes;
+	char *fragmentShaderBytes;
+	uint32_t vertexShaderSize = 0;
+	uint32_t fragmentShaderSize = 0;
 
-	char *vertPath;
-	char *fragPath;
-	asprintf(&vertPath, "%s/%s", resourcePath, "vert.spv");
-	asprintf(&fragPath, "%s/%s", resourcePath, "frag.spv");
-	fp_vert = fopen(vertPath, "rb");
-	fp_frag = fopen(fragPath, "rb");
-	if (fp_vert == NULL || fp_frag == NULL) {
-		printf("can't find SPIR-V binaries.\n");
+	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
+		printf("failed to open vertex shader for reading\n");
 	}
-	fseek(fp_vert, 0, SEEK_END);
-	fseek(fp_frag, 0, SEEK_END);
-	uint32_t vertexShaderSize = ftell(fp_vert);
-	uint32_t fragmentShaderSize = ftell(fp_frag);
-
-	char *vertexShaderBytes = malloc(sizeof(*vertexShaderBytes) * vertexShaderSize);
-	char *fragmentShaderBytes = malloc(sizeof(*fragmentShaderBytes) * fragmentShaderSize);
-
-	rewind(fp_vert);
-	rewind(fp_frag);
-	fread(vertexShaderBytes, 1, vertexShaderSize, fp_vert);
-	printf("vertex shader binaries loaded.\n");
-	fread(fragmentShaderBytes, 1, fragmentShaderSize, fp_frag);
-	printf("fragment shader binaries loaded.\n");
-
-	fclose(fp_vert);
-	fclose(fp_frag);
+	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
+		printf("failed to open fragment shader for reading\n");
+	}
 #endif /* EMBED_SHADERS */
 //
 //create shader modules

@@ -54,3 +54,23 @@ int vasprintf(char **strp, const char *fmt, va_list ap)
 
 	return vsnprintf(*strp, expstrlen + 1, fmt, ap);
 }
+
+long readFileToString(char *path, char **bytes)
+{
+	FILE *fp = NULL;
+
+	fp = fopen(path, "rb");
+	if (fp == NULL) {
+		return -1;
+	}
+
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp);
+	*bytes = malloc(sizeof(*bytes) * size);
+	rewind(fp);
+	fread(*bytes, 1, size, fp);
+
+	fclose(fp);
+
+	return size;
+}
