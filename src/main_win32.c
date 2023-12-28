@@ -114,15 +114,15 @@ static LRESULT calcSize(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	if (!wParam) return DefWindowProc(hwnd, uMsg, wParam, lParam);
 
 	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
-	int borderX = GetSystemMetrics(SM_CXFRAME) + padding;
-	int borderY = GetSystemMetrics(SM_CYFRAME) + padding;
+	int expandX = GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXBORDER) + padding;
+	int expandY = GetSystemMetrics(SM_CYFRAME) - GetSystemMetrics(SM_CYBORDER) + padding;
 
 	NCCALCSIZE_PARAMS *params = (NCCALCSIZE_PARAMS *) lParam;
 	RECT *clientRect = params->rgrc;
 
-	clientRect->right -= borderX;
-	clientRect->left += borderX;
-	clientRect->bottom -= borderY;
+	clientRect->right -= expandX;
+	clientRect->left += expandX;
+	clientRect->bottom -= expandY;
 
 	bool isMaximized = false;
 	if (isMaximized) {
