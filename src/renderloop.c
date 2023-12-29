@@ -16,323 +16,8 @@
 
 #include "renderloop.h"
 
-void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo) {
-//
-//
-//render pass creation part		line_477 to line_574
-//
-//fill attachment description
-//
-	VkAttachmentDescription attach_descp;
-	attach_descp.flags = 0;
-	attach_descp.format = VK_FORMAT_B8G8R8A8_SRGB;
-	attach_descp.samples = VK_SAMPLE_COUNT_1_BIT;
-	attach_descp.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	attach_descp.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	attach_descp.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	attach_descp.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	attach_descp.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	attach_descp.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-	printf("attachment description filled.\n");
-//
-//fill attachment reference
-//
-	VkAttachmentReference attach_ref;
-	attach_ref.attachment = 0;
-	attach_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-	printf("attachment reference filled.\n");
-//
-//fill subpass description
-//
-	VkSubpassDescription subp_descp;
-	subp_descp.flags = 0;
-	subp_descp.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subp_descp.inputAttachmentCount = 0;
-	subp_descp.pInputAttachments = NULL;
-	subp_descp.colorAttachmentCount = 1;
-	subp_descp.pColorAttachments = &attach_ref;
-	subp_descp.pResolveAttachments = NULL;
-	subp_descp.pDepthStencilAttachment = NULL;
-	subp_descp.preserveAttachmentCount = 0;
-	subp_descp.pPreserveAttachments = NULL;
-	printf("subpass description filled.\n");
-//
-//fill subpass dependency
-//
-	VkSubpassDependency subp_dep;
-	subp_dep.srcSubpass = VK_SUBPASS_EXTERNAL;
-	subp_dep.dstSubpass = 0;
-	subp_dep.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	subp_dep.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	subp_dep.srcAccessMask = 0;
-	subp_dep.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	subp_dep.dependencyFlags = 0;
-	printf("subpass dependency created.\n");
-//
-//create render pass
-//
-	VkRenderPassCreateInfo rendp_cre_info;
-	rendp_cre_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	rendp_cre_info.pNext = NULL;
-	rendp_cre_info.flags = 0;
-	rendp_cre_info.attachmentCount = 1;
-	rendp_cre_info.pAttachments = &attach_descp;
-	rendp_cre_info.subpassCount = 1;
-	rendp_cre_info.pSubpasses = &subp_descp;
-	rendp_cre_info.dependencyCount = 1;
-	rendp_cre_info.pDependencies = &subp_dep;
-
-	VkRenderPass rendp;
-	vkCreateRenderPass(device, &rendp_cre_info, NULL, &rendp);
-	printf("render pass created.\n");
-//
-//
-//pipeline creation part		line_575 to line_935
-//
-//load shader
-//
-#ifndef EMBED_SHADERS
-	char *vertexShaderPath;
-	char *fragmentShaderPath;
-	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "vert.spv");
-	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "frag.spv");
-	char *vertexShaderBytes;
-	char *fragmentShaderBytes;
-	uint32_t vertexShaderSize = 0;
-	uint32_t fragmentShaderSize = 0;
-
-	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
-		printf("failed to open vertex shader for reading\n");
-	}
-	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
-		printf("failed to open fragment shader for reading\n");
-	}
-#endif /* EMBED_SHADERS */
-//
-//create shader modules
-//
-	VkShaderModuleCreateInfo vert_shad_mod_cre_info;
-	vert_shad_mod_cre_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	vert_shad_mod_cre_info.pNext = NULL;
-	vert_shad_mod_cre_info.flags = 0;
-	vert_shad_mod_cre_info.codeSize = vertexShaderSize;
-	vert_shad_mod_cre_info.pCode = (const uint32_t *) vertexShaderBytes;
-
-	VkShaderModuleCreateInfo frag_shad_mod_cre_info;
-	frag_shad_mod_cre_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	frag_shad_mod_cre_info.pNext = NULL;
-	frag_shad_mod_cre_info.flags = 0;
-	frag_shad_mod_cre_info.codeSize = fragmentShaderSize;
-	frag_shad_mod_cre_info.pCode = (const uint32_t *) fragmentShaderBytes;
-
-	VkShaderModule vert_shad_mod;
-	VkShaderModule frag_shad_mod;
-	vkCreateShaderModule(device, &vert_shad_mod_cre_info, NULL, &vert_shad_mod);
-	printf("vertex shader module created.\n");
-	vkCreateShaderModule(device, &frag_shad_mod_cre_info, NULL, &frag_shad_mod);
-	printf("fragment shader module created.\n");
-//
-//fill shader stage info
-//
-	VkPipelineShaderStageCreateInfo vert_shad_stage_cre_info, frag_shad_stage_cre_info, shad_stage_cre_infos[2];
-
-	vert_shad_stage_cre_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vert_shad_stage_cre_info.pNext = NULL;
-	vert_shad_stage_cre_info.flags = 0;
-	vert_shad_stage_cre_info.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vert_shad_stage_cre_info.module = vert_shad_mod;
-	char vert_entry
-	[VK_MAX_EXTENSION_NAME_SIZE];
-	strcpy(vert_entry, "main");
-	vert_shad_stage_cre_info.pName = vert_entry;
-	vert_shad_stage_cre_info.pSpecializationInfo = NULL;
-	printf("vertex shader stage info filled.\n");
-
-	frag_shad_stage_cre_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	frag_shad_stage_cre_info.pNext = NULL;
-	frag_shad_stage_cre_info.flags = 0;
-	frag_shad_stage_cre_info.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	frag_shad_stage_cre_info.module = frag_shad_mod;
-	char frag_entry
-	[VK_MAX_EXTENSION_NAME_SIZE];
-	strcpy(frag_entry, "main");
-	frag_shad_stage_cre_info.pName = frag_entry;
-	frag_shad_stage_cre_info.pSpecializationInfo = NULL;
-	printf("fragment shader stage info filled.\n");
-
-	shad_stage_cre_infos[0] = vert_shad_stage_cre_info;
-	shad_stage_cre_infos[1] = frag_shad_stage_cre_info;
-//
-//fill vertex input state info
-//
-	VkPipelineVertexInputStateCreateInfo vert_input_info;
-	vert_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vert_input_info.pNext = NULL;
-	vert_input_info.flags = 0;
-	vert_input_info.vertexBindingDescriptionCount = 0;
-	vert_input_info.pVertexBindingDescriptions = NULL;
-	vert_input_info.vertexAttributeDescriptionCount = 0;
-	vert_input_info.pVertexAttributeDescriptions = NULL;
-	printf("vertex input state info filled.\n");
-//
-//fill input assembly state info
-//
-	VkPipelineInputAssemblyStateCreateInfo input_asm_info;
-	input_asm_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	input_asm_info.pNext = NULL;
-	input_asm_info.flags = 0;
-	input_asm_info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-	input_asm_info.primitiveRestartEnable = VK_FALSE;
-	printf("input assembly info filled.\n");
-//
-//fill viewport
-//
-	VkViewport viewport;
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = windowExtent.width;
-	viewport.height = windowExtent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	printf("viewport filled.\n");
-//
-//fill scissor
-//
-	VkRect2D scissor;
-	VkOffset2D sci_offset;
-	sci_offset.x = 0;
-	sci_offset.y = 0;
-	scissor.offset = sci_offset;
-	scissor.extent = windowExtent;
-	printf("scissor filled.\n");
-//
-//fill viewport state info
-//
-	VkPipelineViewportStateCreateInfo vwp_state_cre_info;
-	vwp_state_cre_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	vwp_state_cre_info.pNext = NULL;
-	vwp_state_cre_info.flags = 0;
-	vwp_state_cre_info.viewportCount = 1;
-	vwp_state_cre_info.pViewports = &viewport;
-	vwp_state_cre_info.scissorCount = 1;
-	vwp_state_cre_info.pScissors = &scissor;
-	printf("viewport state filled.\n");
-//
-//fill rasterizer state info
-//
-	VkPipelineRasterizationStateCreateInfo rast_cre_info;
-	rast_cre_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rast_cre_info.pNext = NULL;
-	rast_cre_info.flags = 0;
-	rast_cre_info.depthClampEnable = VK_FALSE;
-	rast_cre_info.rasterizerDiscardEnable = VK_FALSE;
-	rast_cre_info.polygonMode = VK_POLYGON_MODE_FILL;
-	rast_cre_info.cullMode = VK_CULL_MODE_BACK_BIT;
-	rast_cre_info.frontFace = VK_FRONT_FACE_CLOCKWISE;
-	rast_cre_info.depthBiasEnable = VK_FALSE;
-	rast_cre_info.depthBiasConstantFactor = 0.0f;
-	rast_cre_info.depthBiasClamp = 0.0f;
-	rast_cre_info.depthBiasSlopeFactor = 0.0f;
-	rast_cre_info.lineWidth = 1.0f;
-	printf("rasterization info filled.\n");
-//
-//fill multisampling state info
-//
-	VkPipelineMultisampleStateCreateInfo mul_sam_cre_info;
-	mul_sam_cre_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	mul_sam_cre_info.pNext = NULL;
-	mul_sam_cre_info.flags = 0;
-	mul_sam_cre_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-	mul_sam_cre_info.sampleShadingEnable = VK_FALSE;
-	mul_sam_cre_info.minSampleShading = 1.0f;
-	mul_sam_cre_info.pSampleMask = NULL;
-	mul_sam_cre_info.alphaToCoverageEnable = VK_FALSE;
-	mul_sam_cre_info.alphaToOneEnable = VK_FALSE;
-	printf("multisample info filled.\n");
-//
-//fill color blend attachment state
-//
-	VkPipelineColorBlendAttachmentState color_blend_attach;
-	color_blend_attach.blendEnable = VK_FALSE;
-	color_blend_attach.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-	color_blend_attach.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-	color_blend_attach.colorBlendOp = VK_BLEND_OP_ADD;
-	color_blend_attach.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-	color_blend_attach.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-	color_blend_attach.alphaBlendOp = VK_BLEND_OP_ADD;
-	color_blend_attach.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-	printf("color blend attachment state filled.\n");
-//
-//fill color blend state info
-//
-	VkPipelineColorBlendStateCreateInfo color_blend_cre_info;
-	color_blend_cre_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	color_blend_cre_info.pNext = NULL;
-	color_blend_cre_info.flags = 0;
-	color_blend_cre_info.logicOpEnable = VK_FALSE;
-	color_blend_cre_info.logicOp = VK_LOGIC_OP_COPY;
-	color_blend_cre_info.attachmentCount = 1;
-	color_blend_cre_info.pAttachments = &color_blend_attach;
-	for (uint32_t i = 0; i < 4; i++) {
-		color_blend_cre_info.blendConstants[i] = 0.0f;
-	}
-	printf("color blend state info filled.\n");
-//
-//create pipeline layout
-//
-	VkPipelineLayoutCreateInfo pipe_lay_cre_info;
-	pipe_lay_cre_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-	pipe_lay_cre_info.pNext = NULL;
-	pipe_lay_cre_info.flags = 0;
-	pipe_lay_cre_info.setLayoutCount = 0;
-	pipe_lay_cre_info.pSetLayouts = NULL;
-	pipe_lay_cre_info.pushConstantRangeCount = 0;
-	pipe_lay_cre_info.pPushConstantRanges = NULL;
-
-	VkPipelineLayout pipe_layout;
-	vkCreatePipelineLayout(device, &pipe_lay_cre_info, NULL, &pipe_layout);
-	printf("pipeline layout created.\n");
-//
-//create pipeline
-//
-	VkGraphicsPipelineCreateInfo pipe_cre_info;
-	pipe_cre_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	pipe_cre_info.pNext = NULL;
-	pipe_cre_info.flags = 0;
-	pipe_cre_info.stageCount = 2;
-	pipe_cre_info.pStages = shad_stage_cre_infos;
-	pipe_cre_info.pVertexInputState = &vert_input_info;
-	pipe_cre_info.pInputAssemblyState = &input_asm_info;
-	pipe_cre_info.pTessellationState = NULL;
-	pipe_cre_info.pViewportState = &vwp_state_cre_info;
-	pipe_cre_info.pRasterizationState = &rast_cre_info;
-	pipe_cre_info.pMultisampleState = &mul_sam_cre_info;
-	pipe_cre_info.pDepthStencilState = NULL;
-	pipe_cre_info.pColorBlendState = &color_blend_cre_info;
-	pipe_cre_info.pDynamicState = NULL;
-
-	pipe_cre_info.layout = pipe_layout;
-	pipe_cre_info.renderPass = rendp;
-	pipe_cre_info.subpass = 0;
-	pipe_cre_info.basePipelineHandle = VK_NULL_HANDLE;
-	pipe_cre_info.basePipelineIndex = -1;
-
-	VkPipeline pipe;
-	vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipe_cre_info, NULL, &pipe);
-	printf("graphics pipeline created.\n");
-//
-//destroy shader module
-//
-	vkDestroyShaderModule(device, frag_shad_mod, NULL);
-	printf("fragment shader module destroyed.\n");
-	vkDestroyShaderModule(device, vert_shad_mod, NULL);
-	printf("vertex shader module destroyed.\n");
-#ifndef EMBED_SHADERS
-	free(fragmentShaderBytes);
-	printf("fragment shader binaries released.\n");
-	free(vertexShaderBytes);
-	printf("vertex shader binaries released.\n");
-#endif /* EMBED_SHADERS */
+void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
+{
 //
 //
 //framebuffer creation		line_936 to line_967
@@ -347,7 +32,7 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 		frame_buff_cre_infos[i].sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		frame_buff_cre_infos[i].pNext = NULL;
 		frame_buff_cre_infos[i].flags = 0;
-		frame_buff_cre_infos[i].renderPass = rendp;
+		frame_buff_cre_infos[i].renderPass = renderPass;
 		frame_buff_cre_infos[i].attachmentCount = 1;
 		frame_buff_cre_infos[i].pAttachments = &(image_attachs[i]);
 		frame_buff_cre_infos[i].width = windowExtent.width;
@@ -389,7 +74,7 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 //
 //imgui init
 //
-	cImGui_ImplVulkan_Init(&imVulkanInitInfo, rendp);
+	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
 //
 //
 //render preparation		line1002 to line1062
@@ -412,7 +97,7 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 
 		rendp_begin_infos[i].sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		rendp_begin_infos[i].pNext = NULL;
-		rendp_begin_infos[i].renderPass = rendp;
+		rendp_begin_infos[i].renderPass = renderPass;
 		rendp_begin_infos[i].framebuffer = frame_buffs[i];
 		rendp_begin_infos[i].renderArea = rendp_area;
 		rendp_begin_infos[i].clearValueCount = 1;
@@ -423,7 +108,7 @@ void draw(VkDevice device, VkSwapchainKHR swap, VkImageView *imageViews, uint32_
 
 		vkCmdBeginRenderPass(cmd_buffers[i], &(rendp_begin_infos[i]), VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(cmd_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipe);
+		vkCmdBindPipeline(cmd_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
 		vkCmdDraw(cmd_buffers[i], 3, 1, 0, 0);
 

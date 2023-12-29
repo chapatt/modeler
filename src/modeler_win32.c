@@ -19,6 +19,7 @@
 #include "device.h"
 #include "swapchain.h"
 #include "image_view.h"
+#include "render_pass.h"
 #include "pipeline.h"
 #include "utils.h"
 #include "vulkan_utils.h"
@@ -124,7 +125,14 @@ static void *threadProc(void *arg)
 		sendThreadFailureSignal(hwnd);
 	}
 
-	if (!createPipeline()) {
+	VkRenderPass renderPass;
+	if (!createRenderPass(device, swapchainInfo, &renderPass, error)) {
+		sendThreadFailureSignal(hwnd);
+	}
+
+	VkPipelineLayout pipelineLayout;
+	VkPipeline pipeline;
+	if (!createPipeline(device, renderPass, ".", swapchainInfo, &pipelineLayout, &pipeline, error)) {
 		sendThreadFailureSignal(hwnd);
 	}
 
@@ -166,7 +174,7 @@ static void *threadProc(void *arg)
 		.CheckVkResultFn = imVkCheck
 	};
 
-	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
+	draw(device, renderPass, pipeline, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
 
 	return NULL;
 }
@@ -176,8 +184,11 @@ static void sendThreadFailureSignal(HWND hwnd) {
 	pthread_exit(NULL);
 }
 
-void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics)
+void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline)
 {
+	destroyPipeline(device, pipeline);
+	destroyPipelineLayout(device, pipelineLayout);
+	destroyRenderPass(device, renderPass);
 	destroyImageViews(device, imageViews, imageViewCount);
 	destroySwapchain(device, swapchain);
 	destroyDevice(device);
