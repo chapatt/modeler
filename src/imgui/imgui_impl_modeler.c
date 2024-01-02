@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <time.h>
 
 #include "imgui_impl_modeler.h"
@@ -30,7 +31,9 @@ void ImGui_ImplModeler_NewFrame(void)
 	};
 	io->DisplaySize = size;
 	io->DisplayFramebufferScale = scale;
-	clock_gettime(CLOCK_MONOTONIC, &spec);
-	io->DeltaTime = spec.tv_nsec - bd->time;
-	bd->time = spec.tv_nsec;
+	io->DeltaTime = 5;
+	// clock_gettime(CLOCK_MONOTONIC, &spec);
+	// io->DeltaTime = spec.tv_nsec - bd->time;
+	// printf("DeltaTime: %d, time: %d, tv_nsec: %d", io->DeltaTime, bd->time, spec.tv_nsec);
+	// bd->time = spec.tv_nsec;
 }
