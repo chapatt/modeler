@@ -16,7 +16,7 @@
 
 #include "renderloop.h"
 
-void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkSwapchainKHR swap, VkImageView *imageViews, uint32_t imageViewCount, VkExtent2D windowExtent, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
+void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
 {
 //
 //
@@ -35,8 +35,8 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkSwapc
 		frame_buff_cre_infos[i].renderPass = renderPass;
 		frame_buff_cre_infos[i].attachmentCount = 1;
 		frame_buff_cre_infos[i].pAttachments = &(image_attachs[i]);
-		frame_buff_cre_infos[i].width = windowExtent.width;
-		frame_buff_cre_infos[i].height = windowExtent.height;
+		frame_buff_cre_infos[i].width = swapchainInfo.extent.width;
+		frame_buff_cre_infos[i].height = swapchainInfo.extent.height;
 		frame_buff_cre_infos[i].layers = 1;
 
 		vkCreateFramebuffer(device, &(frame_buff_cre_infos[i]), NULL, &(frame_buffs[i]));
@@ -84,7 +84,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkSwapc
 	VkRect2D rendp_area;
 	rendp_area.offset.x = 0;
 	rendp_area.offset.y = 0;
-	rendp_area.extent = windowExtent;
+	rendp_area.extent = swapchainInfo.extent;
 	VkClearValue clear_val = {0.1f, 0.3f, 0.3f, 1.0f};
 	for (uint32_t i = 0; i < imageViewCount; i++) {
 
@@ -188,7 +188,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkSwapc
 		vkWaitForFences(device, 1, &(fens[cur_frame]), VK_TRUE, UINT64_MAX);
 
 		uint32_t img_index = 0;
-		vkAcquireNextImageKHR(device, swap, UINT64_MAX, semps_img_avl[cur_frame], VK_NULL_HANDLE, &img_index);
+		vkAcquireNextImageKHR(device, swapchainInfo.swapchain, UINT64_MAX, semps_img_avl[cur_frame], VK_NULL_HANDLE, &img_index);
 
 		if (fens_img[img_index] != VK_NULL_HANDLE) {
 			vkWaitForFences(device, 1, &(fens_img[img_index]), VK_TRUE, UINT64_MAX);
@@ -231,7 +231,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkSwapc
 		pres_info.pWaitSemaphores = &(semps_sig[0]);
 
 		VkSwapchainKHR swaps[1];
-		swaps[0] = swap;
+		swaps[0] = swapchainInfo.swapchain;
 		pres_info.swapchainCount = 1;
 		pres_info.pSwapchains = &(swaps[0]);
 		pres_info.pImageIndices = &img_index;

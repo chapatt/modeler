@@ -10,6 +10,7 @@
 #include "queue.h"
 #include "input_event.h"
 
+#include "modeler.h"
 #include "modeler_win32.h"
 
 const LPCTSTR CLASS_NAME = L"Modeler Window Class";
@@ -93,7 +94,7 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 	case THREAD_FAILURE_NOTIFICATION_MESSAGE:
 		handleFatalError(hwnd, error);
 	case WM_CLOSE:
-		terminateVulkanWin32(inputQueue, thread);
+		terminateVulkan(inputQueue, thread);
 		DestroyWindow(hwnd);
 		PostQuitMessage(0);
 		return 0;

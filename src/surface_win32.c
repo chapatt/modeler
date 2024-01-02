@@ -5,16 +5,19 @@
 #include <stdio.h>
 #include <vulkan/vulkan.h>
 
-#include "surface_win32.h"
+#include "modeler_win32.h"
+#include "surface.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
-bool createSurfaceWin32(VkInstance instance, HINSTANCE hinstance, HWND hwnd, VkSurfaceKHR *surface, char **error)
+bool createSurface(VkInstance instance, void *platformWindow, VkSurfaceKHR *surface, char **error)
 {
+	Win32Window *window = (Win32Window *) platformWindow;
+
 	VkWin32SurfaceCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	createInfo.hwnd = hwnd;
-	createInfo.hinstance = hinstance;
+	createInfo.hwnd = window->hwnd;
+	createInfo.hinstance = window->hinstance;
     
 	VkResult result;
 	if ((result = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, surface)) != VK_SUCCESS) {
