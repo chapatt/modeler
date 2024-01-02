@@ -86,52 +86,6 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, Swapcha
 	rendp_area.offset.y = 0;
 	rendp_area.extent = swapchainInfo.extent;
 	VkClearValue clear_val = {0.1f, 0.3f, 0.3f, 1.0f};
-	for (uint32_t i = 0; i < imageViewCount; i++) {
-
-
-		cmd_buff_begin_infos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmd_buff_begin_infos[i].pNext = NULL;
-		cmd_buff_begin_infos[i].flags = 0;
-		cmd_buff_begin_infos[i].pInheritanceInfo = NULL;
-		printf("command buffer begin info %d filled.\n", i);
-
-		rendp_begin_infos[i].sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		rendp_begin_infos[i].pNext = NULL;
-		rendp_begin_infos[i].renderPass = renderPass;
-		rendp_begin_infos[i].framebuffer = frame_buffs[i];
-		rendp_begin_infos[i].renderArea = rendp_area;
-		rendp_begin_infos[i].clearValueCount = 1;
-		rendp_begin_infos[i].pClearValues = &clear_val;
-		printf("render pass begin info %d filled.\n", i);
-
-		vkBeginCommandBuffer(cmd_buffers[i], &cmd_buff_begin_infos[i]);
-
-		vkCmdBeginRenderPass(cmd_buffers[i], &(rendp_begin_infos[i]), VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdBindPipeline(cmd_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-		vkCmdDraw(cmd_buffers[i], 3, 1, 0, 0);
-
-
-
-		// cImGui_ImplVulkan_NewFrame();
-		// ImGui_ImplModeler_NewFrame();
-		// ImGui_NewFrame();
-		// ImGui_Begin("A Window", NULL, 0);
-		// ImGui_Text("Hello, Window!");
-		// ImGui_End();
-		// ImGui_Render();
-		// ImDrawData *drawData = ImGui_GetDrawData();
-		// cImGui_ImplVulkan_RenderDrawData(drawData, cmd_buffers[i]);
-
-
-
-		vkCmdEndRenderPass(cmd_buffers[i]);
-
-		vkEndCommandBuffer(cmd_buffers[i]);
-
-		printf("command buffer drawing recorded.\n");
-	}
 //
 //
 //semaphores and fences creation part		line_1063 to line_1103
@@ -182,6 +136,8 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, Swapcha
 				goto cancelMainLoop;
 			}
 		}
+
+
 //
 //submit
 //
@@ -189,6 +145,44 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, Swapcha
 
 		uint32_t img_index = 0;
 		vkAcquireNextImageKHR(device, swapchainInfo.swapchain, UINT64_MAX, semps_img_avl[cur_frame], VK_NULL_HANDLE, &img_index);
+
+		/* render */
+		uint32_t i = img_index;
+		cmd_buff_begin_infos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		cmd_buff_begin_infos[i].pNext = NULL;
+		cmd_buff_begin_infos[i].flags = 0;
+		cmd_buff_begin_infos[i].pInheritanceInfo = NULL;
+
+		rendp_begin_infos[i].sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		rendp_begin_infos[i].pNext = NULL;
+		rendp_begin_infos[i].renderPass = renderPass;
+		rendp_begin_infos[i].framebuffer = frame_buffs[i];
+		rendp_begin_infos[i].renderArea = rendp_area;
+		rendp_begin_infos[i].clearValueCount = 1;
+		rendp_begin_infos[i].pClearValues = &clear_val;
+
+		vkBeginCommandBuffer(cmd_buffers[i], &cmd_buff_begin_infos[i]);
+
+		vkCmdBeginRenderPass(cmd_buffers[i], &(rendp_begin_infos[i]), VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBindPipeline(cmd_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+		vkCmdDraw(cmd_buffers[i], 3, 1, 0, 0);
+
+		cImGui_ImplVulkan_NewFrame();
+		ImGui_ImplModeler_NewFrame();
+		ImGui_NewFrame();
+		ImGui_Begin("A Window", NULL, 0);
+		ImGui_Text("Hello, Window!");
+		ImGui_End();
+		ImGui_Render();
+		ImDrawData *drawData = ImGui_GetDrawData();
+		cImGui_ImplVulkan_RenderDrawData(drawData, cmd_buffers[i]);
+
+		vkCmdEndRenderPass(cmd_buffers[i]);
+
+		vkEndCommandBuffer(cmd_buffers[i]);
+		/* end render*/
 
 		if (fens_img[img_index] != VK_NULL_HANDLE) {
 			vkWaitForFences(device, 1, &(fens_img[img_index]), VK_TRUE, UINT64_MAX);

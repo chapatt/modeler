@@ -126,7 +126,7 @@ imgui_demo.o:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui.cpp src/imgui/imgui_demo.cpp
 imgui_draw.o:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_draw.cpp
-imgui_impl_modeler.o:
+imgui_impl_modeler.o: src/imgui/imgui_impl_modeler.c
 	$(CC) $(CFLAGS) -c src/imgui/imgui_impl_modeler.c
 imgui_impl_vulkan.o:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_impl_vulkan.cpp
