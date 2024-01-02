@@ -18,4 +18,4 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 
 void destroySwapchain(VkDevice device, VkSwapchainKHR swapchain);
 
-#endif // MODELER_SWAPCHAIN_H
+#endif /* MODELER_SWAPCHAIN_H */
