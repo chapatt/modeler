@@ -27,6 +27,16 @@ pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, cha
 	threadArgs->platformWindow = window;
 	threadArgs->inputQueue = inputQueue;
 	asprintf(&threadArgs->resourcePath, ".");
+	char *instanceExtensions[] = {
+		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+		VK_KHR_SURFACE_EXTENSION_NAME,
+		VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+	};
+	threadArgs->instanceExtensionCount = 3;
+	threadArgs->instanceExtensions = malloc(sizeof(*threadArgs->instanceExtensions) * threadArgs->instanceExtensionCount);
+	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
+	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
+	}
 	threadArgs->initialExtent = getWindowExtent(window);
 	if (threadArgs->initialExtent.width == 0 || threadArgs->initialExtent.height == 0) {
 		asprintf(error, "Failed to get window extent");
