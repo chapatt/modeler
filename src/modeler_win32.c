@@ -26,9 +26,16 @@ pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, cha
 	window->hwnd = hwnd;
 	threadArgs->platformWindow = window;
 	threadArgs->inputQueue = inputQueue;
+	asprintf(&threadArgs->resourcePath, ".");
+	threadArgs->initialExtent = getWindowExtent(window);
+	if (threadArgs->initialExtent.width == 0 || threadArgs->initialExtent.height == 0) {
+		asprintf(error, "Failed to get window extent");
+		return 0;
+	}
 	threadArgs->error = error;
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
+		free(threadArgs->resourcePath);
 		free(threadArgs);
 		asprintf(error, "Failed to start Vulkan thread");
 		return 0;

@@ -9,6 +9,7 @@ class ModelerView: NSView, CALayerDelegate {
     override init(frame frameRect: NSRect) {
         self.inputQueue = createQueue()
         super.init(frame: frameRect)
+        self.postsFrameChangedNotifications = true
         self.wantsLayer = true
         let layer = CAMetalLayer()
         self.layer = layer
@@ -18,6 +19,8 @@ class ModelerView: NSView, CALayerDelegate {
         errorPointerPointer = UnsafeMutablePointer.allocate(capacity: 1)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleErrorNotification), name: Notification.Name("THREAD_FAILURE"), object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleFrameDidChange), name: NSView.frameDidChangeNotification, object: nil)
     }
     
     required init?(coder: NSCoder) {
@@ -31,9 +34,9 @@ class ModelerView: NSView, CALayerDelegate {
         
         let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
             
-        let frame: CGRect = layer.frame
-        let width = Int32(frame.size.width)
-        let height = Int32(frame.size.height)
+        let bounds: CGRect = layer.bounds
+        let width = Int32(bounds.size.width)
+        let height = Int32(bounds.size.height)
         
         let resourcePath = Bundle.main.resourcePath!
 
@@ -50,8 +53,8 @@ class ModelerView: NSView, CALayerDelegate {
         }
     }
     
-    func terminateVulkan() {
-        terminateVulkanMetal(inputQueue, thread)
+    func terminateVulkanThread() {
+        terminateVulkan(inputQueue, thread)
     }
     
     override func mouseDown(with event: NSEvent) {
@@ -82,6 +85,11 @@ class ModelerView: NSView, CALayerDelegate {
                 handleFatalError(message: error)
             }
         }
+    }
+    
+    @objc func handleFrameDidChange(object: NSView) {
+        print("extentChange")
+        enqueueInputEvent(inputQueue, EXTENT_CHANGE)
     }
     
     func handleFatalError(message: String) {

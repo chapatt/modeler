@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <vulkan/vulkan.h>
 
-bool createPipeline(VkDevice device, VkRenderPass renderPass, char *resourcePath, SwapchainInfo swapchainInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error);
+bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resourcePath, SwapchainInfo swapchainInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error);
 
 void destroyPipelineLayout(VkDevice device, VkPipelineLayout pipelineLayout);
 

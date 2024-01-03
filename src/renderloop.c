@@ -9,11 +9,6 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
-#ifdef EMBED_SHADERS
-#include "../shader_vert.h"
-#include "../shader_frag.h"
-#endif /* EMBED_SHADERS */
-
 #include "renderloop.h"
 
 void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)

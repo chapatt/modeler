@@ -1,6 +1,6 @@
 #ifndef VK_USE_PLATFORM_METAL_EXT
 #define VK_USE_PLATFORM_METAL_EXT
-#endif
+#endif /* VK_USE_PLATFORM_METAL_EXT */
 
 #include "objc/message.h"
 #include "objc/runtime.h"
@@ -11,48 +11,37 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_metal.h>
 
-#include "imgui/cimgui.h"
-#include "imgui/cimgui_impl_vulkan.h"
-#include "imgui/imgui_impl_modeler.h"
-
+#include "modeler.h"
 #include "modeler_metal.h"
-#include "instance.h"
-#include "surface.h"
-#include "surface_metal.h"
-#include "physical_device.h"
-#include "device.h"
-#include "swapchain.h"
-#include "image_view.h"
-#include "utils.h"
-#include "vulkan_utils.h"
 #include "queue.h"
 
 #include "renderloop.h"
 
-struct threadArguments {
-	void *surfaceLayer;
-	int width;
-	int height;
-	char *resourcePath;
-	Queue *inputQueue;
-	char **error;
-};
-
-static void *threadProc(void *arg);
-static void imVkCheck(VkResult result);
-static void sendThreadFailureSignal(void);
 static void sendNSNotification(char *message);
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics);
 
 pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
-	threadArgs->surfaceLayer = surfaceLayer;
-	threadArgs->width = width;
-	threadArgs->height = height;
+	MetalWindow *window = malloc(sizeof(MetalWindow));
+	window->surfaceLayer = surfaceLayer;
+	threadArgs->platformWindow = window;
 	asprintf(&threadArgs->resourcePath, "%s", resourcePath);
 	threadArgs->inputQueue = inputQueue;
+	char *instanceExtensions[] = {
+		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+		VK_KHR_SURFACE_EXTENSION_NAME,
+		VK_EXT_METAL_SURFACE_EXTENSION_NAME
+	};
+	threadArgs->instanceExtensionCount = 3;
+	threadArgs->instanceExtensions = malloc(sizeof(*threadArgs->instanceExtensions) * threadArgs->instanceExtensionCount);
+	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
+	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
+	}
+	threadArgs->initialExtent = (VkExtent2D) {
+		.width = width,
+		.height = height
+	};
 	threadArgs->error = error;
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
@@ -65,116 +54,7 @@ pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char 
 	return thread;
 }
 
-void terminateVulkanMetal(Queue *inputQueue, pthread_t thread)
-{
-	enqueueInputEvent(inputQueue, TERMINATE);
-	pthread_join(thread, NULL);
-}
-
-static void imVkCheck(VkResult result)
-{
-	if (result != VK_SUCCESS) {
-		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
-	}
-}
-
-static void *threadProc(void *arg)
-{
-	struct threadArguments *threadArgs = (struct threadArguments *) arg;
-	void *surfaceLayer = threadArgs->surfaceLayer;
-	int width = threadArgs->width;
-	int height = threadArgs->height;
-	char *resourcePath = threadArgs->resourcePath;
-	Queue *inputQueue = threadArgs->inputQueue;
-	char **error = threadArgs->error;
-
-	VkExtent2D windowExtent = {
-		.width = width,
-		.height = height
-	};
-
-	const char *instanceExtensions[] = {
-		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-		VK_KHR_SURFACE_EXTENSION_NAME,
-		VK_EXT_METAL_SURFACE_EXTENSION_NAME
-	};
-	VkInstance instance;
-	if (!createInstance(instanceExtensions, 3, &instance, error)) {
-		sendThreadFailureSignal();
-	}
-
-	VkSurfaceKHR surface;
-	if (!createSurfaceMetal(instance, surfaceLayer, &surface, error)) {
-		sendThreadFailureSignal();
-	}
-
-	VkPhysicalDevice physicalDevice;
-	PhysicalDeviceCharacteristics characteristics;
-	PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics;
-	if (!choosePhysicalDevice(instance, surface, &physicalDevice, &characteristics, &surfaceCharacteristics, error)) {
-		sendThreadFailureSignal();
-	}
-
-	VkDevice device;
-	QueueInfo queueInfo = {};
-	if (!createDevice(physicalDevice, surface, characteristics, surfaceCharacteristics, &device, &queueInfo, error)) {
-		sendThreadFailureSignal();
-	}
-
-	SwapchainInfo swapchainInfo = {};
-	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchainInfo, error)) {
-		sendThreadFailureSignal();
-	}
-
-	VkImageView *imageViews;
-	if (!createImageViews(device, &swapchainInfo, &imageViews, error)) {
-		sendThreadFailureSignal();
-	}
-
-	VkDescriptorPool imDescriptorPool;
-	VkDescriptorPoolSize pool_sizes[] =
-	{
-		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
-	};
-	VkDescriptorPoolCreateInfo pool_info = {
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-		.maxSets = 1,
-		.poolSizeCount = (uint32_t) IM_ARRAYSIZE(pool_sizes),
-		.pPoolSizes = pool_sizes
-	};
-	VkResult result;
-	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, &imDescriptorPool)) != VK_SUCCESS) {
-		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
-		sendThreadFailureSignal();
-	}
-	ImGui_CreateContext(NULL);
-	ImGui_ImplModeler_Init(windowExtent);
-	ImGui_StyleColorsDark(NULL);
-	ImGui_ImplVulkan_InitInfo imVulkanInitInfo = {
-		.Instance = instance,
-		.PhysicalDevice = physicalDevice,
-		.Device = device,
-		.QueueFamily = queueInfo.graphicsQueueFamilyIndex,
-		.Queue = queueInfo.graphicsQueue,
-		.PipelineCache = VK_NULL_HANDLE,
-		.DescriptorPool = imDescriptorPool,
-		.Subpass = 0,
-		.MinImageCount = surfaceCharacteristics.capabilities.minImageCount,
-		.ImageCount = swapchainInfo.imageCount,
-		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
-		.Allocator = NULL,
-		.CheckVkResultFn = imVkCheck
-	};
-
-	draw(device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, imVulkanInitInfo);
-
-	cleanupVulkan(instance, surface, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, &characteristics, &surfaceCharacteristics);
-
-	return NULL;
-}
-
-static void sendThreadFailureSignal(void)
+void sendThreadFailureSignal(void *platformWindow)
 {
 	sendNSNotification(THREAD_FAILURE_NOTIFICATION_NAME);
 	pthread_exit(NULL);
@@ -201,15 +81,4 @@ static void sendNSNotification(char *message)
 
 	SEL postNotificationSelector = sel_registerName("postNotification:");
 	postNotification(notificationCenter, postNotificationSelector, notification);
-}
-
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics)
-{
-	destroyImageViews(device, imageViews, imageViewCount);
-	destroySwapchain(device, swapchain);
-	destroyDevice(device);
-	freePhysicalDeviceCharacteristics(characteristics);
-	freePhysicalDeviceSurfaceCharacteristics(surfaceCharacteristics);
-	destroySurface(instance, surface);
-	destroyInstance(instance);
 }

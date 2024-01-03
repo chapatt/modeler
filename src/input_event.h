@@ -6,6 +6,7 @@
 typedef enum input_event_type_t {
 	MOUSE_DOWN,
 	MOUSE_UP,
+	EXTENT_CHANGE,
 	TERMINATE
 } InputEventType;
 

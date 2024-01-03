@@ -38,7 +38,7 @@ endif
 
 all: $(ALL_TARGET)
 
-renderloop.o: src/renderloop.c src/renderloop.h shader_vert.h shader_frag.h
+renderloop.o: src/renderloop.c src/renderloop.h
 	$(CC) $(CFLAGS) -c src/renderloop.c
 
 modeler: main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o
@@ -47,8 +47,8 @@ modeler: main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o
 modeler.exe: main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o modeler.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a $(LDLIBS)
 	
-modeler.a: modeler_metal.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o
-	$(AR) rvs $@ modeler_metal.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o pipeline.o input_event.o queue.o utils.o renderloop.o
+modeler.a: modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o input_event.o queue.o utils.o renderloop.o
+	$(AR) rvs $@ modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o input_event.o queue.o utils.o renderloop.o
 
 main_wayland.o: src/main_wayland.c src/modeler_wayland.h xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
@@ -65,7 +65,7 @@ modeler_wayland.o: src/modeler_wayland.c src/modeler_wayland.h src/instance.h sr
 modeler_win32.o: src/modeler_win32.c src/modeler_win32.h src/modeler.h src/utils.h
 	$(CC) $(CFLAGS) -c src/modeler_win32.c
 
-modeler_metal.o: src/modeler_metal.c src/modeler_metal.h src/instance.h src/surface_metal.h src/physical_device.h src/device.h src/swapchain.h src/image_view.h src/pipeline.h src/input_event.h src/queue.h src/utils.h src/renderloop.h
+modeler_metal.o: src/modeler_metal.c src/modeler_metal.h src/modeler.h src/utils.h
 	$(CC) $(CFLAGS) -c src/modeler_metal.c
 
 instance.o: src/instance.c src/instance.h
@@ -80,7 +80,7 @@ surface_wayland.o: src/surface_wayland.c src/surface_wayland.h
 surface_win32.o: src/surface_win32.c
 	$(CC) $(CFLAGS) -c src/surface_win32.c
 
-surface_metal.o: src/surface_metal.c src/surface_metal.h
+surface_metal.o: src/surface_metal.c src/surface.h
 	$(CC) $(CFLAGS) -c src/surface_metal.c
 
 physical_device.o: src/physical_device.c src/physical_device.h
@@ -95,7 +95,7 @@ swapchain.o: src/swapchain.c src/swapchain.h
 image_view.o: src/image_view.c src/image_view.h src/swapchain.h
 	$(CC) $(CFLAGS) -c src/image_view.c
 
-pipeline.o: src/pipeline.c src/pipeline.h
+pipeline.o: src/pipeline.c src/pipeline.h shader_vert.h shader_frag.h
 	$(CC) $(CFLAGS) -c src/pipeline.c
 
 render_pass.o: src/render_pass.c src/render_pass.h

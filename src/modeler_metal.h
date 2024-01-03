@@ -3,12 +3,16 @@
 
 #include <stdbool.h>
 
+#include "modeler.h"
 #include "queue.h"
 #include "input_event.h"
 
 #define THREAD_FAILURE_NOTIFICATION_NAME "THREAD_FAILURE"
 
+typedef struct metal_window_t {
+	void *surfaceLayer;
+} MetalWindow;
+
 pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error);
-void terminateVulkanMetal(Queue *queue, pthread_t thread);
 
 #endif /* MODELER_METAL_H */

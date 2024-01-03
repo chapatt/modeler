@@ -1,7 +1,3 @@
-#ifndef VK_USE_PLATFORM_WIN32_KHR
-#define VK_USE_PLATFORM_WIN32_KHR
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -25,6 +21,7 @@
 
 #include "renderloop.h"
 
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline);
 static void imVkCheck(VkResult result);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
@@ -45,21 +42,14 @@ void *threadProc(void *arg)
 	struct threadArguments *threadArgs = (struct threadArguments *) arg;
 	void *platformWindow = threadArgs->platformWindow;
 	Queue *inputQueue = threadArgs->inputQueue;
+	const char *resourcePath = threadArgs->resourcePath;
+	const char **instanceExtensions = threadArgs->instanceExtensions;
+	uint32_t instanceExtensionCount = threadArgs->instanceExtensionCount;
+	VkExtent2D initialExtent = threadArgs->initialExtent;
 	char **error = threadArgs->error;
 
-	VkExtent2D windowExtent = getWindowExtent(platformWindow);
-	if (windowExtent.width == 0 || windowExtent.height == 0) {
-		asprintf(error, "Failed to get window extent");
-		sendThreadFailureSignal(platformWindow);
-	}
-
-	const char *instanceExtensions[] = {
-		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-		VK_KHR_SURFACE_EXTENSION_NAME,
-		VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-	};
 	VkInstance instance;
-	if (!createInstance(instanceExtensions, 3, &instance, error)) {
+	if (!createInstance(instanceExtensions, instanceExtensionCount, &instance, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -82,7 +72,7 @@ void *threadProc(void *arg)
 	}
 
 	SwapchainInfo swapchainInfo = {};
-	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchainInfo, error)) {
+	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, initialExtent, &swapchainInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -98,7 +88,7 @@ void *threadProc(void *arg)
 
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
-	if (!createPipeline(device, renderPass, ".", swapchainInfo, &pipelineLayout, &pipeline, error)) {
+	if (!createPipeline(device, renderPass, resourcePath, swapchainInfo, &pipelineLayout, &pipeline, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -142,10 +132,12 @@ void *threadProc(void *arg)
 
 	draw(device, renderPass, pipeline, swapchainInfo, imageViews, swapchainInfo.imageCount, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
 
+	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline);
+
 	return NULL;
 }
 
-void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline)
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline)
 {
 	destroyPipeline(device, pipeline);
 	destroyPipelineLayout(device, pipelineLayout);

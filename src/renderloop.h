@@ -3,6 +3,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include "imgui/cimgui_impl_vulkan.h"
+
 #include "swapchain.h"
 #include "queue.h"
 #include "input_event.h"
