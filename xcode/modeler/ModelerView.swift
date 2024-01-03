@@ -62,7 +62,15 @@ class ModelerView: NSView, CALayerDelegate {
         if event.type == .leftMouseDown {
             print("main: mouseDown")
         }
-        enqueueInputEvent(inputQueue, MOUSE_DOWN)
+        enqueueInputEvent(inputQueue, BUTTON_DOWN, nil)
+    }
+    
+    override func mouseUp(with event: NSEvent) {
+        print("mouseUp")
+        if event.type == .leftMouseUp {
+            print("main: mouseUp")
+        }
+        enqueueInputEvent(inputQueue, BUTTON_UP, nil)
     }
     
     override func mouseMoved(with event: NSEvent) {
@@ -70,6 +78,10 @@ class ModelerView: NSView, CALayerDelegate {
         if event.type == .mouseMoved {
             print("mouseMoved")
         }
+        let height = layer!.bounds.size.height
+        let x = Int32(event.locationInWindow.x)
+        let y = Int32(height - event.locationInWindow.y)
+        enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, x, y)
     }
     
     override func mouseDragged(with event: NSEvent) {
@@ -77,6 +89,10 @@ class ModelerView: NSView, CALayerDelegate {
         if event.type == .leftMouseDragged {
             print("mouseDragged")
         }
+        let height = layer!.bounds.size.height
+        let x = Int32(event.locationInWindow.x)
+        let y = Int32(height - event.locationInWindow.y)
+        enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, x, y)
     }
 
     @objc func handleErrorNotification(notification: NSNotification) {
@@ -89,7 +105,7 @@ class ModelerView: NSView, CALayerDelegate {
     
     @objc func handleFrameDidChange(object: NSView) {
         print("extentChange")
-        enqueueInputEvent(inputQueue, EXTENT_CHANGE)
+        enqueueInputEvent(inputQueue, RESIZE, nil)
     }
     
     func handleFatalError(message: String) {

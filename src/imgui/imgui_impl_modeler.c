@@ -42,10 +42,10 @@ void ImGui_ImplModeler_NewFrame(void)
 void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
 {
 	ImGuiIO *io = ImGui_GetIO();
+	MousePosition *data = inputEvent->data;
 
 	switch (inputEvent->type) {
 	case POINTER_MOVE:
-		MousePosition *data = inputEvent->data;
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
 		ImGuiIO_AddMousePosEvent(io, data->x, data->y);
 		free(data);

@@ -112,12 +112,7 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		enqueueInputEvent(inputQueue, BUTTON_UP, NULL);
 		return 0;
 	case WM_MOUSEMOVE:
-		MousePosition *position = malloc(sizeof(*position));
-		*position = (const MousePosition) {
-			.x = GET_X_LPARAM(lParam),
-			.y = GET_Y_LPARAM(lParam)
-		};
-		enqueueInputEvent(inputQueue, POINTER_MOVE, position);
+		enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 		return 0;
 	case WM_NCCALCSIZE:
 		return calcSize(hwnd, uMsg, wParam, lParam);

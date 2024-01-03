@@ -13,3 +13,13 @@ void enqueueInputEvent(Queue *queue, InputEventType type, void *data)
 
 	enqueue(queue, (void *) event);
 }
+
+void enqueueInputEventWithPosition(Queue *queue, InputEventType type, int x, int y)
+{
+	MousePosition *position = malloc(sizeof(*position));
+	*position = (const MousePosition) {
+		.x = x,
+		.y = y
+	};
+	enqueueInputEvent(queue, type, position);
+}

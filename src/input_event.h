@@ -22,5 +22,6 @@ typedef struct mouse_position_t {
 } MousePosition;
 
 void enqueueInputEvent(Queue *queue, InputEventType type, void *data);
+void enqueueInputEventWithPosition(Queue *queue, InputEventType type, int x, int y);
 
 #endif /* MODELER_INPUT_EVENT_H */
