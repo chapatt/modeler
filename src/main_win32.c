@@ -100,11 +100,22 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return 0;
 	case WM_SIZE:
 		if (inputQueue) {
-			enqueueInputEvent(inputQueue, EXTENT_CHANGE);
+			enqueueInputEvent(inputQueue, RESIZE, NULL);
 		}
 		return 0;
 	case WM_LBUTTONDOWN:
-		enqueueInputEvent(inputQueue, MOUSE_DOWN);
+		enqueueInputEvent(inputQueue, MOUSE_DOWN, NULL);
+		return 0;
+	case WM_LBUTTONUP:
+		enqueueInputEvent(inputQueue, MOUSE_UP, NULL);
+		return 0;
+	case WM_MOUSEMOVE:
+		MousePosition *position = malloc(sizeof(*position));
+		*position = (const MousePosition) {
+			.x = GET_X_LPARAM(lParam),
+			.y = GET_Y_LPARAM(lParam)
+		};
+		enqueueInputEvent(inputQueue, MOUSE_MOVE, position);
 		return 0;
 	case WM_NCCALCSIZE:
 		return calcSize(hwnd, uMsg, wParam, lParam);
@@ -190,7 +201,8 @@ static LRESULT hitTest(HWND hwnd, int x, int y)
 	} else if (result & RIGHT) {
 		return HTRIGHT;
 	} else {
-		return HTCAPTION; /* allows click and drag client area to move, return HTCLIENT to pass through */
+		return HTCLIENT;
+		// return HTCAPTION; /* allows click and drag client area to move, return HTCLIENT to pass through */
 	}
 }
 

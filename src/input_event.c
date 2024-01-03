@@ -3,10 +3,13 @@
 
 #include "input_event.h"
 
-void enqueueInputEvent(Queue *queue, InputEventType type)
+void enqueueInputEvent(Queue *queue, InputEventType type, void *data)
 {
 	InputEvent *event = malloc(sizeof(*event));
-	event->type = type;
+	*event = (const InputEvent) {
+		.type = type,
+		.data = data
+	};
 
 	enqueue(queue, (void *) event);
 }

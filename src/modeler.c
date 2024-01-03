@@ -26,7 +26,7 @@ static void imVkCheck(VkResult result);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
 {
-	enqueueInputEvent(inputQueue, TERMINATE);
+	enqueueInputEvent(inputQueue, TERMINATE, NULL);
 	pthread_join(thread, NULL);
 }
 

@@ -122,12 +122,12 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, Swapcha
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
 			InputEventType type = inputEvent->type;
 
-			free(inputEvent);
-
-			printf("thread: %d\n", type);
-
 			switch(type) {
+			case MOUSE_MOVE: case MOUSE_DOWN: case MOUSE_UP:
+				ImGui_ImplModeler_HandleInput(inputEvent);
+				break;
 			case TERMINATE:
+				free(inputEvent);
 				goto cancelMainLoop;
 			}
 		}

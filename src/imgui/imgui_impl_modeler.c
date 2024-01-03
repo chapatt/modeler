@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 #include "imgui_impl_modeler.h"
@@ -36,4 +37,29 @@ void ImGui_ImplModeler_NewFrame(void)
 	// io->DeltaTime = spec.tv_nsec - bd->time;
 	// printf("DeltaTime: %d, time: %d, tv_nsec: %d", io->DeltaTime, bd->time, spec.tv_nsec);
 	// bd->time = spec.tv_nsec;
+}
+
+void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
+{
+	ImGuiIO *io = ImGui_GetIO();
+
+	switch (inputEvent->type) {
+	case MOUSE_MOVE:
+		MousePosition *data = inputEvent->data;
+		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
+		ImGuiIO_AddMousePosEvent(io, data->x, data->y);
+		free(data);
+		free(inputEvent);
+		break;
+	case MOUSE_DOWN:
+		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
+		ImGuiIO_AddMouseButtonEvent(io, 0, true);
+		free(inputEvent);
+		break;
+	case MOUSE_UP:
+		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
+		ImGuiIO_AddMouseButtonEvent(io, 0, false);
+		free(inputEvent);
+		break;
+	}
 }
