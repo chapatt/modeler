@@ -98,6 +98,11 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		DestroyWindow(hwnd);
 		PostQuitMessage(0);
 		return 0;
+	case WM_SIZE:
+		if (inputQueue) {
+			enqueueInputEvent(inputQueue, EXTENT_CHANGE);
+		}
+		return 0;
 	case WM_LBUTTONDOWN:
 		enqueueInputEvent(inputQueue, MOUSE_DOWN);
 		return 0;
