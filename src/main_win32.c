@@ -13,6 +13,8 @@
 #include "modeler.h"
 #include "modeler_win32.h"
 
+#define CHROME_HEIGHT 50
+
 const LPCTSTR CLASS_NAME = L"Modeler Window Class";
 void handleFatalError(HWND hwnd, char *message);
 static wchar_t *utf8ToUtf16(const char *utf8);
@@ -153,11 +155,12 @@ static LRESULT hitTest(HWND hwnd, int x, int y)
 {
 	enum regionMask
 	{
-		CLIENT = 0b0000,
-		LEFT = 0b0001,
-		RIGHT = 0b0010,
-		TOP = 0b0100,
-		BOTTOM = 0b1000
+		CLIENT = 0b00000,
+		LEFT = 0b00010,
+		RIGHT = 0b00100,
+		TOP = 0b01000,
+		BOTTOM = 0b01000,
+		CHROME = 0b10000
 	};
 
 	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
@@ -187,6 +190,10 @@ static LRESULT hitTest(HWND hwnd, int x, int y)
 		result |= BOTTOM;
 	}
 
+	if (!(result & (LEFT | RIGHT | TOP | BOTTOM)) && y < (windowRect.top + CHROME_HEIGHT)) {
+		result |= CHROME;
+	}
+
 	if (result & TOP)
 	{
 		if (result & LEFT) return HTTOPLEFT;
@@ -200,9 +207,10 @@ static LRESULT hitTest(HWND hwnd, int x, int y)
 		return HTLEFT;
 	} else if (result & RIGHT) {
 		return HTRIGHT;
+	} else if (result & CHROME) {
+		return HTCAPTION;
 	} else {
 		return HTCLIENT;
-		// return HTCAPTION; /* allows click and drag client area to move, return HTCLIENT to pass through */
 	}
 }
 
