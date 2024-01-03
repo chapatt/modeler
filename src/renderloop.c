@@ -123,7 +123,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, Swapcha
 			InputEventType type = inputEvent->type;
 
 			switch(type) {
-			case MOUSE_MOVE: case MOUSE_DOWN: case MOUSE_UP:
+			case POINTER_MOVE: case BUTTON_DOWN: case BUTTON_UP:
 				ImGui_ImplModeler_HandleInput(inputEvent);
 				break;
 			case TERMINATE:

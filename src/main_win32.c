@@ -106,10 +106,10 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		}
 		return 0;
 	case WM_LBUTTONDOWN:
-		enqueueInputEvent(inputQueue, MOUSE_DOWN, NULL);
+		enqueueInputEvent(inputQueue, BUTTON_DOWN, NULL);
 		return 0;
 	case WM_LBUTTONUP:
-		enqueueInputEvent(inputQueue, MOUSE_UP, NULL);
+		enqueueInputEvent(inputQueue, BUTTON_UP, NULL);
 		return 0;
 	case WM_MOUSEMOVE:
 		MousePosition *position = malloc(sizeof(*position));
@@ -117,7 +117,7 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			.x = GET_X_LPARAM(lParam),
 			.y = GET_Y_LPARAM(lParam)
 		};
-		enqueueInputEvent(inputQueue, MOUSE_MOVE, position);
+		enqueueInputEvent(inputQueue, POINTER_MOVE, position);
 		return 0;
 	case WM_NCCALCSIZE:
 		return calcSize(hwnd, uMsg, wParam, lParam);

@@ -44,19 +44,19 @@ void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
 	ImGuiIO *io = ImGui_GetIO();
 
 	switch (inputEvent->type) {
-	case MOUSE_MOVE:
+	case POINTER_MOVE:
 		MousePosition *data = inputEvent->data;
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
 		ImGuiIO_AddMousePosEvent(io, data->x, data->y);
 		free(data);
 		free(inputEvent);
 		break;
-	case MOUSE_DOWN:
+	case BUTTON_DOWN:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
 		ImGuiIO_AddMouseButtonEvent(io, 0, true);
 		free(inputEvent);
 		break;
-	case MOUSE_UP:
+	case BUTTON_UP:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
 		ImGuiIO_AddMouseButtonEvent(io, 0, false);
 		free(inputEvent);

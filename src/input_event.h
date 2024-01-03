@@ -4,9 +4,9 @@
 #include "queue.h"
 
 typedef enum input_event_type_t {
-	MOUSE_DOWN,
-	MOUSE_UP,
-	MOUSE_MOVE,
+	BUTTON_DOWN,
+	BUTTON_UP,
+	POINTER_MOVE,
 	RESIZE,
 	TERMINATE
 } InputEventType;
