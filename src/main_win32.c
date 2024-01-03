@@ -112,7 +112,17 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		enqueueInputEvent(inputQueue, BUTTON_UP, NULL);
 		return 0;
 	case WM_MOUSEMOVE:
+		TRACKMOUSEEVENT trackMouseEvent = {
+			.cbSize = sizeof(TRACKMOUSEEVENT),
+			.dwFlags = TME_LEAVE,
+			.hwndTrack = hwnd
+		};
+		TrackMouseEvent(&trackMouseEvent);
+
 		enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		return 0;
+	case WM_MOUSELEAVE:
+		enqueueInputEvent(inputQueue, POINTER_LEAVE, NULL);
 		return 0;
 	case WM_NCCALCSIZE:
 		return calcSize(hwnd, uMsg, wParam, lParam);

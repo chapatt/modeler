@@ -157,9 +157,10 @@ shader_frag.h: frag.spv
 	./hexdump_include.sh fragmentShaderBytes fragmentShaderSize frag.spv > $@
 
 clean:
-	$(RM) -rf instance.o physical_device.o device.o utils.o \
-		modeler.exe main_win32.o modeler_win32.o surface.o surface_win32.o \
-		modeler main_wayland.o  modeler_wayland.o  surface_wayland.o \
+	$(RM) -rf modeler modeler.exe main_wayland.o main_win32.o \
+		modeler_win32.o modeler_wayland.o modeler.o \
+		instance.o physical_device.o device.o utils.o utils_win32.o \
+		surface.o surface_win32.o surface_wayland.o \
 		swapchain.o image_view.o render_pass.o pipeline.o input_event.o queue.o \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
 		vert.spv frag.spv shader_vert.h shader_frag.h \

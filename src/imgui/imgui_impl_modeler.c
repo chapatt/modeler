@@ -48,18 +48,14 @@ void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
 	case POINTER_MOVE:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
 		ImGuiIO_AddMousePosEvent(io, data->x, data->y);
-		free(data);
-		free(inputEvent);
 		break;
 	case BUTTON_DOWN:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
 		ImGuiIO_AddMouseButtonEvent(io, 0, true);
-		free(inputEvent);
 		break;
-	case BUTTON_UP:
+	case BUTTON_UP: case POINTER_LEAVE:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
 		ImGuiIO_AddMouseButtonEvent(io, 0, false);
-		free(inputEvent);
 		break;
 	}
 }

@@ -7,6 +7,7 @@ typedef enum input_event_type_t {
 	BUTTON_DOWN,
 	BUTTON_UP,
 	POINTER_MOVE,
+	POINTER_LEAVE,
 	RESIZE,
 	TERMINATE
 } InputEventType;

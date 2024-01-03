@@ -121,10 +121,17 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, Swapcha
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
 			InputEventType type = inputEvent->type;
+			void *data = inputEvent->data;
 
 			switch(type) {
-			case POINTER_MOVE: case BUTTON_DOWN: case BUTTON_UP:
+			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
 				ImGui_ImplModeler_HandleInput(inputEvent);
+				free(inputEvent);
+				break;
+			case POINTER_MOVE:
+				ImGui_ImplModeler_HandleInput(inputEvent);
+				free(data);
+				free(inputEvent);
 				break;
 			case TERMINATE:
 				free(inputEvent);
