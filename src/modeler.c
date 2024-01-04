@@ -78,7 +78,7 @@ void *threadProc(void *arg)
 	}
 
 	VkImageView *imageViews;
-	if (!createImageViews(device, &swapchainInfo, &imageViews, error)) {
+	if (!createImageViews(device, swapchainInfo, &imageViews, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -94,7 +94,7 @@ void *threadProc(void *arg)
 	}
 
 	VkFramebuffer *framebuffers;
-	if (!createFramebuffers(device, &swapchainInfo, imageViews, renderPass, &framebuffers, error)) {
+	if (!createFramebuffers(device, swapchainInfo, imageViews, renderPass, &framebuffers, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
