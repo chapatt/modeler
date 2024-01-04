@@ -11,32 +11,8 @@
 
 #include "renderloop.h"
 
-void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
+void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer *framebuffers, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
 {
-//
-//
-//framebuffer creation		line_936 to line_967
-//
-//create framebuffer
-//
-	VkFramebufferCreateInfo frame_buff_cre_infos[imageViewCount];
-	VkFramebuffer frame_buffs[imageViewCount];
-	VkImageView image_attachs[imageViewCount];
-	for (uint32_t i = 0; i < imageViewCount; i++) {
-		image_attachs[i] = imageViews[i];
-		frame_buff_cre_infos[i].sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		frame_buff_cre_infos[i].pNext = NULL;
-		frame_buff_cre_infos[i].flags = 0;
-		frame_buff_cre_infos[i].renderPass = renderPass;
-		frame_buff_cre_infos[i].attachmentCount = 1;
-		frame_buff_cre_infos[i].pAttachments = &(image_attachs[i]);
-		frame_buff_cre_infos[i].width = swapchainInfo.extent.width;
-		frame_buff_cre_infos[i].height = swapchainInfo.extent.height;
-		frame_buff_cre_infos[i].layers = 1;
-
-		vkCreateFramebuffer(device, &(frame_buff_cre_infos[i]), NULL, &(frame_buffs[i]));
-		printf("framebuffer %d created.\n", i);
-	}
 //
 //
 //command buffer creation		line_968 to line_1001
@@ -158,7 +134,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, Swapcha
 		rendp_begin_infos[i].sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		rendp_begin_infos[i].pNext = NULL;
 		rendp_begin_infos[i].renderPass = renderPass;
-		rendp_begin_infos[i].framebuffer = frame_buffs[i];
+		rendp_begin_infos[i].framebuffer = framebuffers[i];
 		rendp_begin_infos[i].renderArea = rendp_area;
 		rendp_begin_infos[i].clearValueCount = 1;
 		rendp_begin_infos[i].pClearValues = &clear_val;
