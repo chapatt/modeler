@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +12,7 @@
 
 #include "renderloop.h"
 
-void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer *framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
+bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer *framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, char **error)
 {
 	VkCommandBufferBeginInfo cmd_buff_begin_infos[imageViewCount];
 	VkRenderPassBeginInfo rendp_begin_infos[imageViewCount];
@@ -36,7 +37,9 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 	}
 	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
 
-	for (uint32_t cur_frame = 0;; cur_frame = (cur_frame + 1) % MAX_FRAMES_IN_FLIGHT) {
+	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
+		VkResult result;
+
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
 			InputEventType type = inputEvent->type;
@@ -58,19 +61,18 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 			}
 		}
 
-		vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + cur_frame, VK_TRUE, UINT64_MAX);
+		vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX);
+		vkResetFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame);
 
-		uint32_t i = 0;
-		vkAcquireNextImageKHR(device, swapchainInfo.swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[cur_frame], VK_NULL_HANDLE, &i);
+		uint32_t imageIndex = 0;
+		vkAcquireNextImageKHR(device, swapchainInfo.swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-		vkBeginCommandBuffer(commandBuffers[i], &cmd_buff_begin_infos[i]);
+		vkResetCommandBuffer(commandBuffers[imageIndex], 0);
+		vkBeginCommandBuffer(commandBuffers[imageIndex], &cmd_buff_begin_infos[imageIndex]);
+		vkCmdBeginRenderPass(commandBuffers[imageIndex], &(rendp_begin_infos[imageIndex]), VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBindPipeline(commandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-		vkCmdBeginRenderPass(commandBuffers[i], &(rendp_begin_infos[i]), VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-		vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
-
+		vkCmdDraw(commandBuffers[imageIndex], 3, 1, 0, 0);
 		cImGui_ImplVulkan_NewFrame();
 		ImGui_ImplModeler_NewFrame();
 		ImGui_NewFrame();
@@ -79,54 +81,47 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		ImGui_End();
 		ImGui_Render();
 		ImDrawData *drawData = ImGui_GetDrawData();
-		cImGui_ImplVulkan_RenderDrawData(drawData, commandBuffers[i]);
+		cImGui_ImplVulkan_RenderDrawData(drawData, commandBuffers[imageIndex]);
 
-		vkCmdEndRenderPass(commandBuffers[i]);
+		vkCmdEndRenderPass(commandBuffers[imageIndex]);
+		vkEndCommandBuffer(commandBuffers[imageIndex]);
 
-		vkEndCommandBuffer(commandBuffers[i]);
+		VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+		VkSubmitInfo submitInfo = {
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			.pNext = NULL,
+			.waitSemaphoreCount = 1,
+			.pWaitSemaphores = synchronizationInfo.imageAvailableSemaphores + currentFrame,
+			.pWaitDstStageMask = waitStages,
+			.signalSemaphoreCount = 1,
+			.pSignalSemaphores = synchronizationInfo.renderFinishedSemaphores + currentFrame,
+			.commandBufferCount = 1,
+			.pCommandBuffers = commandBuffers + imageIndex
+		};
 
-		VkSubmitInfo sub_info;
-		sub_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		sub_info.pNext = NULL;
+		if ((result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, synchronizationInfo.frameInFlightFences[currentFrame])) != VK_SUCCESS) {
+			asprintf(error, "Failed to submit queue: %s", string_VkResult(result));
+			return false;
+		}
 
-		VkSemaphore semps_wait[1];
-		semps_wait[0] = synchronizationInfo.imageAvailableSemaphores[cur_frame];
-		VkPipelineStageFlags wait_stages[1];
-		wait_stages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		VkPresentInfoKHR presentInfo = {
+			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			.pNext = NULL,
+			.waitSemaphoreCount = 1,
+			.pWaitSemaphores = synchronizationInfo.renderFinishedSemaphores + currentFrame,
+			.swapchainCount = 1,
+			.pSwapchains = &swapchainInfo.swapchain,
+			.pImageIndices = &imageIndex,
+			.pResults = NULL
+		};
 
-		sub_info.waitSemaphoreCount = 1;
-		sub_info.pWaitSemaphores = &(semps_wait[0]);
-		sub_info.pWaitDstStageMask = &(wait_stages[0]);
-		sub_info.commandBufferCount = 1;
-		sub_info.pCommandBuffers = &(commandBuffers[i]);
-
-		VkSemaphore semps_sig[1];
-		semps_sig[0] = synchronizationInfo.renderFinishedSemaphores[cur_frame];
-
-		sub_info.signalSemaphoreCount = 1;
-		sub_info.pSignalSemaphores = &(semps_sig[0]);
-
-		vkResetFences(device, 1, &(synchronizationInfo.frameInFlightFences[cur_frame]));
-
-		vkQueueSubmit(graphicsQueue, 1, &sub_info, synchronizationInfo.frameInFlightFences[cur_frame]);
-
-		VkPresentInfoKHR pres_info;
-
-		pres_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		pres_info.pNext = NULL;
-		pres_info.waitSemaphoreCount = 1;
-		pres_info.pWaitSemaphores = &(semps_sig[0]);
-
-		VkSwapchainKHR swaps[1];
-		swaps[0] = swapchainInfo.swapchain;
-		pres_info.swapchainCount = 1;
-		pres_info.pSwapchains = &(swaps[0]);
-		pres_info.pImageIndices = &i;
-		pres_info.pResults = NULL;
-
-		vkQueuePresentKHR(presentationQueue, &pres_info);
+		if ((result = vkQueuePresentKHR(presentationQueue, &presentInfo)) != VK_SUCCESS) {
+			asprintf(error, "Failed to present framebuffer: %s", string_VkResult(result));
+			return false;
+		}
 	}
 
 cancelMainLoop:
 	vkDeviceWaitIdle(device);
+	return true;
 }

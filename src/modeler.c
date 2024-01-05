@@ -154,7 +154,9 @@ void *threadProc(void *arg)
 		.CheckVkResultFn = imVkCheck
 	};
 
-	draw(device, renderPass, pipeline, framebuffers, commandBuffers, synchronizationInfo, swapchainInfo, imageViews, swapchainInfo.imageCount, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
+	if (!draw(device, renderPass, pipeline, framebuffers, commandBuffers, synchronizationInfo, swapchainInfo, imageViews, swapchainInfo.imageCount, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
 
 	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, synchronizationInfo);
 

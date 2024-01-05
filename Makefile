@@ -53,7 +53,7 @@ modeler.a: modeler_metal.o modeler.o instance.o surface.o surface_metal.o physic
 main_wayland.o: src/main_wayland.c src/modeler_wayland.h xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
 
-main_win32.o: src/main_win32.c src/modeler.o src/modeler_win32.h
+main_win32.o: src/main_win32.c src/modeler_win32.h
 	$(CC) $(CFLAGS) -c src/main_win32.c
 
 modeler.o: src/modeler.c src/modeler.h src/instance.h src/surface.h src/physical_device.h src/device.h src/swapchain.h src/image_view.h src/render_pass.h src/pipeline.h src/framebuffer.h src/command_pool.h src/utils.h src/vulkan_utils.h src/renderloop.h
