@@ -13,15 +13,6 @@
 
 void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer *framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
 {
-//
-//
-//imgui init
-//
-	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
-//
-//
-//render preparation		line1002 to line1062
-//
 	VkCommandBufferBeginInfo cmd_buff_begin_infos[imageViewCount];
 	VkRenderPassBeginInfo rendp_begin_infos[imageViewCount];
 	VkRect2D rendp_area;
@@ -29,6 +20,21 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 	rendp_area.offset.y = 0;
 	rendp_area.extent = swapchainInfo.extent;
 	VkClearValue clear_val = {0.1f, 0.3f, 0.3f, 1.0f};
+	for (uint32_t i = 0; i < imageViewCount; ++i) {
+		cmd_buff_begin_infos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		cmd_buff_begin_infos[i].pNext = NULL;
+		cmd_buff_begin_infos[i].flags = 0;
+		cmd_buff_begin_infos[i].pInheritanceInfo = NULL;
+
+		rendp_begin_infos[i].sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		rendp_begin_infos[i].pNext = NULL;
+		rendp_begin_infos[i].renderPass = renderPass;
+		rendp_begin_infos[i].framebuffer = framebuffers[i];
+		rendp_begin_infos[i].renderArea = rendp_area;
+		rendp_begin_infos[i].clearValueCount = 1;
+		rendp_begin_infos[i].pClearValues = &clear_val;
+	}
+	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
 
 	for (uint32_t cur_frame = 0;; cur_frame = (cur_frame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		InputEvent *inputEvent;
@@ -52,29 +58,10 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 			}
 		}
 
-
-//
-//submit
-//
 		vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + cur_frame, VK_TRUE, UINT64_MAX);
 
-		uint32_t img_index = 0;
-		vkAcquireNextImageKHR(device, swapchainInfo.swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[cur_frame], VK_NULL_HANDLE, &img_index);
-
-		/* render */
-		uint32_t i = img_index;
-		cmd_buff_begin_infos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmd_buff_begin_infos[i].pNext = NULL;
-		cmd_buff_begin_infos[i].flags = 0;
-		cmd_buff_begin_infos[i].pInheritanceInfo = NULL;
-
-		rendp_begin_infos[i].sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		rendp_begin_infos[i].pNext = NULL;
-		rendp_begin_infos[i].renderPass = renderPass;
-		rendp_begin_infos[i].framebuffer = framebuffers[i];
-		rendp_begin_infos[i].renderArea = rendp_area;
-		rendp_begin_infos[i].clearValueCount = 1;
-		rendp_begin_infos[i].pClearValues = &clear_val;
+		uint32_t i = 0;
+		vkAcquireNextImageKHR(device, swapchainInfo.swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[cur_frame], VK_NULL_HANDLE, &i);
 
 		vkBeginCommandBuffer(commandBuffers[i], &cmd_buff_begin_infos[i]);
 
@@ -97,7 +84,6 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		vkCmdEndRenderPass(commandBuffers[i]);
 
 		vkEndCommandBuffer(commandBuffers[i]);
-		/* end render*/
 
 		VkSubmitInfo sub_info;
 		sub_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -112,7 +98,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		sub_info.pWaitSemaphores = &(semps_wait[0]);
 		sub_info.pWaitDstStageMask = &(wait_stages[0]);
 		sub_info.commandBufferCount = 1;
-		sub_info.pCommandBuffers = &(commandBuffers[img_index]);
+		sub_info.pCommandBuffers = &(commandBuffers[i]);
 
 		VkSemaphore semps_sig[1];
 		semps_sig[0] = synchronizationInfo.renderFinishedSemaphores[cur_frame];
@@ -123,9 +109,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		vkResetFences(device, 1, &(synchronizationInfo.frameInFlightFences[cur_frame]));
 
 		vkQueueSubmit(graphicsQueue, 1, &sub_info, synchronizationInfo.frameInFlightFences[cur_frame]);
-//
-//present
-//
+
 		VkPresentInfoKHR pres_info;
 
 		pres_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -137,7 +121,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		swaps[0] = swapchainInfo.swapchain;
 		pres_info.swapchainCount = 1;
 		pres_info.pSwapchains = &(swaps[0]);
-		pres_info.pImageIndices = &img_index;
+		pres_info.pImageIndices = &i;
 		pres_info.pResults = NULL;
 
 		vkQueuePresentKHR(presentationQueue, &pres_info);
