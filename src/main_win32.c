@@ -161,9 +161,9 @@ static LRESULT hitTest(HWND hwnd, int x, int y)
 	enum regionMask
 	{
 		CLIENT = 0b00000,
-		LEFT = 0b00010,
-		RIGHT = 0b00100,
-		TOP = 0b01000,
+		LEFT = 0b00001,
+		RIGHT = 0b00010,
+		TOP = 0b00100,
 		BOTTOM = 0b01000,
 		CHROME = 0b10000
 	};
