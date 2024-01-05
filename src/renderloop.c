@@ -11,36 +11,8 @@
 
 #include "renderloop.h"
 
-void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer *framebuffers, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
+void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer *framebuffers, VkCommandBuffer *commandBuffers, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
 {
-//
-//
-//command buffer creation		line_968 to line_1001
-//
-//create command pool
-//
-	VkCommandPoolCreateInfo cmd_pool_cre_info;
-	cmd_pool_cre_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	cmd_pool_cre_info.pNext = NULL;
-	cmd_pool_cre_info.flags = 0;
-	cmd_pool_cre_info.queueFamilyIndex = graphicsQueueFamilyIndex;
-
-	VkCommandPool cmd_pool;
-	vkCreateCommandPool(device, &cmd_pool_cre_info, NULL, &cmd_pool);
-	printf("command pool created.\n");
-//
-//allocate command buffers
-//
-	VkCommandBufferAllocateInfo cmd_buff_alloc_info;
-	cmd_buff_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	cmd_buff_alloc_info.pNext = NULL;
-	cmd_buff_alloc_info.commandPool = cmd_pool;
-	cmd_buff_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	cmd_buff_alloc_info.commandBufferCount = imageViewCount;
-
-	VkCommandBuffer cmd_buffers[imageViewCount];
-	vkAllocateCommandBuffers(device, &cmd_buff_alloc_info, cmd_buffers);
-	printf("command buffers allocated.\n");
 //
 //
 //imgui init
@@ -139,13 +111,13 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		rendp_begin_infos[i].clearValueCount = 1;
 		rendp_begin_infos[i].pClearValues = &clear_val;
 
-		vkBeginCommandBuffer(cmd_buffers[i], &cmd_buff_begin_infos[i]);
+		vkBeginCommandBuffer(commandBuffers[i], &cmd_buff_begin_infos[i]);
 
-		vkCmdBeginRenderPass(cmd_buffers[i], &(rendp_begin_infos[i]), VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(commandBuffers[i], &(rendp_begin_infos[i]), VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(cmd_buffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+		vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
-		vkCmdDraw(cmd_buffers[i], 3, 1, 0, 0);
+		vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
 
 		cImGui_ImplVulkan_NewFrame();
 		ImGui_ImplModeler_NewFrame();
@@ -155,11 +127,11 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		ImGui_End();
 		ImGui_Render();
 		ImDrawData *drawData = ImGui_GetDrawData();
-		cImGui_ImplVulkan_RenderDrawData(drawData, cmd_buffers[i]);
+		cImGui_ImplVulkan_RenderDrawData(drawData, commandBuffers[i]);
 
-		vkCmdEndRenderPass(cmd_buffers[i]);
+		vkCmdEndRenderPass(commandBuffers[i]);
 
-		vkEndCommandBuffer(cmd_buffers[i]);
+		vkEndCommandBuffer(commandBuffers[i]);
 		/* end render*/
 
 		if (fens_img[img_index] != VK_NULL_HANDLE) {
@@ -181,7 +153,7 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		sub_info.pWaitSemaphores = &(semps_wait[0]);
 		sub_info.pWaitDstStageMask = &(wait_stages[0]);
 		sub_info.commandBufferCount = 1;
-		sub_info.pCommandBuffers = &(cmd_buffers[img_index]);
+		sub_info.pCommandBuffers = &(commandBuffers[img_index]);
 
 		VkSemaphore semps_sig[1];
 		semps_sig[0] = semps_rend_fin[cur_frame];

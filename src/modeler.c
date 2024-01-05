@@ -17,12 +17,14 @@
 #include "render_pass.h"
 #include "pipeline.h"
 #include "framebuffer.h"
+#include "command_pool.h"
+#include "command_buffer.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
 #include "renderloop.h"
 
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount);
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool);
 static void imVkCheck(VkResult result);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
@@ -98,6 +100,16 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	VkCommandPool commandPool;
+	if (!createCommandPool(device, queueInfo, &commandPool, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
+	VkCommandBuffer *commandBuffers;
+	if (!createCommandBuffers(device, swapchainInfo, commandPool, &commandBuffers, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
 	VkDescriptorPool imDescriptorPool;
 	VkDescriptorPoolSize pool_sizes[] =
 	{
@@ -136,15 +148,16 @@ void *threadProc(void *arg)
 		.CheckVkResultFn = imVkCheck
 	};
 
-	draw(device, renderPass, pipeline, framebuffers, swapchainInfo, imageViews, swapchainInfo.imageCount, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
+	draw(device, renderPass, pipeline, framebuffers, commandBuffers, swapchainInfo, imageViews, swapchainInfo.imageCount, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
 
-	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount);
+	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool);
 
 	return NULL;
 }
 
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount)
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool)
 {
+	destroyCommandPool(device, commandPool);
 	destroyFramebuffers(device, framebuffers, framebufferCount);
 	destroyPipeline(device, pipeline);
 	destroyPipelineLayout(device, pipelineLayout);

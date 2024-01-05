@@ -44,11 +44,11 @@ renderloop.o: src/renderloop.c src/renderloop.h
 modeler: main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o $(LDLIBS)
 
-modeler.exe: main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o modeler.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a $(LDLIBS)
+modeler.exe: main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o modeler.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a $(LDLIBS)
 	
-modeler.a: modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o input_event.o queue.o utils.o renderloop.o
-	$(AR) rvs $@ modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o input_event.o queue.o utils.o renderloop.o
+modeler.a: modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o input_event.o queue.o utils.o renderloop.o
+	$(AR) rvs $@ modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o input_event.o queue.o utils.o renderloop.o
 
 main_wayland.o: src/main_wayland.c src/modeler_wayland.h xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
@@ -56,7 +56,7 @@ main_wayland.o: src/main_wayland.c src/modeler_wayland.h xdg-shell-client-protoc
 main_win32.o: src/main_win32.c src/modeler.o src/modeler_win32.h
 	$(CC) $(CFLAGS) -c src/main_win32.c
 
-modeler.o: src/modeler.c src/modeler.h src/instance.h src/surface.h src/physical_device.h src/device.h src/swapchain.h src/image_view.h src/render_pass.h src/pipeline.h src/framebuffer.h src/utils.h src/vulkan_utils.h src/renderloop.h
+modeler.o: src/modeler.c src/modeler.h src/instance.h src/surface.h src/physical_device.h src/device.h src/swapchain.h src/image_view.h src/render_pass.h src/pipeline.h src/framebuffer.h src/command_pool.h src/utils.h src/vulkan_utils.h src/renderloop.h
 	$(CC) $(CFLAGS) -c src/modeler.c
 
 modeler_wayland.o: src/modeler_wayland.c src/modeler_wayland.h src/instance.h src/surface_wayland.h src/physical_device.h src/device.h
@@ -103,6 +103,12 @@ pipeline.o: src/pipeline.c src/pipeline.h shader_vert.h shader_frag.h
 
 framebuffer.o: src/framebuffer.c src/framebuffer.h
 	$(CC) $(CFLAGS) -c src/framebuffer.c
+
+command_pool.o: src/command_pool.c src/command_pool.h
+	$(CC) $(CFLAGS) -c src/command_pool.c
+
+command_buffer.o: src/command_buffer.c src/command_buffer.h
+	$(CC) $(CFLAGS) -c src/command_buffer.c
 
 input_event.o: src/input_event.c src/input_event.h src/queue.h
 	$(CC) $(CFLAGS) -c src/input_event.c
@@ -165,6 +171,7 @@ clean:
 		instance.o physical_device.o device.o utils.o utils_win32.o \
 		surface.o surface_win32.o surface_wayland.o \
 		swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o \
+		command_pool.o command_buffer.o \
 		input_event.o queue.o \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
 		vert.spv frag.spv shader_vert.h shader_frag.h \
