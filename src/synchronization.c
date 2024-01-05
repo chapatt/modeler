@@ -24,9 +24,19 @@ bool createSynchronization(VkDevice device, SwapchainInfo swapchainInfo, Synchro
 	};
 
 	for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		vkCreateSemaphore(device, &semaphoreCreateInfo, NULL, synchronizationInfo->imageAvailableSemaphores + i);
-		vkCreateSemaphore(device, &semaphoreCreateInfo, NULL, synchronizationInfo->renderFinishedSemaphores + i);
-		vkCreateFence(device, &fenceCreateInfo, NULL, synchronizationInfo->frameInFlightFences + i);
+		VkResult result;
+		if ((result = vkCreateSemaphore(device, &semaphoreCreateInfo, NULL, synchronizationInfo->imageAvailableSemaphores + i)) != VK_SUCCESS) {
+			asprintf(error, "Failed to create semaphore: %s", string_VkResult(result));
+			return false;
+		}
+		if ((result = vkCreateSemaphore(device, &semaphoreCreateInfo, NULL, synchronizationInfo->renderFinishedSemaphores + i)) != VK_SUCCESS) {
+			asprintf(error, "Failed to create semaphore: %s", string_VkResult(result));
+			return false;
+		}
+		if ((result = vkCreateFence(device, &fenceCreateInfo, NULL, synchronizationInfo->frameInFlightFences + i)) != VK_SUCCESS) {
+			asprintf(error, "Failed to create fence: %s", string_VkResult(result));
+			return false;
+		}
 	}
 
 	return true;
