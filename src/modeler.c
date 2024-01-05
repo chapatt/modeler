@@ -19,6 +19,7 @@
 #include "framebuffer.h"
 #include "command_pool.h"
 #include "command_buffer.h"
+#include "synchronization.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
@@ -110,6 +111,11 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	SynchronizationInfo synchronizationInfo;
+	if (!createSynchronization(device, swapchainInfo, &synchronizationInfo, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
 	VkDescriptorPool imDescriptorPool;
 	VkDescriptorPoolSize pool_sizes[] =
 	{
@@ -148,7 +154,7 @@ void *threadProc(void *arg)
 		.CheckVkResultFn = imVkCheck
 	};
 
-	draw(device, renderPass, pipeline, framebuffers, commandBuffers, swapchainInfo, imageViews, swapchainInfo.imageCount, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
+	draw(device, renderPass, pipeline, framebuffers, commandBuffers, synchronizationInfo, swapchainInfo, imageViews, swapchainInfo.imageCount, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo);
 
 	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool);
 

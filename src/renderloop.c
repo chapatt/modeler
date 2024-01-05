@@ -11,7 +11,7 @@
 
 #include "renderloop.h"
 
-void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer *framebuffers, VkCommandBuffer *commandBuffers, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
+void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer *framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo swapchainInfo, VkImageView *imageViews, uint32_t imageViewCount, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo)
 {
 //
 //
@@ -29,43 +29,8 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 	rendp_area.offset.y = 0;
 	rendp_area.extent = swapchainInfo.extent;
 	VkClearValue clear_val = {0.1f, 0.3f, 0.3f, 1.0f};
-//
-//
-//semaphores and fences creation part		line_1063 to line_1103
-//
-	uint32_t max_frames = 2;
-	VkSemaphore semps_img_avl[max_frames];
-	VkSemaphore semps_rend_fin[max_frames];
-	VkFence fens[max_frames];
 
-	VkSemaphoreCreateInfo semp_cre_info;
-	semp_cre_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	semp_cre_info.pNext = NULL;
-	semp_cre_info.flags = 0;
-
-	VkFenceCreateInfo fen_cre_info;
-	fen_cre_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	fen_cre_info.pNext = NULL;
-	fen_cre_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-	for (uint32_t i = 0; i < max_frames; i++) {
-		vkCreateSemaphore(device, &semp_cre_info, NULL, &(semps_img_avl[i]));
-		vkCreateSemaphore(device, &semp_cre_info, NULL, &(semps_rend_fin[i]));
-		vkCreateFence(device, &fen_cre_info, NULL, &(fens[i]));
-	}
-	printf("semaphores and fences created.\n");
-
-	uint32_t cur_frame = 0;
-	VkFence fens_img[imageViewCount];
-	for (uint32_t i = 0; i < imageViewCount; i++) {
-		fens_img[i] = VK_NULL_HANDLE;
-	}
-//
-//
-//main present part		line_1104 to line_1197
-//
-	printf("\n");
-	for (;;) {
+	for (uint32_t cur_frame = 0;; cur_frame = (cur_frame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
 			InputEventType type = inputEvent->type;
@@ -91,10 +56,10 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 //
 //submit
 //
-		vkWaitForFences(device, 1, &(fens[cur_frame]), VK_TRUE, UINT64_MAX);
+		vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + cur_frame, VK_TRUE, UINT64_MAX);
 
 		uint32_t img_index = 0;
-		vkAcquireNextImageKHR(device, swapchainInfo.swapchain, UINT64_MAX, semps_img_avl[cur_frame], VK_NULL_HANDLE, &img_index);
+		vkAcquireNextImageKHR(device, swapchainInfo.swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[cur_frame], VK_NULL_HANDLE, &img_index);
 
 		/* render */
 		uint32_t i = img_index;
@@ -134,18 +99,12 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		vkEndCommandBuffer(commandBuffers[i]);
 		/* end render*/
 
-		if (fens_img[img_index] != VK_NULL_HANDLE) {
-			vkWaitForFences(device, 1, &(fens_img[img_index]), VK_TRUE, UINT64_MAX);
-		}
-
-		fens_img[img_index] = fens[cur_frame];
-
 		VkSubmitInfo sub_info;
 		sub_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		sub_info.pNext = NULL;
 
 		VkSemaphore semps_wait[1];
-		semps_wait[0] = semps_img_avl[cur_frame];
+		semps_wait[0] = synchronizationInfo.imageAvailableSemaphores[cur_frame];
 		VkPipelineStageFlags wait_stages[1];
 		wait_stages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -156,14 +115,14 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		sub_info.pCommandBuffers = &(commandBuffers[img_index]);
 
 		VkSemaphore semps_sig[1];
-		semps_sig[0] = semps_rend_fin[cur_frame];
+		semps_sig[0] = synchronizationInfo.renderFinishedSemaphores[cur_frame];
 
 		sub_info.signalSemaphoreCount = 1;
 		sub_info.pSignalSemaphores = &(semps_sig[0]);
 
-		vkResetFences(device, 1, &(fens[cur_frame]));
+		vkResetFences(device, 1, &(synchronizationInfo.frameInFlightFences[cur_frame]));
 
-		vkQueueSubmit(graphicsQueue, 1, &sub_info, fens[cur_frame]);
+		vkQueueSubmit(graphicsQueue, 1, &sub_info, synchronizationInfo.frameInFlightFences[cur_frame]);
 //
 //present
 //
@@ -182,8 +141,6 @@ void draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		pres_info.pResults = NULL;
 
 		vkQueuePresentKHR(presentationQueue, &pres_info);
-
-		cur_frame = (cur_frame + 1) % max_frames;
 	}
 
 cancelMainLoop:

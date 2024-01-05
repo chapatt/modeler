@@ -8,4 +8,4 @@
 
 bool createCommandBuffers(VkDevice device, SwapchainInfo swapchainInfo, VkCommandPool commandPool, VkCommandBuffer **commandBuffers, char **error);
 
-#endif /* MODELER_COMMAND_POOL_H */
+#endif /* MODELER_COMMAND_BUFFER_H */
