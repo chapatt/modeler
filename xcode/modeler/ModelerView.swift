@@ -105,7 +105,10 @@ class ModelerView: NSView, CALayerDelegate {
     
     @objc func handleFrameDidChange(object: NSView) {
         print("extentChange")
-        enqueueInputEvent(inputQueue, RESIZE, nil)
+        let bounds: CGRect = layer!.bounds
+        let width = Int32(bounds.size.width)
+        let height = Int32(bounds.size.height)
+        enqueueInputEventWithExtent(inputQueue, RESIZE, width, height)
     }
     
     func handleFatalError(message: String) {
