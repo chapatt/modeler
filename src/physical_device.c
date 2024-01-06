@@ -8,7 +8,6 @@
 SuitabilityResult isPhysicalDeviceSuitable(PhysicalDeviceCharacteristics characteristics, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error);
 bool isPhysicalDeviceSurfaceSupportSuitable(PhysicalDeviceSurfaceCharacteristics characteristics);
 bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, char **error);
-bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics *characteristics, char **error);
 
 bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface,
 	VkPhysicalDevice *physicalDevice, PhysicalDeviceCharacteristics *characteristics,
