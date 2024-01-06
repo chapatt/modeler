@@ -23,3 +23,14 @@ void enqueueInputEventWithPosition(Queue *queue, InputEventType type, int x, int
 	};
 	enqueueInputEvent(queue, type, position);
 }
+
+void enqueueInputEventWithExtent(Queue *queue, InputEventType type, int width, int height)
+{
+	VkExtent2D *extent = malloc(sizeof(extent));
+	*extent = (const VkExtent2D) {
+		.width = width,
+		.height = height
+	};
+	enqueueInputEvent(queue, type, extent);
+}
+

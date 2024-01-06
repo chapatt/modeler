@@ -50,6 +50,11 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 				free(data);
 				free(inputEvent);
 				break;
+			case RESIZE:
+				swapchainInfo->extent = *((VkExtent2D *) data);
+				free(data);
+				free(inputEvent);
+				break;
 			case TERMINATE:
 				free(inputEvent);
 				goto cancelMainLoop;
@@ -73,7 +78,10 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		uint32_t imageIndex = 0;
 		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			recreateSwapchain(swapchainCreateInfo, error);
+			printf("acquire recreate\n");
+			if (!recreateSwapchain(swapchainCreateInfo, error)) {
+				return false;
+			}
 			continue;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			asprintf(error, "Failed to acquire swapchain image: %s", string_VkResult(result));
@@ -144,7 +152,10 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 
 		result = vkQueuePresentKHR(presentationQueue, &presentInfo);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-			recreateSwapchain(swapchainCreateInfo, error);
+			printf("present recreate\n");
+			if (!recreateSwapchain(swapchainCreateInfo, error)) {
+				return false;
+			}
 			continue;
 		} else if (result != VK_SUCCESS) {
 			asprintf(error, "Failed to present swapchain image: %s", string_VkResult(result));

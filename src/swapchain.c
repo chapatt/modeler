@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -11,7 +12,10 @@ VkSurfaceFormatKHR chooseSwapchainSurfaceFormat(VkSurfaceFormatKHR *surfaceForma
 VkPresentModeKHR chooseSwapchainPresentMode(VkPresentModeKHR *presentModes, uint32_t presentModeCount);
 VkExtent2D chooseSwapchainExtent(VkSurfaceCapabilitiesKHR capabilities, VkExtent2D windowExtent, char **error);
 
-bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, SwapchainInfo *swapchainInfo, char **error) {
+bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, VkSwapchainKHR oldSwapchain, SwapchainInfo *swapchainInfo, char **error)
+{
+	printf("extent width: %d\n", windowExtent.width);
+	printf("extent height: %d\n", windowExtent.height);
 	swapchainInfo->surfaceFormat = chooseSwapchainSurfaceFormat(surfaceCharacteristics.formats, surfaceCharacteristics.formatCount);
 #ifdef ENABLE_VSYNC
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
@@ -35,7 +39,7 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 	createInfo.presentMode = presentMode;
 	createInfo.clipped = VK_TRUE;
-	createInfo.oldSwapchain = VK_NULL_HANDLE;
+	createInfo.oldSwapchain = oldSwapchain;
 
 	swapchainInfo->imageCount = surfaceCharacteristics.capabilities.minImageCount + 1;
 	if (surfaceCharacteristics.capabilities.maxImageCount > 0 && swapchainInfo->imageCount > surfaceCharacteristics.capabilities.maxImageCount) {

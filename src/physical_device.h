@@ -32,6 +32,7 @@ SuitabilityResult findQueueFamilyWithSurfaceSupport(uint32_t queueFamilyCount, V
 bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface,
 	VkPhysicalDevice *physicalDevice, PhysicalDeviceCharacteristics *characteristics,
 	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, char **error);
+bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics *characteristics, char **error);
 void freePhysicalDeviceCharacteristics(PhysicalDeviceCharacteristics *characteristics);
 void freePhysicalDeviceSurfaceCharacteristics(PhysicalDeviceSurfaceCharacteristics *characteristics);
 

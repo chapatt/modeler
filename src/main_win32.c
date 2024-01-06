@@ -102,7 +102,7 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return 0;
 	case WM_SIZE:
 		if (inputQueue) {
-			enqueueInputEvent(inputQueue, RESIZE, NULL);
+			enqueueInputEventWithExtent(inputQueue, RESIZE, LOWORD(lParam), HIWORD(lParam));
 		}
 		return 0;
 	case WM_LBUTTONDOWN:

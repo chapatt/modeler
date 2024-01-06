@@ -1,6 +1,8 @@
 #ifndef MODELER_INPUT_EVENT_H
 #define MODELER_INPUT_EVENT_H
 
+#include <vulkan/vulkan.h>
+
 #include "queue.h"
 
 typedef enum input_event_type_t {
@@ -24,5 +26,6 @@ typedef struct mouse_position_t {
 
 void enqueueInputEvent(Queue *queue, InputEventType type, void *data);
 void enqueueInputEventWithPosition(Queue *queue, InputEventType type, int x, int y);
+void enqueueInputEventWithExtent(Queue *queue, InputEventType type, int width, int height);
 
 #endif /* MODELER_INPUT_EVENT_H */

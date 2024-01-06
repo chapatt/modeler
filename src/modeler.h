@@ -20,8 +20,9 @@ struct threadArguments {
 
 typedef struct swapchain_create_info_t {
 	VkDevice device;
+	VkPhysicalDevice physicalDevice;
 	VkSurfaceKHR surface;
-	PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics;
+	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics;
 	QueueInfo queueInfo;
 	VkRenderPass renderPass;
 	SwapchainInfo *swapchainInfo;

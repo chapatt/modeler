@@ -73,7 +73,7 @@ void *threadProc(void *arg)
 	}
 
 	SwapchainInfo swapchainInfo = {};
-	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, initialExtent, &swapchainInfo, error)) {
+	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, initialExtent, VK_NULL_HANDLE, &swapchainInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -115,8 +115,9 @@ void *threadProc(void *arg)
 
 	SwapchainCreateInfo swapchainCreateInfo = {
 		.device = device,
+		.physicalDevice = physicalDevice,
 		.surface = surface,
-		.surfaceCharacteristics = surfaceCharacteristics,
+		.surfaceCharacteristics = &surfaceCharacteristics,
 		.queueInfo = queueInfo,
 		.renderPass = renderPass,
 		.swapchainInfo = &swapchainInfo,
@@ -173,11 +174,18 @@ void *threadProc(void *arg)
 
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
+	printf("recreateSwapchain\n");
+	vkDeviceWaitIdle(swapchainCreateInfo.device);
+
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
 	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
-	destroySwapchain(swapchainCreateInfo.device, swapchainCreateInfo.swapchainInfo->swapchain);
+	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.surfaceCharacteristics);
 
-	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, swapchainCreateInfo.extent, swapchainCreateInfo.swapchainInfo, error)) {
+	if (!getPhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.physicalDevice, swapchainCreateInfo.surface, swapchainCreateInfo.surfaceCharacteristics, error)) {
+		return false;
+	}
+
+	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, *swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, swapchainCreateInfo.swapchainInfo->extent, swapchainCreateInfo.swapchainInfo->swapchain, swapchainCreateInfo.swapchainInfo, error)) {
 		return false;
 	}
 
