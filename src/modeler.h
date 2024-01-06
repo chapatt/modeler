@@ -3,6 +3,9 @@
 
 #include <vulkan/vulkan.h>
 
+#include "physical_device.h"
+#include "device.h"
+#include "swapchain.h"
 #include "queue.h"
 
 struct threadArguments {
@@ -15,7 +18,20 @@ struct threadArguments {
 	char **error;
 };
 
+typedef struct swapchain_create_info_t {
+	VkDevice device;
+	VkSurfaceKHR surface;
+	PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics;
+	QueueInfo queueInfo;
+	VkRenderPass renderPass;
+	SwapchainInfo *swapchainInfo;
+	VkExtent2D extent;
+	VkImageView **imageViews;
+	VkFramebuffer **framebuffers;
+} SwapchainCreateInfo;
+
 void *threadProc(void *arg);
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
 void sendThreadFailureSignal(void *platformWindow);
 void terminateVulkan(Queue *inputQueue, pthread_t thread);
 

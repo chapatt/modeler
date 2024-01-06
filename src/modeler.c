@@ -10,9 +10,6 @@
 #include "modeler.h"
 #include "instance.h"
 #include "surface.h"
-#include "physical_device.h"
-#include "device.h"
-#include "swapchain.h"
 #include "image_view.h"
 #include "render_pass.h"
 #include "pipeline.h"
@@ -116,10 +113,21 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	SwapchainCreateInfo swapchainCreateInfo = {
+		.device = device,
+		.surface = surface,
+		.surfaceCharacteristics = surfaceCharacteristics,
+		.queueInfo = queueInfo,
+		.renderPass = renderPass,
+		.swapchainInfo = &swapchainInfo,
+		.extent = initialExtent,
+		.imageViews = &imageViews,
+		.framebuffers = &framebuffers
+	};
+
 	VkDescriptorPool imDescriptorPool;
-	VkDescriptorPoolSize pool_sizes[] =
-	{
-		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1},
+	VkDescriptorPoolSize pool_sizes[] = {
+		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}
 	};
 	VkDescriptorPoolCreateInfo pool_info = {
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
@@ -154,13 +162,34 @@ void *threadProc(void *arg)
 		.CheckVkResultFn = imVkCheck
 	};
 
-	if (!draw(device, renderPass, pipeline, framebuffers, commandBuffers, synchronizationInfo, swapchainInfo, imageViews, swapchainInfo.imageCount, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, error)) {
+	if (!draw(device, renderPass, pipeline, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
 	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, synchronizationInfo);
 
 	return NULL;
+}
+
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
+{
+	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
+	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
+	destroySwapchain(swapchainCreateInfo.device, swapchainCreateInfo.swapchainInfo->swapchain);
+
+	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, swapchainCreateInfo.extent, swapchainCreateInfo.swapchainInfo, error)) {
+		return false;
+	}
+
+	if (!createImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, swapchainCreateInfo.imageViews, error)) {
+		return false;
+	}
+
+	if (!createFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, *swapchainCreateInfo.imageViews, swapchainCreateInfo.renderPass, swapchainCreateInfo.framebuffers, error)) {
+		return false;
+	}
+
+	return true;
 }
 
 static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, SynchronizationInfo synchronizationInfo)
