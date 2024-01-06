@@ -29,6 +29,7 @@ else
 	endif
 endif
 
+CFLAGS += -DENABLE_VSYNC
 ifdef DEBUG
 	CFLAGS += -DDEBUG -g
 else

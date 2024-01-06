@@ -13,7 +13,11 @@ VkExtent2D chooseSwapchainExtent(VkSurfaceCapabilitiesKHR capabilities, VkExtent
 
 bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, SwapchainInfo *swapchainInfo, char **error) {
 	swapchainInfo->surfaceFormat = chooseSwapchainSurfaceFormat(surfaceCharacteristics.formats, surfaceCharacteristics.formatCount);
+#ifdef ENABLE_VSYNC
+	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+#else
 	VkPresentModeKHR presentMode = chooseSwapchainPresentMode(surfaceCharacteristics.presentModes, surfaceCharacteristics.presentModeCount);
+#endif /* ENABLE_VSYNC */
 	swapchainInfo->extent = chooseSwapchainExtent(surfaceCharacteristics.capabilities, windowExtent, error);
 	if (swapchainInfo->extent.width == 0 || swapchainInfo->extent.height == 0) {
 		return false;
