@@ -24,3 +24,8 @@ bool createCommandBuffers(VkDevice device, SwapchainInfo swapchainInfo, VkComman
 
 	return true;
 }
+
+void freeCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t count)
+{
+	vkFreeCommandBuffers(device, commandPool, count, commandBuffers);
+}

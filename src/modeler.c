@@ -22,7 +22,7 @@
 
 #include "renderloop.h"
 
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, SynchronizationInfo synchronizationInfo);
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
 static void imVkCheck(VkResult result);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
@@ -167,7 +167,7 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
-	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, synchronizationInfo);
+	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo);
 
 	return NULL;
 }
@@ -200,9 +200,10 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	return true;
 }
 
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, SynchronizationInfo synchronizationInfo)
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo)
 {
 	destroySynchronization(device, synchronizationInfo);
+	freeCommandBuffers(device, commandPool, commandBuffers, commandBufferCount);
 	destroyCommandPool(device, commandPool);
 	destroyFramebuffers(device, framebuffers, framebufferCount);
 	destroyPipeline(device, pipeline);
