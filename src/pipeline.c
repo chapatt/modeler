@@ -195,6 +195,18 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resour
 		return false;
 	}
 
+	VkDynamicState dynamicStates[] = {
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR
+	};
+	VkPipelineDynamicStateCreateInfo pipelineDynamicStateCreateInfo = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+		.pNext = NULL,
+		.flags = 0,
+		.dynamicStateCount = 2,
+		.pDynamicStates = dynamicStates
+	};
+
 	VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		.pNext = NULL,

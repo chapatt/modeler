@@ -107,6 +107,25 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		vkCmdBeginRenderPass((*commandBuffers)[imageIndex], &(renderPassBeginInfos[imageIndex]), VK_SUBPASS_CONTENTS_INLINE);
 		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
+		VkViewport viewport = {
+			.x = 0.0f,
+			.y = 0.0f,
+			.width = swapchainInfo->extent.width,
+			.height = swapchainInfo->extent.height,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+		VkOffset2D scissorOffset = {
+			.x = 0,
+			.y = 0
+		};
+		VkRect2D scissor = {
+			.offset = scissorOffset,
+			.extent = swapchainInfo->extent
+		};
+		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &viewport);
+		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
+
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 		cImGui_ImplVulkan_NewFrame();
 		ImGui_ImplModeler_NewFrame();
