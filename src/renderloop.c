@@ -133,6 +133,7 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
 
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
+
 		cImGui_ImplVulkan_NewFrame();
 		ImGui_ImplModeler_NewFrame();
 		ImGui_NewFrame();

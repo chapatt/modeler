@@ -145,7 +145,7 @@ void *threadProc(void *arg)
 	ImGui_CreateContext(NULL);
 	ImGuiIO *io = ImGui_GetIO();
 	io->IniFilename = NULL;
-	ImGui_ImplModeler_Init(swapchainInfo.extent);
+	ImGui_ImplModeler_Init(&swapchainInfo);
 	ImGui_StyleColorsDark(NULL);
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo = {
 		.Instance = instance,
