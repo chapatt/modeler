@@ -221,7 +221,7 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resour
 		.pMultisampleState = &multisampleStateCreateInfo,
 		.pDepthStencilState = NULL,
 		.pColorBlendState = &colorBlendStateCreateInfo,
-		.pDynamicState = NULL,
+		.pDynamicState = &pipelineDynamicStateCreateInfo,
 		.layout = *pipelineLayout,
 		.renderPass = renderPass,
 		.subpass = 0,

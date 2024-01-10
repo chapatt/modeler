@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -14,13 +13,11 @@ VkExtent2D chooseSwapchainExtent(VkSurfaceCapabilitiesKHR capabilities, VkExtent
 
 bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, VkSwapchainKHR oldSwapchain, SwapchainInfo *swapchainInfo, char **error)
 {
-	printf("extent width: %d\n", windowExtent.width);
-	printf("extent height: %d\n", windowExtent.height);
 	swapchainInfo->surfaceFormat = chooseSwapchainSurfaceFormat(surfaceCharacteristics.formats, surfaceCharacteristics.formatCount);
 #ifdef ENABLE_VSYNC
 	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
 #else
-	VkPresentModeKHR presentMode = chooseSwapchainPresentMode(surfaceCharacteristics.presentModes, surfaceCharacteristics.presentModeCount);
+	swapchainInfo->presentMode = chooseSwapchainPresentMode(surfaceCharacteristics.presentModes, surfaceCharacteristics.presentModeCount);
 #endif /* ENABLE_VSYNC */
 	swapchainInfo->extent = chooseSwapchainExtent(surfaceCharacteristics.capabilities, windowExtent, error);
 	if (swapchainInfo->extent.width == 0 || swapchainInfo->extent.height == 0) {
@@ -61,6 +58,10 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 	if ((result = vkCreateSwapchainKHR(device, &createInfo, NULL, &swapchainInfo->swapchain)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create swapchain: %s", string_VkResult(result));
 		return false;
+	}
+
+	if (oldSwapchain != VK_NULL_HANDLE) {
+		vkDestroySwapchainKHR(device, oldSwapchain, NULL);
 	}
 
 	vkGetSwapchainImagesKHR(device, swapchainInfo->swapchain, &swapchainInfo->imageCount, NULL);

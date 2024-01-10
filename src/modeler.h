@@ -32,7 +32,7 @@ typedef struct swapchain_create_info_t {
 } SwapchainCreateInfo;
 
 void *threadProc(void *arg);
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error);
 void sendThreadFailureSignal(void *platformWindow);
 void terminateVulkan(Queue *inputQueue, pthread_t thread);
 

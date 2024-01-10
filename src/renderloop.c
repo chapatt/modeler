@@ -1,5 +1,3 @@
-#include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -34,6 +32,8 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 	long elapsed = 1;
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
+		bool windowResized = false;
+		VkExtent2D windowExtent = swapchainInfo->extent;
 
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
@@ -51,7 +51,8 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 				free(inputEvent);
 				break;
 			case RESIZE:
-				swapchainInfo->extent = *((VkExtent2D *) data);
+				windowExtent = *((VkExtent2D *) data);
+				windowResized = true;
 				free(data);
 				free(inputEvent);
 				break;
@@ -73,13 +74,15 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		previousTime.tv_sec = spec.tv_sec;
 		previousTime.tv_nsec = spec.tv_nsec;
 
-		vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX);
+		if ((result = vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
+			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
+			return false;
+		}
 
 		uint32_t imageIndex = 0;
 		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			printf("acquire recreate\n");
-			if (!recreateSwapchain(swapchainCreateInfo, error)) {
+			if (!recreateSwapchain(swapchainCreateInfo, windowExtent, error)) {
 				return false;
 			}
 			continue;
@@ -88,7 +91,10 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 			return false;
 		}
 
-		vkResetFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame);
+		if ((result = vkResetFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame)) != VK_SUCCESS) {
+			asprintf(error, "Failed to reset fences: %s", string_VkResult(result));
+			return false;
+		}
 
 		VkRect2D renderArea = {
 			.offset = {},
@@ -170,11 +176,11 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		};
 
 		result = vkQueuePresentKHR(presentationQueue, &presentInfo);
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-			printf("present recreate\n");
-			if (!recreateSwapchain(swapchainCreateInfo, error)) {
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResized) {
+			if (!recreateSwapchain(swapchainCreateInfo, windowExtent, error)) {
 				return false;
 			}
+			windowResized = false;
 			continue;
 		} else if (result != VK_SUCCESS) {
 			asprintf(error, "Failed to present swapchain image: %s", string_VkResult(result));

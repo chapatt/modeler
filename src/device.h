@@ -14,7 +14,7 @@ typedef struct queue_info_t {
 } QueueInfo;
 
 bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
-	PhysicalDeviceCharacteristics characteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics,
+	PhysicalDeviceCharacteristics characteristics,
 	VkDevice *device, QueueInfo *queueInfo, char **error);
 
 void destroyDevice(VkDevice device);

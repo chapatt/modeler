@@ -1,6 +1,7 @@
 #ifndef MODELER_RENDERLOOP_H
 #define MODELER_RENDERLOOP_H
 
+#include <stdbool.h>
 #include <vulkan/vulkan.h>
 
 #include "imgui/cimgui_impl_vulkan.h"

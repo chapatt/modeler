@@ -12,6 +12,7 @@ typedef struct swapchain_info_t {
 	VkImage *images;
 	VkSurfaceFormatKHR surfaceFormat;
 	VkExtent2D extent;
+	VkPresentModeKHR presentMode;
 } SwapchainInfo;
 
 bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, VkSwapchainKHR oldSwapchain, SwapchainInfo *swapchainInfo, char **error);

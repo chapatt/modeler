@@ -30,9 +30,14 @@ pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, cha
 	char *instanceExtensions[] = {
 		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 		VK_KHR_SURFACE_EXTENSION_NAME,
-		VK_KHR_WIN32_SURFACE_EXTENSION_NAME
+		VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+		VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 	};
+	#ifdef DEBUG
+	threadArgs->instanceExtensionCount = 4;
+	#else
 	threadArgs->instanceExtensionCount = 3;
+	#endif /* DEBUG */
 	threadArgs->instanceExtensions = malloc(sizeof(*threadArgs->instanceExtensions) * threadArgs->instanceExtensionCount);
 	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
 	    threadArgs->instanceExtensions[i] = instanceExtensions[i];

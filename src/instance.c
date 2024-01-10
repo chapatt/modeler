@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,6 +15,7 @@ typedef enum support_result_t {
 
 SupportResult areInstanceExtensionsSupported(const char **extensions, size_t extensionCount, char **error);
 SupportResult areLayersSupported(const char **layers, size_t layerCount, char **error);
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugReportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT object_type, uint64_t object, size_t location, int32_t message_code, const char *layer_prefix, const char *message, void *user_data);
 
 bool createInstance(const char **extensions, size_t extensionCount, VkInstance *instance, char **error)
 {
@@ -71,6 +73,19 @@ bool createInstance(const char **extensions, size_t extensionCount, VkInstance *
 		asprintf(error, "Failed to create instance: %s", string_VkResult(result));
 		return false;
 	}
+
+#ifdef DEBUG
+	PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT) (vkGetInstanceProcAddr(*instance, "vkCreateDebugReportCallbackEXT"));
+	VkDebugReportCallbackCreateInfoEXT debugReportCreateInfo = {};
+	debugReportCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+	debugReportCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+	debugReportCreateInfo.pfnCallback = (PFN_vkDebugReportCallbackEXT) debugReportCallback;
+	VkDebugReportCallbackEXT callback;
+	if ((result = vkCreateDebugReportCallbackEXT(*instance, &debugReportCreateInfo, NULL, &callback)) != VK_SUCCESS) {
+		asprintf(error, "Failed to create debug report callback: %s", string_VkResult(result));
+		return false;
+	}
+#endif /* DEBUG */
 
 	free(requiredExtensions);
 
@@ -137,4 +152,11 @@ SupportResult areLayersSupported(const char **layers, size_t layerCount, char **
 	free(availableLayers);
 
 	return SUPPORT_SUPPORTED;
+}
+
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugReportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT object_type, uint64_t object, size_t location, int32_t message_code, const char *layer_prefix, const char *message, void *user_data)
+{
+	printf("%s\n", message);
+
+	return VK_FALSE;
 }

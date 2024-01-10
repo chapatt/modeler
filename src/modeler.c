@@ -68,7 +68,7 @@ void *threadProc(void *arg)
 
 	VkDevice device;
 	QueueInfo queueInfo = {};
-	if (!createDevice(physicalDevice, surface, characteristics, surfaceCharacteristics, &device, &queueInfo, error)) {
+	if (!createDevice(physicalDevice, surface, characteristics, &device, &queueInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -172,9 +172,8 @@ void *threadProc(void *arg)
 	return NULL;
 }
 
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error)
 {
-	printf("recreateSwapchain\n");
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
@@ -185,7 +184,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		return false;
 	}
 
-	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, *swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, swapchainCreateInfo.swapchainInfo->extent, swapchainCreateInfo.swapchainInfo->swapchain, swapchainCreateInfo.swapchainInfo, error)) {
+	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, *swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, windowExtent, swapchainCreateInfo.swapchainInfo->swapchain, swapchainCreateInfo.swapchainInfo, error)) {
 		return false;
 	}
 

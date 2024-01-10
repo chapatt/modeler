@@ -6,7 +6,7 @@
 #include "vulkan_utils.h"
 
 bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
-	PhysicalDeviceCharacteristics characteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics,
+	PhysicalDeviceCharacteristics characteristics,
 	VkDevice *device, QueueInfo *queueInfo, char **error)
 {
 	VkDeviceCreateInfo createInfo = {};
