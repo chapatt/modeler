@@ -15,7 +15,7 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 {
 	swapchainInfo->surfaceFormat = chooseSwapchainSurfaceFormat(surfaceCharacteristics.formats, surfaceCharacteristics.formatCount);
 #ifdef ENABLE_VSYNC
-	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	swapchainInfo->presentMode = VK_PRESENT_MODE_FIFO_KHR;
 #else
 	swapchainInfo->presentMode = chooseSwapchainPresentMode(surfaceCharacteristics.presentModes, surfaceCharacteristics.presentModeCount);
 #endif /* ENABLE_VSYNC */
@@ -34,7 +34,7 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 	createInfo.preTransform = surfaceCharacteristics.capabilities.currentTransform;
 	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	createInfo.presentMode = presentMode;
+	createInfo.presentMode = swapchainInfo->presentMode;
 	createInfo.clipped = VK_TRUE;
 	createInfo.oldSwapchain = oldSwapchain;
 
