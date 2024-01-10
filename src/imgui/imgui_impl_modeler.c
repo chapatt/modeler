@@ -4,7 +4,7 @@
 
 #include "imgui_impl_modeler.h"
 
-bool ImGui_ImplModeler_Init(SwapchainInfo *swapchainInfo)
+CIMGUI_IMPL_API bool ImGui_ImplModeler_Init(SwapchainInfo *swapchainInfo)
 {
 	ImGuiIO *io = ImGui_GetIO();
 	ImGui_ImplModeler_Data* bd = (ImGui_ImplModeler_Data *) ImGui_MemAlloc(sizeof(ImGui_ImplModeler_Data));
@@ -15,7 +15,7 @@ bool ImGui_ImplModeler_Init(SwapchainInfo *swapchainInfo)
 	return true;
 }
 
-void ImGui_ImplModeler_NewFrame(void)
+CIMGUI_IMPL_API void ImGui_ImplModeler_NewFrame(void)
 {
 	struct timespec spec;
 	ImGuiIO *io = ImGui_GetIO();
@@ -39,7 +39,7 @@ void ImGui_ImplModeler_NewFrame(void)
 	// bd->time = spec.tv_nsec;
 }
 
-void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
+CIMGUI_IMPL_API void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
 {
 	ImGuiIO *io = ImGui_GetIO();
 	MousePosition *data = inputEvent->data;
