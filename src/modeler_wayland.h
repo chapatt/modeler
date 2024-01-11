@@ -5,10 +5,15 @@
 #define VK_USE_PLATFORM_WAYLAND_KHR
 #endif
 
-#include <vulkan/vulkan.h>
+#include <pthread.h>
 
-#include <stdbool.h>
+#include "queue.h"
 
-bool initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, char **error);
+typedef struct wayland_window_t {
+	struct wl_display *display;
+	struct wl_surface *surface;
+} WaylandWindow;
+
+pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, Queue *inputQueue, char **error);
 
 #endif /* MODELER_MODELER_WAYLAND_H */

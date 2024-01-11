@@ -1,54 +1,68 @@
+#ifndef VK_USE_PLATFORM_WAYLAND_KHR
+#define VK_USE_PLATFORM_WAYLAND_KHR
+#endif /* VK_USE_PLATFORM_WIN32_KHR */
+
+#include <stdlib.h>
+#include <pthread.h>
+#include <vulkan/vulkan.h>
+
+#include "imgui/cimgui.h"
+#include "imgui/cimgui_impl_vulkan.h"
+#include "imgui/imgui_impl_modeler.h"
+
+#include "modeler.h"
+#include "utils.h"
+
 #include "modeler_wayland.h"
-#include "instance.h"
-#include "surface.h"
-#include "surface_wayland.h"
-#include "physical_device.h"
-#include "device.h"
-#include "swapchain.h"
 
-#include "renderloop.h"
+static void imVkCheck(VkResult result);
 
-bool initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, char **error)
+pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, Queue *inputQueue, char **error)
 {
-        VkExtent2D windowExtent = {
+	pthread_t thread;
+	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
+	WaylandWindow *window = malloc(sizeof(WaylandWindow));
+	window->display = waylandDisplay;
+	window->surface = waylandSurface;
+	threadArgs->platformWindow = window;
+	threadArgs->inputQueue = inputQueue;
+	asprintf(&threadArgs->resourcePath, ".");
+	char *instanceExtensions[] = {
+		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+		VK_KHR_SURFACE_EXTENSION_NAME,
+		VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
+		VK_EXT_DEBUG_REPORT_EXTENSION_NAME
+	};
+	#ifdef DEBUG
+	threadArgs->instanceExtensionCount = 4;
+	#else
+	threadArgs->instanceExtensionCount = 3;
+	#endif /* DEBUG */
+	threadArgs->instanceExtensions = malloc(sizeof(*threadArgs->instanceExtensions) * threadArgs->instanceExtensionCount);
+	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
+	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
+	}
+	threadArgs->initialExtent = (VkExtent2D) {
                 .width = 600,
                 .height = 400
         };
+	if (threadArgs->initialExtent.width == 0 || threadArgs->initialExtent.height == 0) {
+		asprintf(error, "Failed to get window extent");
+		return 0;
+	}
+	threadArgs->error = error;
 
-	const char *instanceExtensions[] = {
-		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-		VK_KHR_SURFACE_EXTENSION_NAME,
-		VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME
-	};
-	VkInstance instance;
-	if (!createInstance(instanceExtensions, 3, &instance, error)) {
-		return false;
+	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
+		free(threadArgs->resourcePath);
+		free(threadArgs);
+		asprintf(error, "Failed to start Vulkan thread");
+		return 0;
 	}
 
-	VkSurfaceKHR surface;
-	if (!createSurfaceWayland(instance, waylandDisplay, waylandSurface, &surface, error)) {
-		return false;
-	}
+	return thread;
+}
 
-        VkPhysicalDevice physicalDevice;
-        PhysicalDeviceCharacteristics characteristics;
-        PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics;
-        if (!choosePhysicalDevice(instance, surface, &physicalDevice, &characteristics, &surfaceCharacteristics, error)) {
-                return false;
-        }
-
-        VkDevice device;
-        QueueInfo queueInfo = {};
-        if (!createDevice(physicalDevice, surface, characteristics, surfaceCharacteristics, &device, &queueInfo, error)) {
-                return false;
-        }
-
-        VkSwapchainKHR swapchain;
-        if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowExtent, &swapchain, error)) {
-                return false;
-        }
-
-        draw(device, swapchain, windowExtent, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".");
-
-        return true;
+void sendThreadFailureSignal(void *platformWindow)
+{
+	pthread_exit(NULL);
 }

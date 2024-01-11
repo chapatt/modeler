@@ -1,16 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "surface_wayland.h"
+#include "modeler_wayland.h"
+#include "surface.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
-bool createSurfaceWayland(VkInstance instance, struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, VkSurfaceKHR *surface, char **error)
+bool createSurface(VkInstance instance, void *platformWindow, VkSurfaceKHR *surface, char **error)
 {
+	WaylandWindow *window = (WaylandWindow *) platformWindow;
+
 	VkWaylandSurfaceCreateInfoKHR createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
-	createInfo.display = waylandDisplay;
-	createInfo.surface = waylandSurface;
+	createInfo.display = window->display;
+	createInfo.surface =window->surface;
 
 	VkResult result;
 	if ((result = vkCreateWaylandSurfaceKHR(instance, &createInfo, NULL, surface)) != VK_SUCCESS) {

@@ -42,11 +42,11 @@ all: $(ALL_TARGET)
 renderloop.o: src/renderloop.c src/renderloop.h
 	$(CC) $(CFLAGS) -c src/renderloop.c
 
-modeler: main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o input_event.o queue.o utils.o xdg-shell-protocol.o renderloop.o $(LDLIBS)
+modeler: main_wayland.o modeler.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o imgui.a xdg-shell-protocol.o
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o imgui.a xdg-shell-protocol.o $(LDLIBS)
 
 modeler.exe: main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler_win32.o modeler.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a $(LDLIBS)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a $(LDLIBS)
 	
 modeler.a: modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o
 	$(AR) rvs $@ modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o

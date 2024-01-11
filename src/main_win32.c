@@ -7,10 +7,10 @@
 #include <windows.h>
 #include <windowsx.h>
 
+#include "modeler.h"
 #include "queue.h"
 #include "input_event.h"
 
-#include "modeler.h"
 #include "modeler_win32.h"
 
 #define CHROME_HEIGHT 50

@@ -5,6 +5,11 @@
 #include <wayland-client-protocol.h>
 
 #include "../xdg-shell-client-protocol.h"
+
+#include "queue.h"
+#include "input_event.h"
+#include "modeler.h"
+
 #include "modeler_wayland.h"
 
 struct display {
@@ -31,12 +36,15 @@ void handleFatalError(char *message);
 int main(int argc, char **argv)
 {
 	struct display display;
+	Queue inputQueue;
 
 	connectDisplay(&display);
 	createWindow(&display);
 
+	initializeQueue(&inputQueue);
+
 	char *error;
-	if (!initVulkanWayland(display.display, display.surface, &error)) {
+	if (!initVulkanWayland(display.display, display.surface, &inputQueue, &error)) {
 		handleFatalError(error);
 	}
 

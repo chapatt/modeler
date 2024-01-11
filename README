@@ -1,0 +1,7 @@
+# Linux
+
+## Build Dependencies
+wayland-protocols
+libwayland-dev
+libvulkan-dev
+glslc

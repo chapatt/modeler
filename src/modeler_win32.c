@@ -1,19 +1,18 @@
 #ifndef VK_USE_PLATFORM_WIN32_KHR
 #define VK_USE_PLATFORM_WIN32_KHR
-#endif
+#endif /* VK_USE_PLATFORM_WIN32_KHR */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
 #include <vulkan/vulkan.h>
 
 #include "imgui/cimgui.h"
 #include "imgui/cimgui_impl_vulkan.h"
 #include "imgui/imgui_impl_modeler.h"
 
-#include "modeler_win32.h"
 #include "modeler.h"
 #include "utils.h"
+
+#include "modeler_win32.h"
 
 static void imVkCheck(VkResult result);
 
