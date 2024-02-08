@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -139,7 +138,6 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkPipel
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
-		printf("drawing!");
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 
 		cImGui_ImplVulkan_NewFrame();
