@@ -163,7 +163,7 @@ void *threadProc(void *arg)
 		.CheckVkResultFn = imVkCheck
 	};
 
-	if (!draw(device, renderPass, pipeline, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
+	if (!draw(device, renderPass, pipeline, pipelineLayout, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 

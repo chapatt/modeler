@@ -180,10 +180,11 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resour
 		colorBlendStateCreateInfo.blendConstants[i] = 0.0f;
 	}
 
-	VkPushConstantRange pushConstantRange;
-	pushConstantRange.offset = 0;
-	pushConstantRange.size = sizeof(PushConstants);
-	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+	VkPushConstantRange pushConstantRange = {
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.offset = 0,
+		.size = sizeof(PushConstants)
+	};
 
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,

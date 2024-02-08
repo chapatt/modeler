@@ -14,7 +14,7 @@
 
 #include "renderloop.h"
 
-bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkImageView *imageViews, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkImageView *imageViews, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
 	VkRenderPassBeginInfo renderPassBeginInfos[swapchainInfo->imageCount];
@@ -137,7 +137,7 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		PushConstants pushConstants = {
 			.extent = {swapchainInfo->extent.width, swapchainInfo->extent.height}
 		};
-		vkCmdPushConstants((*commandBuffers)[imageIndex], 0, 1, 0, sizeof(pushConstants), &pushConstants);
+		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 
 		printf("drawing!");
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
