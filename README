@@ -5,3 +5,4 @@ wayland-protocols
 libwayland-dev
 libvulkan-dev
 glslc
+bsdextrautils (hexdump)

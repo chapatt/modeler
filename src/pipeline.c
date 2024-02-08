@@ -180,14 +180,19 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resour
 		colorBlendStateCreateInfo.blendConstants[i] = 0.0f;
 	}
 
+	VkPushConstantRange pushConstantRange;
+	pushConstantRange.offset = 0;
+	pushConstantRange.size = sizeof(PushConstants);
+	pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
 		.setLayoutCount = 0,
 		.pSetLayouts = NULL,
-		.pushConstantRangeCount = 0,
-		.pPushConstantRanges = NULL
+		.pushConstantRangeCount = 1,
+		.pPushConstantRanges = &pushConstantRange
 	};
 
 	if ((result = vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, NULL, pipelineLayout)) != VK_SUCCESS) {

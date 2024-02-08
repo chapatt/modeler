@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -7,6 +8,7 @@
 #include "imgui/imgui_impl_modeler.h"
 
 #include "modeler.h"
+#include "pipeline.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
@@ -132,6 +134,12 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkFrame
 		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &viewport);
 		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
 
+		PushConstants pushConstants = {
+			.extent = {swapchainInfo->extent.width, swapchainInfo->extent.height}
+		};
+		vkCmdPushConstants((*commandBuffers)[imageIndex], 0, 1, 0, sizeof(pushConstants), &pushConstants);
+
+		printf("drawing!");
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 
 		cImGui_ImplVulkan_NewFrame();

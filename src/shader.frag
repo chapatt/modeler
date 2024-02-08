@@ -2,8 +2,35 @@
 
 layout(location=0) out vec4 outColor;
 
-layout(location=0) in vec3 fragColor;
+layout (push_constant) uniform _push_constants
+{
+    vec2 extent;
+} PushConstants;
 
-void main(){
-	outColor=vec4(fragColor,1.0);
+float sdRoundedRectangle(vec2 p, vec2 b, float r) {
+	vec2 q = abs(p) - b + r;
+	return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
+}
+
+float sigmoid(float t) {
+    return 1.0 / (1.0 + exp(-t));
+}
+
+float cornerRadius = 10.0;
+float blurRadius = 10.0;
+
+void main()
+{
+	vec2 center = PushConstants.extent.xy / 2.0;
+	vec2 size = (PushConstants.extent.xy / 4.0) - blurRadius;
+
+	float shadowDistance = clamp(sigmoid(sdRoundedRectangle(gl_FragCoord.xy - center, size, cornerRadius + blurRadius) / blurRadius), 0.0, 1.0);
+	float boxDistance = sdRoundedRectangle(gl_FragCoord.xy - center, size, cornerRadius);
+
+	float smoothedAlpha = 1.0 - smoothstep(0.0, 2.0, boxDistance);
+	vec4 boxColor = mix(vec4(1.0), vec4(0.0, 0.0, 1.0, smoothedAlpha), smoothedAlpha);
+
+	vec4 shadowColor = vec4(0.4, 0.4, 0.4, 1.0);
+
+	outColor = boxColor;
 }

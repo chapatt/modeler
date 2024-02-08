@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <vulkan/vulkan.h>
 
+typedef struct push_constants_t {
+	float extent[2];
+} PushConstants;
+
 bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resourcePath, SwapchainInfo swapchainInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error);
 
 void destroyPipelineLayout(VkDevice device, VkPipelineLayout pipelineLayout);
