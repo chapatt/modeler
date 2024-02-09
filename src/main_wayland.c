@@ -1,6 +1,9 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/epoll.h>
 #include <wayland-client.h>
 #include <wayland-client-protocol.h>
 
@@ -9,6 +12,7 @@
 #include "queue.h"
 #include "input_event.h"
 #include "modeler.h"
+#include "utils.h"
 
 #include "modeler_wayland.h"
 
@@ -37,6 +41,11 @@ int main(int argc, char **argv)
 {
 	struct display display;
 	Queue inputQueue;
+	int threadPipe[2];
+	int epollFd;
+	if (pipe(threadPipe)) {
+		handleFatalError("Failed to create pipe");
+	}
 
 	connectDisplay(&display);
 	createWindow(&display);
@@ -44,13 +53,43 @@ int main(int argc, char **argv)
 	initializeQueue(&inputQueue);
 
 	char *error;
-	if (!initVulkanWayland(display.display, display.surface, &inputQueue, &error)) {
+	if (!initVulkanWayland(display.display, display.surface, &inputQueue, threadPipe[1], &error)) {
 		handleFatalError(error);
 	}
 
-	while (wl_display_dispatch(display.display) != -1) {
-		/* This space deliberately left blank */
+	int wlFd = wl_display_get_fd(display.display);
+	if ((epollFd = epoll_create1(0)) == -1) {
+		char *error;
+		asprintf(&error, "Failed to create epoll instance: %s", strerror(errno));
+		handleFatalError(error);
 	}
+	struct epoll_event epollConfigurationEvent1 = {
+		.events = EPOLLIN,
+		.data.fd = threadPipe[0]
+	};
+	epoll_ctl(epollFd, EPOLL_CTL_ADD, threadPipe[0], &epollConfigurationEvent1);
+	struct epoll_event epollConfigurationEvent2 = {
+		.events = EPOLLIN,
+		.data.fd = wlFd
+	};
+	epoll_ctl(epollFd, EPOLL_CTL_ADD, wlFd, &epollConfigurationEvent2);
+
+	struct epoll_event epollEventBuffer;
+	for (;;) {
+		if (epoll_wait(epollFd, &epollEventBuffer, 1, -1) == -1) {
+			char *error;
+			asprintf(&error, "Failed to wait for epoll: %s", strerror(errno));
+			handleFatalError(error);
+		}
+
+		if (epollEventBuffer.data.fd == wlFd) {
+			wl_display_dispatch(display.display);
+		} else if (epollEventBuffer.data.fd == threadPipe[0]) {
+			handleFatalError(error);
+		}
+	}
+
+	close(epollFd);
 
 	disconnectDisplay(&display);
 	destroyWindow(&display);

@@ -3,6 +3,7 @@
 #endif /* VK_USE_PLATFORM_WIN32_KHR */
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <vulkan/vulkan.h>
 
@@ -17,13 +18,14 @@
 
 static void imVkCheck(VkResult result);
 
-pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, Queue *inputQueue, char **error)
+pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, Queue *inputQueue, int fd, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
 	WaylandWindow *window = malloc(sizeof(WaylandWindow));
 	window->display = waylandDisplay;
 	window->surface = waylandSurface;
+	window->fd = fd;
 	threadArgs->platformWindow = window;
 	threadArgs->inputQueue = inputQueue;
 	asprintf(&threadArgs->resourcePath, ".");
@@ -40,11 +42,11 @@ pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface
 	#endif /* DEBUG */
 	threadArgs->instanceExtensions = malloc(sizeof(*threadArgs->instanceExtensions) * threadArgs->instanceExtensionCount);
 	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
-	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
+		threadArgs->instanceExtensions[i] = instanceExtensions[i];
 	}
 	threadArgs->initialExtent = (VkExtent2D) {
-                .width = 600,
-                .height = 400
+		.width = 600,
+		.height = 400
         };
 	if (threadArgs->initialExtent.width == 0 || threadArgs->initialExtent.height == 0) {
 		asprintf(error, "Failed to get window extent");
@@ -64,5 +66,9 @@ pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface
 
 void sendThreadFailureSignal(void *platformWindow)
 {
+	int fd = ((WaylandWindow *) platformWindow)->fd;
+	char c = 'f';
+	write(fd, &c, 1);
+	close(fd);
 	pthread_exit(NULL);
 }
