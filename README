@@ -6,3 +6,6 @@ libwayland-dev
 libvulkan-dev
 glslc
 bsdextrautils (hexdump)
+
+### Debug only
+vulkan-validationlayers
