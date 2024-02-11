@@ -4,36 +4,11 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
-#ifdef EMBED_SHADERS
-#include "../shader_vert.h"
-#include "../shader_frag.h"
-#endif /* EMBED_SHADERS */
-
 #include "pipeline.h"
 
-bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resourcePath, SwapchainInfo swapchainInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
+bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *vertexShaderBytes, long vertexShaderSize, const char *fragmentShaderBytes, long fragmentShaderSize, VkExtent2D extent, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
 {
 	VkResult result;
-
-#ifndef EMBED_SHADERS
-	char *vertexShaderPath;
-	char *fragmentShaderPath;
-	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "vert.spv");
-	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "frag.spv");
-	char *vertexShaderBytes;
-	char *fragmentShaderBytes;
-	uint32_t vertexShaderSize = 0;
-	uint32_t fragmentShaderSize = 0;
-
-	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
-		asprintf(error, "Failed to open vertex shader for reading.\n");
-		return false;
-	}
-	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
-		asprintf(error, "Failed to open fragment shader for reading.\n");
-		return false;
-	}
-#endif /* EMBED_SHADERS */
 
 	VkShaderModuleCreateInfo vertexShaderModuleCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -102,8 +77,8 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resour
 	VkViewport viewport = {
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = swapchainInfo.extent.width,
-		.height = swapchainInfo.extent.height,
+		.width = extent.width,
+		.height = extent.height,
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f
 	};
@@ -115,7 +90,7 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *resour
 
 	VkRect2D scissor = {
 		.offset = scissorOffset,
-		.extent = swapchainInfo.extent
+		.extent = extent
 	};
 
 	VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {

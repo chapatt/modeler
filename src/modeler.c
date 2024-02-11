@@ -20,6 +20,11 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
+#ifdef EMBED_SHADERS
+#include "../shader_vert.h"
+#include "../shader_frag.h"
+#endif /* EMBED_SHADERS */
+
 #include "renderloop.h"
 
 static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
@@ -87,9 +92,37 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+#ifndef EMBED_SHADERS
+	char *vertexShaderPath;
+	char *fragmentShaderPath;
+	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "vert.spv");
+	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "frag.spv");
+	char *vertexShaderBytes;
+	char *fragmentShaderBytes;
+	uint32_t vertexShaderSize = 0;
+	uint32_t fragmentShaderSize = 0;
+
+	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
+		asprintf(error, "Failed to open vertex shader for reading.\n");
+		sendThreadFailureSignal(platformWindow);
+	}
+	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
+		asprintf(error, "Failed to open fragment shader for reading.\n");
+		sendThreadFailureSignal(platformWindow);
+	}
+#endif /* EMBED_SHADERS */
+
+#ifdef DRAW_WINDOW_DECORATION
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
-	if (!createPipeline(device, renderPass, resourcePath, swapchainInfo, &pipelineLayout, &pipeline, error)) {
+	if (!createPipeline(device, renderPass, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &pipelineLayout, &pipeline, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+#endif
+
+	VkPipelineLayout pipelineLayout;
+	VkPipeline pipeline;
+	if (!createPipeline(device, renderPass, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &pipelineLayout, &pipeline, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
