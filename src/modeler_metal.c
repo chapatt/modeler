@@ -31,9 +31,10 @@ pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char 
 	char *instanceExtensions[] = {
 		VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 		VK_KHR_SURFACE_EXTENSION_NAME,
-		VK_EXT_METAL_SURFACE_EXTENSION_NAME
+		VK_EXT_METAL_SURFACE_EXTENSION_NAME,
+		VK_EXT_DEBUG_REPORT_EXTENSION_NAME
 	};
-	threadArgs->instanceExtensionCount = 3;
+	threadArgs->instanceExtensionCount = 4;
 	threadArgs->instanceExtensions = malloc(sizeof(*threadArgs->instanceExtensions) * threadArgs->instanceExtensionCount);
 	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
 	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
