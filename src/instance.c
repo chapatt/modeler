@@ -76,10 +76,11 @@ bool createInstance(const char **extensions, size_t extensionCount, VkInstance *
 
 #ifdef DEBUG
 	PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT) (vkGetInstanceProcAddr(*instance, "vkCreateDebugReportCallbackEXT"));
-	VkDebugReportCallbackCreateInfoEXT debugReportCreateInfo = {};
-	debugReportCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-	debugReportCreateInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
-	debugReportCreateInfo.pfnCallback = (PFN_vkDebugReportCallbackEXT) debugReportCallback;
+	VkDebugReportCallbackCreateInfoEXT debugReportCreateInfo = {
+		.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT,
+		.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT,
+		.pfnCallback = (PFN_vkDebugReportCallbackEXT) debugReportCallback
+	};
 	VkDebugReportCallbackEXT callback;
 	if ((result = vkCreateDebugReportCallbackEXT(*instance, &debugReportCreateInfo, NULL, &callback)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create debug report callback: %s", string_VkResult(result));
