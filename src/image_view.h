@@ -6,7 +6,7 @@
 
 #include "swapchain.h"
 
-bool createImageViews(VkDevice device, VkImage *images, uint32_t imageCount, VkFormat format, VkImageView **imageViews, char **error);
+bool createImageViews(VkDevice device, VkImage *images, uint32_t imageCount, VkFormat format, VkImageView *imageViews, char **error);
 void destroyImageViews(VkDevice device, VkImageView *imageViews, uint32_t count);
 
 #endif /* MODELER_IMAGE_VIEW_H */

@@ -4,9 +4,8 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
-bool createImageViews(VkDevice device, VkImage *images, uint32_t imageCount, VkFormat format, VkImageView **imageViews, char **error)
+bool createImageViews(VkDevice device, VkImage *images, uint32_t imageCount, VkFormat format, VkImageView *imageViews, char **error)
 {
-	*imageViews = malloc(sizeof(*imageViews) * imageCount);
 	VkImageViewCreateInfo createInfoTemplate = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		.viewType = VK_IMAGE_VIEW_TYPE_2D,
@@ -27,7 +26,7 @@ bool createImageViews(VkDevice device, VkImage *images, uint32_t imageCount, VkF
 		createInfo.image = images[i];
 
 		VkResult result;
-		if ((result = vkCreateImageView(device, &createInfo, NULL, *imageViews + i)) != VK_SUCCESS) {
+		if ((result = vkCreateImageView(device, &createInfo, NULL, imageViews + i)) != VK_SUCCESS) {
 			asprintf(error, "Failed to create image views: %s", string_VkResult(result));
 			return false;
 		}
@@ -40,5 +39,4 @@ void destroyImageViews(VkDevice device, VkImageView *imageViews, uint32_t count)
 	for (uint32_t i = 0; i < count; ++i) {
 		vkDestroyImageView(device, imageViews[i], NULL);
 	}
-	free(imageViews);
 }

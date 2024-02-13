@@ -82,10 +82,22 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
-	VkImageView *imageViews;
-	if (!createImageViews(device, swapchainInfo.images, swapchainInfo.imageCount, swapchainInfo.surfaceFormat.format, &imageViews, error)) {
+	VkImageView *imageViews = malloc(sizeof(imageViews) * swapchainInfo.imageCount);
+	if (!createImageViews(device, swapchainInfo.images, swapchainInfo.imageCount, swapchainInfo.surfaceFormat.format, imageViews, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
+
+#ifdef DRAW_WINDOW_DECORATION
+	VkImage offscreenImage;
+	if (!createImage(device, &offscreenImage, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
+	VkImageView offscreenImageView;
+	if (!createImageViews(device, &offscreenImage, 1, swapchainInfo.surfaceFormat.format, &&offscreenImageView, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+#endif
 
 	VkRenderPass renderPass;
 	if (!createRenderPass(device, swapchainInfo, &renderPass, error)) {
@@ -155,7 +167,7 @@ void *threadProc(void *arg)
 		.renderPass = renderPass,
 		.swapchainInfo = &swapchainInfo,
 		.extent = initialExtent,
-		.imageViews = &imageViews,
+		.imageViews = imageViews,
 		.framebuffers = &framebuffers
 	};
 
@@ -210,7 +222,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
-	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
+	destroyImageViews(swapchainCreateInfo.device, swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.surfaceCharacteristics);
 
 	if (!getPhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.physicalDevice, swapchainCreateInfo.surface, swapchainCreateInfo.surfaceCharacteristics, error)) {
@@ -225,7 +237,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		return false;
 	}
 
-	if (!createFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, *swapchainCreateInfo.imageViews, swapchainCreateInfo.renderPass, swapchainCreateInfo.framebuffers, error)) {
+	if (!createFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, swapchainCreateInfo.imageViews, swapchainCreateInfo.renderPass, swapchainCreateInfo.framebuffers, error)) {
 		return false;
 	}
 
@@ -241,6 +253,7 @@ static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDev
 	destroyPipeline(device, pipeline);
 	destroyPipelineLayout(device, pipelineLayout);
 	destroyRenderPass(device, renderPass);
+	free(imageViews);
 	destroyImageViews(device, imageViews, imageViewCount);
 	destroySwapchain(device, swapchain);
 	destroyDevice(device);
