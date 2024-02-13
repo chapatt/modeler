@@ -4,12 +4,13 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
-bool createImageViews(VkDevice device, SwapchainInfo swapchainInfo, VkImageView **imageViews, char **error) {
-	*imageViews = malloc(sizeof(*imageViews) * swapchainInfo.imageCount);
+bool createImageViews(VkDevice device, VkImage *images, uint32_t imageCount, VkFormat format, VkImageView **imageViews, char **error)
+{
+	*imageViews = malloc(sizeof(*imageViews) * imageCount);
 	VkImageViewCreateInfo createInfoTemplate = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
 		.viewType = VK_IMAGE_VIEW_TYPE_2D,
-		.format = swapchainInfo.surfaceFormat.format,
+		.format = format,
 		.components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
 		.components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
 		.components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
@@ -21,9 +22,9 @@ bool createImageViews(VkDevice device, SwapchainInfo swapchainInfo, VkImageView 
 		.subresourceRange.layerCount = 1
 	};
 
-	for (uint32_t i = 0; i < swapchainInfo.imageCount; ++i) {
+	for (uint32_t i = 0; i < imageCount; ++i) {
 		VkImageViewCreateInfo createInfo = createInfoTemplate;
-		createInfo.image = swapchainInfo.images[i];
+		createInfo.image = images[i];
 
 		VkResult result;
 		if ((result = vkCreateImageView(device, &createInfo, NULL, *imageViews + i)) != VK_SUCCESS) {

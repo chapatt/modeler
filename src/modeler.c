@@ -83,7 +83,7 @@ void *threadProc(void *arg)
 	}
 
 	VkImageView *imageViews;
-	if (!createImageViews(device, swapchainInfo, &imageViews, error)) {
+	if (!createImageViews(device, swapchainInfo.images, swapchainInfo.imageCount, swapchainInfo.surfaceFormat.format, &imageViews, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -221,7 +221,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		return false;
 	}
 
-	if (!createImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, swapchainCreateInfo.imageViews, error)) {
+	if (!createImageViews(swapchainCreateInfo.device, swapchainCreateInfo.swapchainInfo->images, swapchainCreateInfo.swapchainInfo->imageCount, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, swapchainCreateInfo.imageViews, error)) {
 		return false;
 	}
 
