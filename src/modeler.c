@@ -167,7 +167,7 @@ void *threadProc(void *arg)
 		.renderPass = renderPass,
 		.swapchainInfo = &swapchainInfo,
 		.extent = initialExtent,
-		.imageViews = imageViews,
+		.imageViews = &imageViews,
 		.framebuffers = &framebuffers
 	};
 
@@ -222,7 +222,8 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
-	destroyImageViews(swapchainCreateInfo.device, swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
+	free(*swapchainCreateInfo.imageViews);
+	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.surfaceCharacteristics);
 
 	if (!getPhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.physicalDevice, swapchainCreateInfo.surface, swapchainCreateInfo.surfaceCharacteristics, error)) {
@@ -233,11 +234,12 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		return false;
 	}
 
-	if (!createImageViews(swapchainCreateInfo.device, swapchainCreateInfo.swapchainInfo->images, swapchainCreateInfo.swapchainInfo->imageCount, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, swapchainCreateInfo.imageViews, error)) {
+	*swapchainCreateInfo.imageViews = malloc(sizeof(*swapchainCreateInfo.imageViews) * swapchainCreateInfo.swapchainInfo->imageCount);
+	if (!createImageViews(swapchainCreateInfo.device, swapchainCreateInfo.swapchainInfo->images, swapchainCreateInfo.swapchainInfo->imageCount, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, *swapchainCreateInfo.imageViews, error)) {
 		return false;
 	}
 
-	if (!createFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, swapchainCreateInfo.imageViews, swapchainCreateInfo.renderPass, swapchainCreateInfo.framebuffers, error)) {
+	if (!createFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, *swapchainCreateInfo.imageViews, swapchainCreateInfo.renderPass, swapchainCreateInfo.framebuffers, error)) {
 		return false;
 	}
 
