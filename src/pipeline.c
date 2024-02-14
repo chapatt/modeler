@@ -217,10 +217,6 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *vertex
 
 	vkDestroyShaderModule(device, fragmentShaderModule, NULL);
 	vkDestroyShaderModule(device, vertexShaderModule, NULL);
-#ifndef EMBED_SHADERS
-	free(fragmentShaderBytes);
-	free(vertexShaderBytes);
-#endif /* EMBED_SHADERS */
 
 	return true;
 }

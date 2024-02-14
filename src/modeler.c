@@ -134,7 +134,12 @@ void *threadProc(void *arg)
 
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
-	if (!createPipeline(device, renderPass, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &pipelineLayout, &pipeline, error)) {
+	bool pipelineCreationSuccess = createPipeline(device, renderPass, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &pipelineLayout, &pipeline, error);
+#ifndef EMBED_SHADERS
+	free(fragmentShaderBytes);
+	free(vertexShaderBytes);
+#endif /* EMBED_SHADERS */
+	if (!pipelineCreationSuccess) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
