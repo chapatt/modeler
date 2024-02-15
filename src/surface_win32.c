@@ -1,8 +1,6 @@
 #ifndef VK_USE_PLATFORM_WIN32_KHR
 #define VK_USE_PLATFORM_WIN32_KHR
-#endif
-
-#include <stdio.h>
+#endif /* VK_USE_PLATFORM_WIN32_KHR */
 #include <vulkan/vulkan.h>
 
 #include "modeler_win32.h"
