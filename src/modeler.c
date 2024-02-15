@@ -7,9 +7,12 @@
 #include "imgui/cimgui_impl_vulkan.h"
 #include "imgui/imgui_impl_modeler.h"
 
+#include "vk_mem_alloc.h"
+
 #include "modeler.h"
 #include "instance.h"
 #include "surface.h"
+#include "image.h"
 #include "image_view.h"
 #include "render_pass.h"
 #include "pipeline.h"
@@ -17,6 +20,7 @@
 #include "command_pool.h"
 #include "command_buffer.h"
 #include "synchronization.h"
+#include "allocator.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
@@ -27,7 +31,7 @@
 
 #include "renderloop.h"
 
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
 static void imVkCheck(VkResult result);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
@@ -77,6 +81,11 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	VmaAllocator allocator;
+	if (!createAllocator(instance, physicalDevice, device, &allocator, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
 	SwapchainInfo swapchainInfo = {};
 	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, initialExtent, VK_NULL_HANDLE, &swapchainInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
@@ -89,12 +98,13 @@ void *threadProc(void *arg)
 
 #ifdef DRAW_WINDOW_DECORATION
 	VkImage offscreenImage;
-	if (!createImage(device, &offscreenImage, error)) {
+	VmaAllocation offscreenImageAllocation;
+	if (!createImage(device, allocator, swapchainInfo.extent, swapchainInfo.surfaceFormat.format, &offscreenImage, &offscreenImageAllocation, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
 	VkImageView offscreenImageView;
-	if (!createImageViews(device, &offscreenImage, 1, swapchainInfo.surfaceFormat.format, &&offscreenImageView, error)) {
+	if (!createImageViews(device, &offscreenImage, 1, swapchainInfo.surfaceFormat.format, &offscreenImageView, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 #endif
@@ -217,7 +227,17 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
-	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, swapchainInfo.swapchain, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo);
+#ifdef DRAW_WINDOW_DECORATION
+	size_t offscreenImageCount = 1;
+	VkImage offscreenImages[] = {offscreenImage};
+	VmaAllocation offscreenImageAllocations[] = {offscreenImageAllocation};
+#else
+	VkImage *offscreenImages = NULL;
+	VmaAllocation *offscreenImageAllocations = NULL;
+	size_t offscreenImageCount = 0;
+#endif /* DRAW_WINDOW_DECORATION */
+
+	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo);
 
 	return NULL;
 }
@@ -227,8 +247,8 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
-	free(*swapchainCreateInfo.imageViews);
 	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
+	free(*swapchainCreateInfo.imageViews);
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.surfaceCharacteristics);
 
 	if (!getPhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.physicalDevice, swapchainCreateInfo.surface, swapchainCreateInfo.surfaceCharacteristics, error)) {
@@ -251,7 +271,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	return true;
 }
 
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VkSwapchainKHR swapchain, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo)
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo)
 {
 	destroySynchronization(device, synchronizationInfo);
 	freeCommandBuffers(device, commandPool, commandBuffers, commandBufferCount);
@@ -260,9 +280,13 @@ static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDev
 	destroyPipeline(device, pipeline);
 	destroyPipelineLayout(device, pipelineLayout);
 	destroyRenderPass(device, renderPass);
-	free(imageViews);
 	destroyImageViews(device, imageViews, imageViewCount);
+	free(imageViews);
+	for (size_t i = 0; i < offscreenImageCount; ++i) {
+		destroyImage(allocator, offscreenImages[i], offscreenImageAllocations[i]);
+	}
 	destroySwapchain(device, swapchain);
+	destroyAllocator(allocator);
 	destroyDevice(device);
 	freePhysicalDeviceCharacteristics(characteristics);
 	freePhysicalDeviceSurfaceCharacteristics(surfaceCharacteristics);

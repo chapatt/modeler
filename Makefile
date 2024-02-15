@@ -1,5 +1,5 @@
 CFLAGS=-m64
-CXXFLAGS+=-std=c++11
+CXXFLAGS+=-std=c++17
 LDFLAGS=
 LDLIBS=
 
@@ -45,11 +45,11 @@ all: $(ALL_TARGET)
 renderloop.o: src/renderloop.c src/renderloop.h
 	$(CC) $(CFLAGS) -c src/renderloop.c
 
-modeler: main_wayland.o modeler.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o imgui.a xdg-shell-protocol.o
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o imgui.a xdg-shell-protocol.o $(LDLIBS)
+modeler: main_wayland.o modeler.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o renderloop.o imgui.a vma_implementation.o xdg-shell-protocol.o
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o renderloop.o imgui.a vma_implementation.o xdg-shell-protocol.o $(LDLIBS)
 
-modeler.exe: main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a $(LDLIBS)
+modeler.exe: main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a vma_implementation.o
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a vma_implementation.o $(LDLIBS)
 	
 modeler.a: modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o
 	$(AR) rvs $@ modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o
@@ -96,6 +96,9 @@ device.o: src/device.c src/device.h
 swapchain.o: src/swapchain.c src/swapchain.h
 	$(CC) $(CFLAGS) -c src/swapchain.c
 
+image.o: src/image.c src/image.h src/vk_mem_alloc.h src/utils.h src/vulkan_utils.h
+	$(CC) $(CFLAGS) -c src/image.c
+
 image_view.o: src/image_view.c src/image_view.h src/swapchain.h
 	$(CC) $(CFLAGS) -c src/image_view.c
 
@@ -116,6 +119,9 @@ command_buffer.o: src/command_buffer.c src/command_buffer.h
 
 synchronization.o: src/synchronization.c src/synchronization.h
 	$(CC) $(CFLAGS) -c src/synchronization.c
+
+allocator.o: src/allocator.c src/allocator.h
+	$(CC) $(CFLAGS) -c src/allocator.c
 
 input_event.o: src/input_event.c src/input_event.h src/queue.h
 	$(CC) $(CFLAGS) -c src/input_event.c
@@ -160,6 +166,9 @@ xdg-shell-protocol.c:
 xdg-shell-client-protocol.h:
 	wayland-scanner client-header < /usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml > xdg-shell-client-protocol.h
 
+vma_implementation.o: src/vk_mem_alloc.h
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/vma_implementation.cpp
+
 vert.spv: src/shader.vert
 	$(GLSLC) src/shader.vert -o $@
 
@@ -177,10 +186,11 @@ clean:
 		modeler_win32.o modeler_wayland.o modeler.o \
 		instance.o physical_device.o device.o utils.o utils_win32.o \
 		surface.o surface_win32.o surface_wayland.o \
-		swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o \
+		swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o \
 		command_pool.o command_buffer.o synchronization.o \
 		input_event.o queue.o \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
 		vert.spv frag.spv shader_vert.h shader_frag.h \
 		imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o \
+		vma_implementation.o \
 		renderloop.o
