@@ -31,6 +31,7 @@
 
 #include "renderloop.h"
 
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkDescriptorPool *descriptorPool, ImGui_ImplVulkan_InitInfo *imVulkanInitInfo, char **error);
 static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
 static void imVkCheck(VkResult result);
 
@@ -38,13 +39,6 @@ void terminateVulkan(Queue *inputQueue, pthread_t thread)
 {
 	enqueueInputEvent(inputQueue, TERMINATE, NULL);
 	pthread_join(thread, NULL);
-}
-
-static void imVkCheck(VkResult result)
-{
-	if (result != VK_SUCCESS) {
-		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
-	}
 }
 
 void *threadProc(void *arg)
@@ -187,41 +181,8 @@ void *threadProc(void *arg)
 	};
 
 	VkDescriptorPool imDescriptorPool;
-	VkDescriptorPoolSize pool_sizes[] = {
-		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}
-	};
-	VkDescriptorPoolCreateInfo pool_info = {
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-		.maxSets = 1,
-		.poolSizeCount = (uint32_t) IM_ARRAYSIZE(pool_sizes),
-		.pPoolSizes = pool_sizes
-	};
-	VkResult result;
-	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, &imDescriptorPool)) != VK_SUCCESS) {
-		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
-		sendThreadFailureSignal(platformWindow);
-	}
-	ImGui_CreateContext(NULL);
-	ImGuiIO *io = ImGui_GetIO();
-	io->IniFilename = NULL;
-	ImGui_ImplModeler_Init(&swapchainInfo);
-	ImGui_StyleColorsDark(NULL);
-	ImGui_ImplVulkan_InitInfo imVulkanInitInfo = {
-		.Instance = instance,
-		.PhysicalDevice = physicalDevice,
-		.Device = device,
-		.QueueFamily = queueInfo.graphicsQueueFamilyIndex,
-		.Queue = queueInfo.graphicsQueue,
-		.PipelineCache = VK_NULL_HANDLE,
-		.DescriptorPool = imDescriptorPool,
-		.Subpass = 0,
-		.MinImageCount = surfaceCharacteristics.capabilities.minImageCount,
-		.ImageCount = swapchainInfo.imageCount,
-		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
-		.Allocator = NULL,
-		.CheckVkResultFn = imVkCheck
-	};
+	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
+	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, &imDescriptorPool, &imVulkanInitInfo, error);
 
 	if (!draw(device, renderPass, pipeline, pipelineLayout, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
@@ -240,6 +201,52 @@ void *threadProc(void *arg)
 	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo);
 
 	return NULL;
+}
+
+static void imVkCheck(VkResult result)
+{
+	if (result != VK_SUCCESS) {
+		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
+	}
+}
+
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkDescriptorPool *descriptorPool, ImGui_ImplVulkan_InitInfo *imVulkanInitInfo, char **error)
+{
+	VkDescriptorPoolSize pool_sizes[] = {
+		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}
+	};
+	VkDescriptorPoolCreateInfo pool_info = {
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+		.maxSets = 1,
+		.poolSizeCount = (uint32_t) IM_ARRAYSIZE(pool_sizes),
+		.pPoolSizes = pool_sizes
+	};
+	VkResult result;
+	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, descriptorPool)) != VK_SUCCESS) {
+		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
+		sendThreadFailureSignal(platformWindow);
+	}
+	ImGui_CreateContext(NULL);
+	ImGuiIO *io = ImGui_GetIO();
+	io->IniFilename = NULL;
+	ImGui_ImplModeler_Init(swapchainInfo);
+	ImGui_StyleColorsDark(NULL);
+	*imVulkanInitInfo = (ImGui_ImplVulkan_InitInfo) {
+		.Instance = instance,
+		.PhysicalDevice = physicalDevice,
+		.Device = device,
+		.QueueFamily = queueInfo.graphicsQueueFamilyIndex,
+		.Queue = queueInfo.graphicsQueue,
+		.PipelineCache = VK_NULL_HANDLE,
+		.DescriptorPool = *descriptorPool,
+		.Subpass = 0,
+		.MinImageCount = surfaceCharacteristics.capabilities.minImageCount,
+		.ImageCount = swapchainInfo->imageCount,
+		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+		.Allocator = NULL,
+		.CheckVkResultFn = imVkCheck
+	};
 }
 
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error)
