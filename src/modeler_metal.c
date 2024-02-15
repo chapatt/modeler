@@ -1,7 +1,3 @@
-#ifndef VK_USE_PLATFORM_METAL_EXT
-#define VK_USE_PLATFORM_METAL_EXT
-#endif /* VK_USE_PLATFORM_METAL_EXT */
-
 #include "objc/message.h"
 #include "objc/runtime.h"
 

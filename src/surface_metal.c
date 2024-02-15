@@ -1,7 +1,3 @@
-#ifndef VK_USE_PLATFORM_METAL_EXT
-#define VK_USE_PLATFORM_METAL_EXT
-#endif
-
 #include <stdio.h>
 
 #include "modeler_metal.h"

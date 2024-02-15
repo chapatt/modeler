@@ -1,7 +1,3 @@
-#ifndef VK_USE_PLATFORM_WIN32_KHR
-#define VK_USE_PLATFORM_WIN32_KHR
-#endif /* VK_USE_PLATFORM_WIN32_KHR */
-
 #include <stdlib.h>
 #include <vulkan/vulkan.h>
 

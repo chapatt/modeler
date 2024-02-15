@@ -13,6 +13,7 @@ ifeq ($(OS),Windows_NT)
 	LDFLAGS+=-L/VulkanSDK/1.3.250.0/Lib
 	LDLIBS+=-lvulkan-1 -ldwmapi
 	ALL_TARGET=modeler.exe
+	CFLAGS+=-DVK_USE_PLATFORM_WIN32_KHR
 else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
@@ -20,21 +21,23 @@ else
 		GLSLC=glslc
 		LDLIBS+=-lvulkan -lwayland-client
 		ALL_TARGET=modeler
+		CFLAGS+=-DVK_USE_PLATFORM_WAYLAND_KHR
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		GLSLC=/Users/chase/VulkanSDK/1.3.250.0/macOS/bin/glslc
 		CFLAGS+=-I/Users/chase/VulkanSDK/1.3.250.0/macOS/include
 		LDLIBS+=-lvulkan
 		ALL_TARGET=modeler.a
+		CFLAGS+=-DVK_USE_PLATFORM_METAL_EXT
 	endif
 endif
 
-CFLAGS += -DENABLE_VSYNC
+CFLAGS+=-DENABLE_VSYNC
 ifdef DEBUG
-	CFLAGS += -DDEBUG -g
+	CFLAGS+=-DDEBUG -g
 else
-	CFLAGS += -DEMBED_SHADERS -O3
-	LDFLAGS += -static
+	CFLAGS+=-DEMBED_SHADERS -O3
+	LDFLAGS+=-static
 endif
 
 all: $(ALL_TARGET)

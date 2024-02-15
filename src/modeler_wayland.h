@@ -1,10 +1,6 @@
 #ifndef MODELER_MODELER_WAYLAND_H
 #define MODELER_MODELER_WAYLAND_H
 
-#ifndef VK_USE_PLATFORM_WAYLAND_KHR
-#define VK_USE_PLATFORM_WAYLAND_KHR
-#endif
-
 #include <pthread.h>
 
 #include "queue.h"
