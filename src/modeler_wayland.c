@@ -1,6 +1,6 @@
 #ifndef VK_USE_PLATFORM_WAYLAND_KHR
 #define VK_USE_PLATFORM_WAYLAND_KHR
-#endif /* VK_USE_PLATFORM_WIN32_KHR */
+#endif /* VK_USE_PLATFORM_WAYLAND_KHR */
 
 #include <stdlib.h>
 #include <unistd.h>
