@@ -31,7 +31,7 @@
 
 #include "renderloop.h"
 
-void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkDescriptorPool *descriptorPool, ImGui_ImplVulkan_InitInfo *imVulkanInitInfo, char **error);
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, char **error);
 static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
 static void imVkCheck(VkResult result);
 
@@ -182,7 +182,7 @@ void *threadProc(void *arg)
 
 	VkDescriptorPool imDescriptorPool;
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
-	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, &imDescriptorPool, &imVulkanInitInfo, error);
+	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
 	if (!draw(device, renderPass, pipeline, pipelineLayout, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
@@ -210,8 +210,9 @@ static void imVkCheck(VkResult result)
 	}
 }
 
-void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkDescriptorPool *descriptorPool, ImGui_ImplVulkan_InitInfo *imVulkanInitInfo, char **error)
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, char **error)
 {
+	VkDescriptorPool descriptorPool;
 	VkDescriptorPoolSize pool_sizes[] = {
 		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}
 	};
@@ -223,7 +224,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		.pPoolSizes = pool_sizes
 	};
 	VkResult result;
-	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, descriptorPool)) != VK_SUCCESS) {
+	if ((result = vkCreateDescriptorPool(device, &pool_info, NULL, &descriptorPool)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
 		sendThreadFailureSignal(platformWindow);
 	}
@@ -232,14 +233,14 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 	io->IniFilename = NULL;
 	ImGui_ImplModeler_Init(swapchainInfo);
 	ImGui_StyleColorsDark(NULL);
-	*imVulkanInitInfo = (ImGui_ImplVulkan_InitInfo) {
+	ImGui_ImplVulkan_InitInfo imVulkanInitInfo = {
 		.Instance = instance,
 		.PhysicalDevice = physicalDevice,
 		.Device = device,
 		.QueueFamily = queueInfo.graphicsQueueFamilyIndex,
 		.Queue = queueInfo.graphicsQueue,
 		.PipelineCache = VK_NULL_HANDLE,
-		.DescriptorPool = *descriptorPool,
+		.DescriptorPool = descriptorPool,
 		.Subpass = 0,
 		.MinImageCount = surfaceCharacteristics.capabilities.minImageCount,
 		.ImageCount = swapchainInfo->imageCount,
@@ -247,6 +248,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		.Allocator = NULL,
 		.CheckVkResultFn = imVkCheck
 	};
+	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
 }
 
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error)

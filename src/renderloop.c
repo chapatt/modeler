@@ -24,7 +24,6 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkPipel
 		commandBufferBeginInfos[i].flags = 0;
 		commandBufferBeginInfos[i].pInheritanceInfo = NULL;
 	}
-	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
 
 	struct timespec previousTime = {};
 	const size_t queueLength = 10;
@@ -62,18 +61,6 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkPipel
 				goto cancelMainLoop;
 			}
 		}
-
-		struct timespec spec;
-		clock_gettime(CLOCK_MONOTONIC, &spec);
-			head = (head + 1) % queueLength;
-			elapsedQueue[head] = spec.tv_nsec + ((1000000000 * (spec.tv_sec - previousTime.tv_sec)) - previousTime.tv_nsec);
-		if (spec.tv_sec > previousTime.tv_sec) {
-			for (size_t i = 0; i < queueLength; ++i) {
-				elapsed = (elapsed + elapsedQueue[i]) / 2;
-			}
-		}
-		previousTime.tv_sec = spec.tv_sec;
-		previousTime.tv_nsec = spec.tv_nsec;
 
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
 			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
@@ -140,6 +127,17 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkPipel
 
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 
+		struct timespec spec;
+		clock_gettime(CLOCK_MONOTONIC, &spec);
+			head = (head + 1) % queueLength;
+			elapsedQueue[head] = spec.tv_nsec + ((1000000000 * (spec.tv_sec - previousTime.tv_sec)) - previousTime.tv_nsec);
+		if (spec.tv_sec > previousTime.tv_sec) {
+			for (size_t i = 0; i < queueLength; ++i) {
+				elapsed = (elapsed + elapsedQueue[i]) / 2;
+			}
+		}
+		previousTime.tv_sec = spec.tv_sec;
+		previousTime.tv_nsec = spec.tv_nsec;
 		cImGui_ImplVulkan_NewFrame();
 		ImGui_ImplModeler_NewFrame();
 		ImGui_NewFrame();
