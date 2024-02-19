@@ -39,7 +39,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 
 	VkSubpassDependency subpassDependency = {
 		.srcSubpass = VK_SUBPASS_EXTERNAL,
-		.dstSubpass = 1,
+		.dstSubpass = 0,
 		.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		.srcAccessMask = 0,
