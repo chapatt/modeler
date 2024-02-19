@@ -6,17 +6,18 @@
 
 #include "framebuffer.h"
 
-bool createFramebuffers(VkDevice device, SwapchainInfo swapchainInfo, VkImageView *imageViews, VkRenderPass renderPass, VkFramebuffer **framebuffers, char **error)
+bool createFramebuffers(VkDevice device, SwapchainInfo swapchainInfo, VkImageView *offscreenImageView, VkImageView *imageViews, VkRenderPass renderPass, VkFramebuffer **framebuffers, char **error)
 {
 	*framebuffers = malloc(sizeof(*framebuffers) * swapchainInfo.imageCount);
 	for (uint32_t i = 0; i < swapchainInfo.imageCount; ++i) {
+		VkImageView attachments[] = {*offscreenImageView, imageViews[i]};
 		VkFramebufferCreateInfo framebufferCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 			.pNext = NULL,
 			.flags = 0,
 			.renderPass = renderPass,
-			.attachmentCount = 1,
-			.pAttachments = imageViews + i,
+			.attachmentCount = 2,
+			.pAttachments = attachments,
 			.width = swapchainInfo.extent.width,
 			.height = swapchainInfo.extent.height,
  			.layers = 1

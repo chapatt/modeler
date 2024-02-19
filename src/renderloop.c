@@ -13,11 +13,13 @@
 
 #include "renderloop.h"
 
-bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkImageView *imageViews, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPass, VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkPipeline secondPipeline, VkPipelineLayout secondPipelineLayout, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkImageView *imageViews, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
 	VkRenderPassBeginInfo renderPassBeginInfos[swapchainInfo->imageCount];
-	VkClearValue clear_val = {0.1f, 0.3f, 0.3f, 1.0f};
+	VkClearValue clearValue = {0.1f, 0.3f, 0.3f, 1.0f};
+	VkClearValue secondClearValue = {0.0f, 0.0f, 0.0f, 0.0f};
+	VkClearValue clearValues[] = {clearValue, secondClearValue};
 	for (uint32_t i = 0; i < swapchainInfo->imageCount; ++i) {
 		commandBufferBeginInfos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		commandBufferBeginInfos[i].pNext = NULL;
@@ -93,14 +95,14 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkPipel
 		renderPassBeginInfos[imageIndex].renderPass = renderPass;
 		renderPassBeginInfos[imageIndex].framebuffer = (*framebuffers)[imageIndex];
 		renderPassBeginInfos[imageIndex].renderArea = renderArea;
-		renderPassBeginInfos[imageIndex].clearValueCount = 1;
-		renderPassBeginInfos[imageIndex].pClearValues = &clear_val;
+		renderPassBeginInfos[imageIndex].clearValueCount = 2;
+		renderPassBeginInfos[imageIndex].pClearValues = clearValues;
 
 		vkResetCommandBuffer((*commandBuffers)[imageIndex], 0);
 		vkBeginCommandBuffer((*commandBuffers)[imageIndex], &commandBufferBeginInfos[imageIndex]);
 		vkCmdBeginRenderPass((*commandBuffers)[imageIndex], &(renderPassBeginInfos[imageIndex]), VK_SUBPASS_CONTENTS_INLINE);
-		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
+		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		VkViewport viewport = {
 			.x = 0.0f,
 			.y = 0.0f,
@@ -119,34 +121,60 @@ bool draw(VkDevice device, VkRenderPass renderPass, VkPipeline pipeline, VkPipel
 		};
 		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &viewport);
 		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
-
 		PushConstants pushConstants = {
 			.extent = {swapchainInfo->extent.width, swapchainInfo->extent.height}
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
-
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 
-		struct timespec spec;
-		clock_gettime(CLOCK_MONOTONIC, &spec);
-			head = (head + 1) % queueLength;
-			elapsedQueue[head] = spec.tv_nsec + ((1000000000 * (spec.tv_sec - previousTime.tv_sec)) - previousTime.tv_nsec);
-		if (spec.tv_sec > previousTime.tv_sec) {
-			for (size_t i = 0; i < queueLength; ++i) {
-				elapsed = (elapsed + elapsedQueue[i]) / 2;
-			}
-		}
-		previousTime.tv_sec = spec.tv_sec;
-		previousTime.tv_nsec = spec.tv_nsec;
-		cImGui_ImplVulkan_NewFrame();
-		ImGui_ImplModeler_NewFrame();
-		ImGui_NewFrame();
-		ImGui_Begin("A Window", NULL, 0);
-		ImGui_Text("fps: %ld", 1000000000 / elapsed);
-		ImGui_End();
-		ImGui_Render();
-		ImDrawData *drawData = ImGui_GetDrawData();
-		cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
+		// struct timespec spec;
+		// clock_gettime(CLOCK_MONOTONIC, &spec);
+		// 	head = (head + 1) % queueLength;
+		// 	elapsedQueue[head] = spec.tv_nsec + ((1000000000 * (spec.tv_sec - previousTime.tv_sec)) - previousTime.tv_nsec);
+		// if (spec.tv_sec > previousTime.tv_sec) {
+		// 	for (size_t i = 0; i < queueLength; ++i) {
+		// 		elapsed = (elapsed + elapsedQueue[i]) / 2;
+		// 	}
+		// }
+		// previousTime.tv_sec = spec.tv_sec;
+		// previousTime.tv_nsec = spec.tv_nsec;
+		// cImGui_ImplVulkan_NewFrame();
+		// ImGui_ImplModeler_NewFrame();
+		// ImGui_NewFrame();
+		// ImGui_Begin("A Window", NULL, 0);
+		// ImGui_Text("fps: %ld", 1000000000 / elapsed);
+		// ImGui_End();
+		// ImGui_Render();
+		// ImDrawData *drawData = ImGui_GetDrawData();
+		// cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
+
+		vkCmdNextSubpass((*commandBuffers)[imageIndex], VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, secondPipeline);
+		vkCmdBindDescriptorSets((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, secondPipelineLayout, 0, 1, &descriptorSet, 0, NULL);
+		VkViewport secondViewport = {
+			.x = 0.0f,
+			.y = 0.0f,
+			.width = swapchainInfo->extent.width,
+			.height = swapchainInfo->extent.height,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+		VkOffset2D secondScissorOffset = {
+			.x = 0,
+			.y = 0
+		};
+		VkRect2D secondScissor = {
+			.offset = scissorOffset,
+			.extent = swapchainInfo->extent
+		};
+		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &viewport);
+		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
+		PushConstants secondPushConstants = {
+			.extent = {swapchainInfo->extent.width, swapchainInfo->extent.height}
+		};
+		vkCmdPushConstants((*commandBuffers)[imageIndex], secondPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
+		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 
 		vkCmdEndRenderPass((*commandBuffers)[imageIndex]);
 		vkEndCommandBuffer((*commandBuffers)[imageIndex]);

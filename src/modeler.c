@@ -90,6 +90,7 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+#define DRAW_WINDOW_DECORATION = true
 #ifdef DRAW_WINDOW_DECORATION
 	VkImage offscreenImage;
 	VmaAllocation offscreenImageAllocation;
@@ -101,12 +102,73 @@ void *threadProc(void *arg)
 	if (!createImageViews(device, &offscreenImage, 1, swapchainInfo.surfaceFormat.format, &offscreenImageView, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
-#endif
+#endif /* DRAW_WINDOW_DECORATION */
 
 	VkRenderPass renderPass;
 	if (!createRenderPass(device, swapchainInfo, &renderPass, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
+
+/* DESCRIPTORS */
+	VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {
+		.binding = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.pImmutableSamplers = NULL
+	};
+
+	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		.bindingCount = 1,
+		.pBindings = &descriptorSetLayoutBinding,
+	};
+
+	VkDescriptorSetLayout descriptorSetLayout;
+	vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, NULL, &descriptorSetLayout);
+
+	VkDescriptorPoolSize descriptorPoolSize = {
+		.type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+		.descriptorCount = 1
+	};
+
+	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+		.poolSizeCount = 1,
+		.pPoolSizes = &descriptorPoolSize,
+		.maxSets = 1
+	};
+
+	VkDescriptorPool descriptorPool;
+	vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, NULL, &descriptorPool);
+
+	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
+		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+		.descriptorPool = descriptorPool,
+		.descriptorSetCount = 1,
+		.pSetLayouts = &descriptorSetLayout
+	};
+
+	VkDescriptorSet descriptorSet;
+	vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &descriptorSet);
+
+	VkDescriptorImageInfo descriptorImageInfo = {
+		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		.imageView = offscreenImageView,
+		.sampler = VK_NULL_HANDLE
+	};
+
+	VkWriteDescriptorSet writeDescriptorSet = {
+		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+		.dstSet = descriptorSet,
+		.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+		.descriptorCount = 1,
+		.dstBinding = 0,
+		.pImageInfo = &descriptorImageInfo
+	};
+
+	vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, NULL);
+/* END DESCRIPTORS */
 
 #ifndef EMBED_SHADERS
 	char *vertexShaderPath;
@@ -128,27 +190,52 @@ void *threadProc(void *arg)
 	}
 #endif /* EMBED_SHADERS */
 
-#ifdef DRAW_WINDOW_DECORATION
-	VkPipelineLayout pipelineLayout;
-	VkPipeline pipeline;
-	if (!createPipeline(device, renderPass, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &pipelineLayout, &pipeline, error)) {
+#ifndef EMBED_SHADERS
+	char *vertexShaderPathTri;
+	char *fragmentShaderPathTri;
+	asprintf(&vertexShaderPathTri, "%s/%s", resourcePath, "vert_triangle.spv");
+	asprintf(&fragmentShaderPathTri, "%s/%s", resourcePath, "frag_triangle.spv");
+	char *vertexShaderBytesTri;
+	char *fragmentShaderBytesTri;
+	uint32_t vertexShaderSizeTri = 0;
+	uint32_t fragmentShaderSizeTri = 0;
+
+	if ((vertexShaderSizeTri = readFileToString(vertexShaderPathTri, &vertexShaderBytesTri)) == -1) {
+		asprintf(error, "Failed to open vertex shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
-#endif
+	if ((fragmentShaderSizeTri = readFileToString(fragmentShaderPathTri, &fragmentShaderBytesTri)) == -1) {
+		asprintf(error, "Failed to open fragment shader for reading.\n");
+		sendThreadFailureSignal(platformWindow);
+	}
+#endif /* EMBED_SHADERS */
+
+#ifdef DRAW_WINDOW_DECORATION
+	VkPipelineLayout pipelineLayoutTri;
+	VkPipeline pipelineTri;
+	bool pipelineCreateSuccessTri = createPipeline(device, renderPass, 0, vertexShaderBytesTri, vertexShaderSizeTri, fragmentShaderBytesTri, fragmentShaderSizeTri, swapchainInfo.extent, NULL, 0, &pipelineLayoutTri, &pipelineTri, error);
+#ifndef EMBED_SHADERS
+	free(fragmentShaderBytesTri);
+	free(vertexShaderBytesTri);
+#endif /* EMBED_SHADERS */
+	if (!pipelineCreateSuccessTri) {
+		sendThreadFailureSignal(platformWindow);
+	}
+#endif /* DRAW_WINDOW_DECORATION */
 
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
-	bool pipelineCreationSuccess = createPipeline(device, renderPass, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &pipelineLayout, &pipeline, error);
+	bool pipelineCreateSuccess = createPipeline(device, renderPass, 1, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &descriptorSetLayout, 1, &pipelineLayout, &pipeline, error);
 #ifndef EMBED_SHADERS
 	free(fragmentShaderBytes);
 	free(vertexShaderBytes);
 #endif /* EMBED_SHADERS */
-	if (!pipelineCreationSuccess) {
+	if (!pipelineCreateSuccess) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
 	VkFramebuffer *framebuffers;
-	if (!createFramebuffers(device, swapchainInfo, imageViews, renderPass, &framebuffers, error)) {
+	if (!createFramebuffers(device, swapchainInfo, &offscreenImageView, imageViews, renderPass, &framebuffers, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -176,6 +263,7 @@ void *threadProc(void *arg)
 		.renderPass = renderPass,
 		.swapchainInfo = &swapchainInfo,
 		.extent = initialExtent,
+		.offscreenImageView = &offscreenImageView,
 		.imageViews = &imageViews,
 		.framebuffers = &framebuffers
 	};
@@ -184,7 +272,7 @@ void *threadProc(void *arg)
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
 	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
-	if (!draw(device, renderPass, pipeline, pipelineLayout, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
+	if (!draw(device, descriptorSet, renderPass, pipelineTri, pipelineLayoutTri, pipeline, pipelineLayout, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -273,7 +361,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		return false;
 	}
 
-	if (!createFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, *swapchainCreateInfo.imageViews, swapchainCreateInfo.renderPass, swapchainCreateInfo.framebuffers, error)) {
+	if (!createFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, swapchainCreateInfo.offscreenImageView, *swapchainCreateInfo.imageViews, swapchainCreateInfo.renderPass, swapchainCreateInfo.framebuffers, error)) {
 		return false;
 	}
 

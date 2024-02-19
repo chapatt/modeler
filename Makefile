@@ -48,7 +48,7 @@ renderloop.o: src/renderloop.c src/renderloop.h
 modeler: main_wayland.o modeler.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o renderloop.o imgui.a vma_implementation.o xdg-shell-protocol.o
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler main_wayland.o modeler.o modeler_wayland.o instance.o surface.o surface_wayland.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o renderloop.o imgui.a vma_implementation.o xdg-shell-protocol.o $(LDLIBS)
 
-modeler.exe: main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a vma_implementation.o
+modeler.exe: main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a vma_implementation.o vert_triangle.spv frag_triangle.spv
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe main_win32.o modeler.o modeler_win32.o instance.o surface.o surface_win32.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o utils_win32.o renderloop.o imgui.a vma_implementation.o $(LDLIBS)
 	
 modeler.a: modeler_metal.o modeler.o instance.o surface.o surface_metal.o physical_device.o device.o swapchain.o image_view.o render_pass.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o input_event.o queue.o utils.o renderloop.o
@@ -181,11 +181,17 @@ shader_vert.h: vert.spv
 shader_frag.h: frag.spv
 	./hexdump_include.sh fragmentShaderBytes fragmentShaderSize frag.spv > $@
 
+vert_triangle.spv: src/shader_triangle.vert
+	$(GLSLC) src/shader_triangle.vert -o $@
+
+frag_triangle.spv: src/shader_triangle.frag
+	$(GLSLC) src/shader_triangle.frag -o $@
+
 clean:
 	$(RM) -rf modeler modeler.exe main_wayland.o main_win32.o \
 		modeler_win32.o modeler_wayland.o modeler.o \
 		instance.o physical_device.o device.o utils.o utils_win32.o \
-		surface.o surface_win32.o surface_wayland.o \
+		allocator.o surface.o surface_win32.o surface_wayland.o \
 		swapchain.o image.o image_view.o render_pass.o pipeline.o framebuffer.o \
 		command_pool.o command_buffer.o synchronization.o \
 		input_event.o queue.o \

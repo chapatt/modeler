@@ -27,6 +27,7 @@ typedef struct swapchain_create_info_t {
 	VkRenderPass renderPass;
 	SwapchainInfo *swapchainInfo;
 	VkExtent2D extent;
+	VkImageView *offscreenImageView;
 	VkImageView **imageViews;
 	VkFramebuffer **framebuffers;
 } SwapchainCreateInfo;
