@@ -27,7 +27,10 @@ void main()
 	float boxAlpha = clamp(0.5 - boxDistance, 0.0, 1.0);
 	float shadowAlpha = 1.0 - smoothstep(-blurRadius, blurRadius, boxDistance);
 
+	vec3 boxColor = fragColor * boxAlpha;
+	vec3 shadowColor = shadowPaint * shadowAlpha;
+
 	float outAlpha = boxAlpha + (shadowAlpha * (1.0 - boxAlpha));
-	vec3 outRgb = ((fragColor * boxAlpha) + (shadowPaint * shadowAlpha * (1.0 - boxAlpha))) / outAlpha;
+	vec3 outRgb = boxColor + (shadowColor * (1.0 - boxAlpha));
 	outColor = vec4(outRgb * outAlpha, outAlpha);
 }
