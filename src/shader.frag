@@ -13,9 +13,9 @@ float sdfRoundedRectangle(vec2 p, vec2 b, float r) {
 }
 
 float cornerRadius = 10.0;
-float blurRadius = 15.0;
-//vec4 fragColor = vec4(0.0, 0.0, 1.0, 1.0);
-vec4 fragColor = subpassLoad(inputColor).rgba;
+float blurRadius = 20.0;
+vec3 fragColor = subpassLoad(inputColor).rgb;
+vec3 shadowPaint = vec3(0.0);
 
 void main()
 {
@@ -23,13 +23,11 @@ void main()
 	vec2 size = (PushConstants.extent.xy / 2.0) - blurRadius;
 
 	float boxDistance = sdfRoundedRectangle(gl_FragCoord.xy - center, size, cornerRadius);
-	float shadowDistance = sdfRoundedRectangle(gl_FragCoord.xy - center, size, cornerRadius);
 
-	float boxAlpha = 1.0 - smoothstep(0.0, 2.0, boxDistance);
-	float shadowAlpha = 1.0 - smoothstep(-blurRadius, blurRadius, shadowDistance);
+	float boxAlpha = clamp(0.5 - boxDistance, 0.0, 1.0);
+	float shadowAlpha = 1.0 - smoothstep(-blurRadius, blurRadius, boxDistance);
 
-	vec4 boxColor = mix(vec4(0.0), fragColor, boxAlpha);
-	vec4 shadowColor = vec4(vec3(0.0), 0.6);
-
-	outColor = mix(boxColor, shadowColor, shadowAlpha - boxAlpha);
+	float outAlpha = boxAlpha + (shadowAlpha * (1.0 - boxAlpha));
+	vec3 outRgb = ((fragColor * boxAlpha) + (shadowPaint * shadowAlpha * (1.0 - boxAlpha))) / outAlpha;
+	outColor = vec4(outRgb * outAlpha, outAlpha);
 }
