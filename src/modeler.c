@@ -15,6 +15,7 @@
 #include "image.h"
 #include "image_view.h"
 #include "render_pass.h"
+#include "descriptor.h"
 #include "pipeline.h"
 #include "framebuffer.h"
 #include "command_pool.h"
@@ -109,66 +110,24 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
-/* DESCRIPTORS */
-	VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {
-		.binding = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
-		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-		.pImmutableSamplers = NULL
+	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+	VkSampler samplers[] = {VK_NULL_HANDLE};
+	CreateDescriptorSetInfo createDescriptorSetInfo = {
+		&offscreenImageView,
+		imageLayouts,
+		samplers,
+		1,
+		NULL,
+		NULL,
+		NULL,
+		0
 	};
-
-	VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-		.bindingCount = 1,
-		.pBindings = &descriptorSetLayoutBinding,
-	};
-
-	VkDescriptorSetLayout descriptorSetLayout;
-	vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, NULL, &descriptorSetLayout);
-
-	VkDescriptorPoolSize descriptorPoolSize = {
-		.type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
-		.descriptorCount = 1
-	};
-
-	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.poolSizeCount = 1,
-		.pPoolSizes = &descriptorPoolSize,
-		.maxSets = 1
-	};
-
 	VkDescriptorPool descriptorPool;
-	vkCreateDescriptorPool(device, &descriptorPoolCreateInfo, NULL, &descriptorPool);
-
-	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
-		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-		.descriptorPool = descriptorPool,
-		.descriptorSetCount = 1,
-		.pSetLayouts = &descriptorSetLayout
-	};
-
-	VkDescriptorSet descriptorSet;
-	vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, &descriptorSet);
-
-	VkDescriptorImageInfo descriptorImageInfo = {
-		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-		.imageView = offscreenImageView,
-		.sampler = VK_NULL_HANDLE
-	};
-
-	VkWriteDescriptorSet writeDescriptorSet = {
-		.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-		.dstSet = descriptorSet,
-		.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
-		.descriptorCount = 1,
-		.dstBinding = 0,
-		.pImageInfo = &descriptorImageInfo
-	};
-
-	vkUpdateDescriptorSets(device, 1, &writeDescriptorSet, 0, NULL);
-/* END DESCRIPTORS */
+	VkDescriptorSet *imageDescriptorSets;
+	VkDescriptorSetLayout *imageDescriptorSetLayouts;
+	VkDescriptorSet *bufferDescriptorSets;
+	VkDescriptorSetLayout *bufferDescriptorSetLayouts;
+	createDescriptorSets(device, createDescriptorSetInfo, &descriptorPool, &imageDescriptorSets, &imageDescriptorSetLayouts, &bufferDescriptorSets, &bufferDescriptorSetLayouts, error);
 
 #ifndef EMBED_SHADERS
 	char *vertexShaderPath;
@@ -225,7 +184,7 @@ void *threadProc(void *arg)
 
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
-	bool pipelineCreateSuccess = createPipeline(device, renderPass, 1, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &descriptorSetLayout, 1, &pipelineLayout, &pipeline, error);
+	bool pipelineCreateSuccess = createPipeline(device, renderPass, 1, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, imageDescriptorSetLayouts, 1, &pipelineLayout, &pipeline, error);
 #ifndef EMBED_SHADERS
 	free(fragmentShaderBytes);
 	free(vertexShaderBytes);
@@ -272,7 +231,7 @@ void *threadProc(void *arg)
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
 	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
-	if (!draw(device, descriptorSet, renderPass, pipelineTri, pipelineLayoutTri, pipeline, pipelineLayout, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
+	if (!draw(device, imageDescriptorSets[0], renderPass, pipelineTri, pipelineLayoutTri, pipeline, pipelineLayout, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
