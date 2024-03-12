@@ -26,14 +26,16 @@
 #include "vulkan_utils.h"
 
 #ifdef EMBED_SHADERS
-#include "../shader_vert.h"
-#include "../shader_frag.h"
+#include "../shader_window_border.vert.h"
+#include "../shader_window_border.frag.h"
+#include "../shader_triangle.vert.h"
+#include "../shader_triangle.frag.h"
 #endif /* EMBED_SHADERS */
 
 #include "renderloop.h"
 
 void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, char **error);
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
 static void imVkCheck(VkResult result);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
@@ -132,19 +134,19 @@ void *threadProc(void *arg)
 #ifndef EMBED_SHADERS
 	char *vertexShaderPath;
 	char *fragmentShaderPath;
-	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "vert.spv");
-	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "frag.spv");
+	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "window_border.vert.spv");
+	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "window_border.frag.spv");
 	char *vertexShaderBytes;
 	char *fragmentShaderBytes;
 	uint32_t vertexShaderSize = 0;
 	uint32_t fragmentShaderSize = 0;
 
 	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
-		asprintf(error, "Failed to open vertex shader for reading.\n");
+		asprintf(error, "Failed to open window border vertex shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
 	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
-		asprintf(error, "Failed to open fragment shader for reading.\n");
+		asprintf(error, "Failed to open window border fragment shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
 #endif /* EMBED_SHADERS */
@@ -152,19 +154,19 @@ void *threadProc(void *arg)
 #ifndef EMBED_SHADERS
 	char *vertexShaderPathTri;
 	char *fragmentShaderPathTri;
-	asprintf(&vertexShaderPathTri, "%s/%s", resourcePath, "vert_triangle.spv");
-	asprintf(&fragmentShaderPathTri, "%s/%s", resourcePath, "frag_triangle.spv");
+	asprintf(&vertexShaderPathTri, "%s/%s", resourcePath, "triangle.vert.spv");
+	asprintf(&fragmentShaderPathTri, "%s/%s", resourcePath, "triangle.frag.spv");
 	char *vertexShaderBytesTri;
 	char *fragmentShaderBytesTri;
 	uint32_t vertexShaderSizeTri = 0;
 	uint32_t fragmentShaderSizeTri = 0;
 
 	if ((vertexShaderSizeTri = readFileToString(vertexShaderPathTri, &vertexShaderBytesTri)) == -1) {
-		asprintf(error, "Failed to open vertex shader for reading.\n");
+		asprintf(error, "Failed to open triangle vertex shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
 	if ((fragmentShaderSizeTri = readFileToString(fragmentShaderPathTri, &fragmentShaderBytesTri)) == -1) {
-		asprintf(error, "Failed to open fragment shader for reading.\n");
+		asprintf(error, "Failed to open triangle fragment shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
 #endif /* EMBED_SHADERS */
@@ -239,13 +241,14 @@ void *threadProc(void *arg)
 	size_t offscreenImageCount = 1;
 	VkImage offscreenImages[] = {offscreenImage};
 	VmaAllocation offscreenImageAllocations[] = {offscreenImageAllocation};
+	VkImageView offscreenImageViews[] = {offscreenImageView};
 #else
 	VkImage *offscreenImages = NULL;
 	VmaAllocation *offscreenImageAllocations = NULL;
 	size_t offscreenImageCount = 0;
 #endif /* DRAW_WINDOW_DECORATION */
 
-	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo);
+	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo);
 
 	return NULL;
 }
@@ -327,7 +330,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	return true;
 }
 
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo)
+static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo)
 {
 	destroySynchronization(device, synchronizationInfo);
 	freeCommandBuffers(device, commandPool, commandBuffers, commandBufferCount);
@@ -338,6 +341,7 @@ static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDev
 	destroyRenderPass(device, renderPass);
 	destroyImageViews(device, imageViews, imageViewCount);
 	free(imageViews);
+	destroyImageViews(device, offscreenImageViews, offscreenImageCount);
 	for (size_t i = 0; i < offscreenImageCount; ++i) {
 		destroyImage(allocator, offscreenImages[i], offscreenImageAllocations[i]);
 	}
