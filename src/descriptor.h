@@ -26,8 +26,8 @@ bool createDescriptorSets(
 	char **error
 );
 
-void destroyDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool);
+void destroyDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout descriptorSetLayout);
 
-void destroyDescriptorSets(VkDevice device, VkDescriptorSet *descriptorSets, size_t count);
+void destroyDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool);
 
 #endif /* MODELER_DESCRIPTOR */

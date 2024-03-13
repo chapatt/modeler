@@ -76,6 +76,16 @@ bool createDescriptorSets(
 	return true;
 }
 
+void destroyDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout descriptorSetLayout)
+{
+	vkDestroyDescriptorSetLayout(device, descriptorSetLayout, NULL);
+}
+
+void destroyDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool)
+{
+	vkDestroyDescriptorPool(device, descriptorPool, NULL);
+}
+
 static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, char **error) {
 	VkDescriptorPoolSize descriptorPoolSize = {
 		.type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
