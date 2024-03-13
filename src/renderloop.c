@@ -44,11 +44,11 @@ bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPas
 
 			switch(type) {
 			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
-				ImGui_ImplModeler_HandleInput(inputEvent);
+				// ImGui_ImplModeler_HandleInput(inputEvent);
 				free(inputEvent);
 				break;
 			case POINTER_MOVE:
-				ImGui_ImplModeler_HandleInput(inputEvent);
+				// ImGui_ImplModeler_HandleInput(inputEvent);
 				free(data);
 				free(inputEvent);
 				break;

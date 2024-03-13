@@ -232,7 +232,7 @@ void *threadProc(void *arg)
 
 	VkDescriptorPool imDescriptorPool;
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
-	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
+	// initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
 	if (!draw(device, imageDescriptorSets[0], renderPass, pipelineTriangle, pipelineLayoutTriangle, pipelineWindowDecoration, pipelineLayoutWindowDecoration, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
