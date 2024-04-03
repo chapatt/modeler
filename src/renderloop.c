@@ -13,7 +13,7 @@
 
 #include "renderloop.h"
 
-bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPass, VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkPipeline secondPipeline, VkPipelineLayout secondPipelineLayout, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkImageView *imageViews, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPass, VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkPipeline secondPipeline, VkPipelineLayout secondPipelineLayout, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
 	VkRenderPassBeginInfo renderPassBeginInfos[swapchainInfo->imageCount];
@@ -102,6 +102,33 @@ bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPas
 		vkBeginCommandBuffer((*commandBuffers)[imageIndex], &commandBufferBeginInfos[imageIndex]);
 		vkCmdBeginRenderPass((*commandBuffers)[imageIndex], &(renderPassBeginInfos[imageIndex]), VK_SUBPASS_CONTENTS_INLINE);
 
+		// struct timespec spec;
+		// clock_gettime(CLOCK_MONOTONIC, &spec);
+		// 	head = (head + 1) % queueLength;
+		// 	elapsedQueue[head] = spec.tv_nsec + ((1000000000 * (spec.tv_sec - previousTime.tv_sec)) - previousTime.tv_nsec);
+		// if (spec.tv_sec > previousTime.tv_sec) {
+		// 	for (size_t i = 0; i < queueLength; ++i) {
+		// 		elapsed = (elapsed + elapsedQueue[i]) / 2;
+		// 	}
+		// }
+		// previousTime.tv_sec = spec.tv_sec;
+		// previousTime.tv_nsec = spec.tv_nsec;
+		// cImGui_ImplVulkan_NewFrame();
+		// ImGui_ImplModeler_NewFrame();
+		// ImGui_NewFrame();
+		// ImGui_Begin("A Window", NULL, 0);
+		// ImGui_Text("fps: %ld", 1000000000 / elapsed);
+		// ImGui_End();
+		// ImGui_Render();
+		// ImDrawData *drawData = ImGui_GetDrawData();
+		// cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
+
+
+
+
+
+
+
 		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 		VkViewport viewport = {
 			.x = 0.0f,
@@ -127,28 +154,20 @@ bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPas
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 
-		// struct timespec spec;
-		// clock_gettime(CLOCK_MONOTONIC, &spec);
-		// 	head = (head + 1) % queueLength;
-		// 	elapsedQueue[head] = spec.tv_nsec + ((1000000000 * (spec.tv_sec - previousTime.tv_sec)) - previousTime.tv_nsec);
-		// if (spec.tv_sec > previousTime.tv_sec) {
-		// 	for (size_t i = 0; i < queueLength; ++i) {
-		// 		elapsed = (elapsed + elapsedQueue[i]) / 2;
-		// 	}
-		// }
-		// previousTime.tv_sec = spec.tv_sec;
-		// previousTime.tv_nsec = spec.tv_nsec;
-		// cImGui_ImplVulkan_NewFrame();
-		// ImGui_ImplModeler_NewFrame();
-		// ImGui_NewFrame();
-		// ImGui_Begin("A Window", NULL, 0);
-		// ImGui_Text("fps: %ld", 1000000000 / elapsed);
-		// ImGui_End();
-		// ImGui_Render();
-		// ImDrawData *drawData = ImGui_GetDrawData();
-		// cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
+
+
+
+
+
+
 
 		vkCmdNextSubpass((*commandBuffers)[imageIndex], VK_SUBPASS_CONTENTS_INLINE);
+
+
+
+
+
+
 
 		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, secondPipeline);
 		vkCmdBindDescriptorSets((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, secondPipelineLayout, 0, 1, &descriptorSet, 0, NULL);
@@ -175,6 +194,12 @@ bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPas
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], secondPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
+
+
+
+
+
+
 
 		vkCmdEndRenderPass((*commandBuffers)[imageIndex]);
 		vkEndCommandBuffer((*commandBuffers)[imageIndex]);
