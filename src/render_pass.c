@@ -92,19 +92,37 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.dependencyFlags = 0
 	};
 
+#if DRAW_WINDOW_DECORATION
 	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, secondAttachmentDescription};
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, secondSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, secondSubpassDependency};
+#else
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency};
+#endif
 
 	VkRenderPassCreateInfo renderPassCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
+#if DRAW_WINDOW_DECORATION
 		.attachmentCount = 2,
+#else
+		.attachmentCount = 1,
+#endif
 		.pAttachments = attachmentDescriptions,
+#if DRAW_WINDOW_DECORATION
 		.subpassCount = 2,
+#else
+		.subpassCount = 1,
+#endif
 		.pSubpasses = subpassDescriptions,
+#if DRAW_WINDOW_DECORATION
 		.dependencyCount = 2,
+#else
+		.dependencyCount = 1,
+#endif
 		.pDependencies = subpassDependencies
 	};
 

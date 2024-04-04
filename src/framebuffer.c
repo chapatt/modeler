@@ -6,14 +6,14 @@
 
 #include "framebuffer.h"
 
-bool createFramebuffer(VkDevice device, SwapchainInfo swapchainInfo, VkImageView *attachments, VkRenderPass renderPass, VkFramebuffer *framebuffer, char **error)
+bool createFramebuffer(VkDevice device, SwapchainInfo swapchainInfo, VkImageView *attachments, uint32_t attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer, char **error)
 {
 	VkFramebufferCreateInfo framebufferCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
 		.renderPass = renderPass,
-		.attachmentCount = 2,
+		.attachmentCount = attachmentCount,
 		.pAttachments = attachments,
 		.width = swapchainInfo.extent.width,
 		.height = swapchainInfo.extent.height,

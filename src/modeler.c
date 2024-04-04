@@ -132,16 +132,20 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
-#ifdef DRAW_WINDOW_DECORATION
 	VkFramebuffer *framebuffers = malloc(sizeof(framebuffers) * swapchainInfo.imageCount);
 	for (uint32_t i = 0; i < swapchainInfo.imageCount; ++i) {
+#ifdef DRAW_WINDOW_DECORATION
 		VkImageView attachments[] = {offscreenImageView, imageViews[i]};
+		uint32_t attachmentCount = 2;
+#else
+		VkImageView attachments[] = {imageViews[i]};
+		uint32_t attachmentCount = 1;
+#endif /* DRAW_WINDOW_DECORATION */
 
-		if (!createFramebuffer(device, swapchainInfo, attachments, renderPass, framebuffers + i, error)) {
+		if (!createFramebuffer(device, swapchainInfo, attachments, attachmentCount, renderPass, framebuffers + i, error)) {
 			sendThreadFailureSignal(platformWindow);
 		}
 	}
-#endif /* DRAW_WINDOW_DECORATION */
 
 #ifndef EMBED_SHADERS
 	char *vertexShaderPathTri;
@@ -245,7 +249,16 @@ void *threadProc(void *arg)
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
 	// initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
-	if (!draw(device, imageDescriptorSets[0], renderPass, pipelineTriangle, pipelineLayoutTriangle, pipelineWindowDecoration, pipelineLayoutWindowDecoration, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
+#if DRAW_WINDOW_DECORATION
+	VkPipeline *pipelines = {pipelineTriangle, pipelineWindowDecoration};
+	VkPipelineLayout *pipelineLayouts = {pipelineLayoutTriangle, pipelineLayoutWindowDecoration}
+	VkDescriptorSet drawDescriptor = imageDescriptorSets[0];
+#else
+	VkPipeline pipelines[] = {pipelineTriangle};
+	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutTriangle};
+	VkDescriptorSet drawDescriptor = NULL;
+#endif /* DRAW_WINDOW_DECORATION */
+	if (!draw(device, drawDescriptor, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -260,7 +273,7 @@ void *threadProc(void *arg)
 	size_t offscreenImageCount = 0;
 #endif /* DRAW_WINDOW_DECORATION */
 
-	cleanupVulkan(instance, debugCallback, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayoutWindowDecoration, pipelineWindowDecoration, pipelineLayoutTriangle, pipelineTriangle, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo, descriptorPool, imageDescriptorSets, imageDescriptorSetLayouts);
+	//cleanupVulkan(instance, debugCallback, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayoutWindowDecoration, pipelineWindowDecoration, pipelineLayoutTriangle, pipelineTriangle, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo, descriptorPool, imageDescriptorSets, imageDescriptorSetLayouts);
 
 	return NULL;
 }
@@ -339,7 +352,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	for (uint32_t i = 0; i < swapchainCreateInfo.swapchainInfo->imageCount; ++i) {
 		VkImageView attachments[] = {*swapchainCreateInfo.offscreenImageView, (*swapchainCreateInfo.imageViews)[i]};
 
-		if (!createFramebuffer(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, attachments, swapchainCreateInfo.renderPass, *swapchainCreateInfo.framebuffers + i, error)) {
+		if (!createFramebuffer(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, attachments, 2, swapchainCreateInfo.renderPass, *swapchainCreateInfo.framebuffers + i, error)) {
 			return false;
 		}
 	}

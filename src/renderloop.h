@@ -11,6 +11,6 @@
 #include "queue.h"
 #include "input_event.h"
 
-bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPass, VkPipeline pipeline, VkPipelineLayout pipelineLayout, VkPipeline secondPipeline, VkPipelineLayout secondPipelineLayout, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error);
+bool draw(VkDevice device, VkDescriptorSet descriptorSet, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error);
 
 #endif /* MODELER_RENDERLOOP_H */
