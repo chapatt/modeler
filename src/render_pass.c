@@ -16,7 +16,11 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+#ifdef DRAW_WINDOW_DECORATION
 		.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+#else
+		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+#endif
 	};
 
 	VkAttachmentReference attachmentReference = {
@@ -47,6 +51,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.dependencyFlags = 0
 	};
 
+#if DRAW_WINDOW_DECORATION
 	VkAttachmentDescription secondAttachmentDescription = {
 		.flags = 0,
 		.format = swapchainInfo.surfaceFormat.format,
@@ -92,7 +97,6 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.dependencyFlags = 0
 	};
 
-#if DRAW_WINDOW_DECORATION
 	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, secondAttachmentDescription};
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, secondSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, secondSubpassDependency};

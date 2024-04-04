@@ -17,7 +17,7 @@ bool createFramebuffer(VkDevice device, SwapchainInfo swapchainInfo, VkImageView
 		.pAttachments = attachments,
 		.width = swapchainInfo.extent.width,
 		.height = swapchainInfo.extent.height,
-			.layers = 1
+		.layers = 1
 	};
 
 	VkResult result;

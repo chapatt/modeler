@@ -124,7 +124,6 @@ void *threadProc(void *arg)
 	VkDescriptorSet *bufferDescriptorSets;
 	VkDescriptorSetLayout *bufferDescriptorSetLayouts;
 	createDescriptorSets(device, createDescriptorSetInfo, &descriptorPool, &imageDescriptorSets, &imageDescriptorSetLayouts, &bufferDescriptorSets, &bufferDescriptorSetLayouts, error);
-
 #endif /* DRAW_WINDOW_DECORATION */
 
 	VkRenderPass renderPass;
@@ -236,12 +235,11 @@ void *threadProc(void *arg)
 		.swapchainInfo = &swapchainInfo,
 		.extent = initialExtent,
 		.imageViews = &imageViews,
+		.framebuffers = &framebuffers,
 #ifdef DRAW_WINDOW_DECORATION
-		.offscreenImageView = &offscreenImageView,
-		.framebuffers = &framebuffers
+		.offscreenImageView = &offscreenImageView
 #else
-		.offscreenImageView = NULL,
-		.framebuffers = NULL
+		.offscreenImageView = NULL
 #endif /* DRAW_WINDOW_DECORATION */
 	};
 
@@ -331,6 +329,13 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
+#ifdef DRAW_WINDOW_DECORATION
+	destroyDescriptorPool(swapchainCreateInfo.device, descriptorPool);
+	destroyDescriptorSetLayouts(swapchainCreateInfo.device, descriptorSetLayouts, 1);
+	destroyDescriptorSets(swapchainCreateInfo.device, descriptorSets, 1);
+	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.offscreenImageView, 1);
+	destroyImage(allocator, offscreenImage, offscreenImageAllocation);
+#endif
 	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
 	free(*swapchainCreateInfo.imageViews);
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.surfaceCharacteristics);
@@ -348,14 +353,54 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		return false;
 	}
 
+#ifdef DRAW_WINDOW_DECORATION
+	VkImage offscreenImage;
+	VmaAllocation offscreenImageAllocation;
+	if (!createImage(device, allocator, swapchainInfo.extent, swapchainInfo.surfaceFormat.format, &offscreenImage, &offscreenImageAllocation, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
+	VkImageView offscreenImageView;
+	if (!createImageViews(device, &offscreenImage, 1, swapchainInfo.surfaceFormat.format, &offscreenImageView, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
+	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+	VkSampler samplers[] = {VK_NULL_HANDLE};
+	CreateDescriptorSetInfo createDescriptorSetInfo = {
+		&offscreenImageView,
+		imageLayouts,
+		samplers,
+		1,
+		NULL,
+		NULL,
+		NULL,
+		0
+	};
+	VkDescriptorPool descriptorPool;
+	VkDescriptorSet *imageDescriptorSets;
+	VkDescriptorSetLayout *imageDescriptorSetLayouts;
+	VkDescriptorSet *bufferDescriptorSets;
+	VkDescriptorSetLayout *bufferDescriptorSetLayouts;
+	createDescriptorSets(device, createDescriptorSetInfo, &descriptorPool, &imageDescriptorSets, &imageDescriptorSetLayouts, &bufferDescriptorSets, &bufferDescriptorSetLayouts, error);
+#endif /* DRAW_WINDOW_DECORATION */
+
+	printf("recreating framebuffers\n");
 	*swapchainCreateInfo.framebuffers = malloc(sizeof(**swapchainCreateInfo.framebuffers) * swapchainCreateInfo.swapchainInfo->imageCount);
 	for (uint32_t i = 0; i < swapchainCreateInfo.swapchainInfo->imageCount; ++i) {
+#ifdef DRAW_WINDOW_DECORATION
 		VkImageView attachments[] = {*swapchainCreateInfo.offscreenImageView, (*swapchainCreateInfo.imageViews)[i]};
+		uint32_t attachmentCount = 2;
+#else
+		VkImageView attachments[] = {(*swapchainCreateInfo.imageViews)[i]};
+		uint32_t attachmentCount = 1;
+#endif /* DRAW_WINDOW_DECORATION */
 
-		if (!createFramebuffer(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, attachments, 2, swapchainCreateInfo.renderPass, *swapchainCreateInfo.framebuffers + i, error)) {
+		if (!createFramebuffer(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, attachments, attachmentCount, swapchainCreateInfo.renderPass, *swapchainCreateInfo.framebuffers + i, error)) {
 			return false;
 		}
 	}
+	printf("recreated framebuffers\n");
 
 	return true;
 }
