@@ -123,12 +123,6 @@ bool draw(VkDevice device, VkDescriptorSet **descriptorSets, VkRenderPass render
 		// ImDrawData *drawData = ImGui_GetDrawData();
 		// cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
 
-
-
-
-
-
-
 		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0]);
 		VkViewport viewport = {
 			.x = 0.0f,
@@ -153,21 +147,6 @@ bool draw(VkDevice device, VkDescriptorSet **descriptorSets, VkRenderPass render
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[0], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #if DRAW_WINDOW_DECORATION
 		vkCmdNextSubpass((*commandBuffers)[imageIndex], VK_SUBPASS_CONTENTS_INLINE);
 
@@ -197,12 +176,6 @@ bool draw(VkDevice device, VkDescriptorSet **descriptorSets, VkRenderPass render
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[1], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(secondPushConstants), &secondPushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 #endif
-
-
-
-
-
-
 
 		vkCmdEndRenderPass((*commandBuffers)[imageIndex]);
 		vkEndCommandBuffer((*commandBuffers)[imageIndex]);
