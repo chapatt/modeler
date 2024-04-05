@@ -227,6 +227,7 @@ void *threadProc(void *arg)
 
 	SwapchainCreateInfo swapchainCreateInfo = {
 		.device = device,
+		.allocator = allocator,
 		.physicalDevice = physicalDevice,
 		.surface = surface,
 		.surfaceCharacteristics = &surfaceCharacteristics,
@@ -237,9 +238,20 @@ void *threadProc(void *arg)
 		.imageViews = &imageViews,
 		.framebuffers = &framebuffers,
 #ifdef DRAW_WINDOW_DECORATION
-		.offscreenImageView = &offscreenImageView
+		.descriptorPool = &descriptorPool,
+		.imageDescriptorSetLayouts = &imageDescriptorSetLayouts,
+		.imageDescriptorSets = &imageDescriptorSets,
+		.bufferDescriptorSetLayouts = &bufferDescriptorSetLayouts,
+		.bufferDescriptorSets = &bufferDescriptorSets,
+		.offscreenImage = &offscreenImage,
+		.offscreenImageCount = 1,
+		.offscreenImageView = &offscreenImageView,
+		.offscreenImageAllocation = &offscreenImageAllocation
 #else
-		.offscreenImageView = NULL
+		.offscreenImage = NULL,
+		.offscreenImageCount = 0,
+		.offscreenImageView = NULL,
+		.offscreenImageAllocation = NULL
 #endif /* DRAW_WINDOW_DECORATION */
 	};
 
@@ -248,15 +260,15 @@ void *threadProc(void *arg)
 	// initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
 #if DRAW_WINDOW_DECORATION
-	VkPipeline *pipelines = {pipelineTriangle, pipelineWindowDecoration};
-	VkPipelineLayout *pipelineLayouts = {pipelineLayoutTriangle, pipelineLayoutWindowDecoration}
-	VkDescriptorSet drawDescriptor = imageDescriptorSets[0];
+	VkPipeline pipelines[] = {pipelineTriangle, pipelineWindowDecoration};
+	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutTriangle, pipelineLayoutWindowDecoration};
+	VkDescriptorSet **drawDescriptorSets = &imageDescriptorSets;
 #else
 	VkPipeline pipelines[] = {pipelineTriangle};
 	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutTriangle};
-	VkDescriptorSet drawDescriptor = NULL;
+	VkDescriptorSet **drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
-	if (!draw(device, drawDescriptor, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
+	if (!draw(device, drawDescriptorSets, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -330,11 +342,14 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
 #ifdef DRAW_WINDOW_DECORATION
-	destroyDescriptorPool(swapchainCreateInfo.device, descriptorPool);
-	destroyDescriptorSetLayouts(swapchainCreateInfo.device, descriptorSetLayouts, 1);
-	destroyDescriptorSets(swapchainCreateInfo.device, descriptorSets, 1);
-	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.offscreenImageView, 1);
-	destroyImage(allocator, offscreenImage, offscreenImageAllocation);
+	for (size_t i = 0; i < swapchainCreateInfo.offscreenImageCount; ++i) {
+		destroyDescriptorSetLayout(swapchainCreateInfo.device, (*swapchainCreateInfo.imageDescriptorSetLayouts)[i]);
+	}
+	free(*swapchainCreateInfo.imageDescriptorSetLayouts);
+	destroyDescriptorPool(swapchainCreateInfo.device, *swapchainCreateInfo.descriptorPool);
+	free(*swapchainCreateInfo.imageDescriptorSets);
+	destroyImageViews(swapchainCreateInfo.device, swapchainCreateInfo.offscreenImageView, 1);
+	destroyImage(swapchainCreateInfo.allocator, *swapchainCreateInfo.offscreenImage, *swapchainCreateInfo.offscreenImageAllocation);
 #endif
 	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
 	free(*swapchainCreateInfo.imageViews);
@@ -354,21 +369,18 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	}
 
 #ifdef DRAW_WINDOW_DECORATION
-	VkImage offscreenImage;
-	VmaAllocation offscreenImageAllocation;
-	if (!createImage(device, allocator, swapchainInfo.extent, swapchainInfo.surfaceFormat.format, &offscreenImage, &offscreenImageAllocation, error)) {
-		sendThreadFailureSignal(platformWindow);
+	if (!createImage(swapchainCreateInfo.device, swapchainCreateInfo.allocator, swapchainCreateInfo.swapchainInfo->extent, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, swapchainCreateInfo.offscreenImage, swapchainCreateInfo.offscreenImageAllocation, error)) {
+		return false;
 	}
 
-	VkImageView offscreenImageView;
-	if (!createImageViews(device, &offscreenImage, 1, swapchainInfo.surfaceFormat.format, &offscreenImageView, error)) {
-		sendThreadFailureSignal(platformWindow);
+	if (!createImageViews(swapchainCreateInfo.device, swapchainCreateInfo.offscreenImage, 1, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, swapchainCreateInfo.offscreenImageView, error)) {
+		return false;
 	}
 
 	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
 	VkSampler samplers[] = {VK_NULL_HANDLE};
 	CreateDescriptorSetInfo createDescriptorSetInfo = {
-		&offscreenImageView,
+		swapchainCreateInfo.offscreenImageView,
 		imageLayouts,
 		samplers,
 		1,
@@ -377,15 +389,9 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		NULL,
 		0
 	};
-	VkDescriptorPool descriptorPool;
-	VkDescriptorSet *imageDescriptorSets;
-	VkDescriptorSetLayout *imageDescriptorSetLayouts;
-	VkDescriptorSet *bufferDescriptorSets;
-	VkDescriptorSetLayout *bufferDescriptorSetLayouts;
-	createDescriptorSets(device, createDescriptorSetInfo, &descriptorPool, &imageDescriptorSets, &imageDescriptorSetLayouts, &bufferDescriptorSets, &bufferDescriptorSetLayouts, error);
+	createDescriptorSets(swapchainCreateInfo.device, createDescriptorSetInfo, swapchainCreateInfo.descriptorPool, swapchainCreateInfo.imageDescriptorSets, swapchainCreateInfo.imageDescriptorSetLayouts, swapchainCreateInfo.bufferDescriptorSets, swapchainCreateInfo.bufferDescriptorSetLayouts, error);
 #endif /* DRAW_WINDOW_DECORATION */
 
-	printf("recreating framebuffers\n");
 	*swapchainCreateInfo.framebuffers = malloc(sizeof(**swapchainCreateInfo.framebuffers) * swapchainCreateInfo.swapchainInfo->imageCount);
 	for (uint32_t i = 0; i < swapchainCreateInfo.swapchainInfo->imageCount; ++i) {
 #ifdef DRAW_WINDOW_DECORATION
@@ -400,7 +406,6 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 			return false;
 		}
 	}
-	printf("recreated framebuffers\n");
 
 	return true;
 }

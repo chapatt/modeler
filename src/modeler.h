@@ -3,6 +3,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include "vk_mem_alloc.h"
+
 #include "physical_device.h"
 #include "device.h"
 #include "swapchain.h"
@@ -20,6 +22,7 @@ struct threadArguments {
 
 typedef struct swapchain_create_info_t {
 	VkDevice device;
+	VmaAllocator allocator;
 	VkPhysicalDevice physicalDevice;
 	VkSurfaceKHR surface;
 	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics;
@@ -27,9 +30,17 @@ typedef struct swapchain_create_info_t {
 	VkRenderPass renderPass;
 	SwapchainInfo *swapchainInfo;
 	VkExtent2D extent;
+	VkImage *offscreenImage;
+	uint32_t offscreenImageCount;
 	VkImageView *offscreenImageView;
+	VmaAllocation *offscreenImageAllocation;
 	VkImageView **imageViews;
 	VkFramebuffer **framebuffers;
+	VkDescriptorPool *descriptorPool;
+	VkDescriptorSet **imageDescriptorSets;
+	VkDescriptorSetLayout **imageDescriptorSetLayouts;
+	VkDescriptorSet **bufferDescriptorSets;
+	VkDescriptorSetLayout **bufferDescriptorSetLayouts;
 } SwapchainCreateInfo;
 
 void *threadProc(void *arg);
