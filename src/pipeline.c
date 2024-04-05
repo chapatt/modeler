@@ -6,7 +6,7 @@
 
 #include "pipeline.h"
 
-bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *vertexShaderBytes, long vertexShaderSize, const char *fragmentShaderBytes, long fragmentShaderSize, VkExtent2D extent, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
+bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIndex, const char *vertexShaderBytes, long vertexShaderSize, const char *fragmentShaderBytes, long fragmentShaderSize, VkExtent2D extent, VkDescriptorSetLayout *descriptorSetLayouts, uint32_t descriptorSetLayoutCount, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
 {
 	VkResult result;
 
@@ -165,8 +165,8 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *vertex
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.setLayoutCount = 0,
-		.pSetLayouts = NULL,
+		.setLayoutCount = descriptorSetLayoutCount,
+		.pSetLayouts = descriptorSetLayouts,
 		.pushConstantRangeCount = 1,
 		.pPushConstantRanges = &pushConstantRange
 	};
@@ -205,7 +205,7 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, const char *vertex
 		.pDynamicState = &pipelineDynamicStateCreateInfo,
 		.layout = *pipelineLayout,
 		.renderPass = renderPass,
-		.subpass = 0,
+		.subpass = subpassIndex,
 		.basePipelineHandle = VK_NULL_HANDLE,
 		.basePipelineIndex = -1
 	};

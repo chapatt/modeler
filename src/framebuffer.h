@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <vulkan/vulkan.h>
 
-bool createFramebuffers(VkDevice device, SwapchainInfo swapchainInfo, VkImageView *imageViews, VkRenderPass renderPass, VkFramebuffer **framebuffers, char **error);
+bool createFramebuffer(VkDevice device, SwapchainInfo swapchainInfo, VkImageView *attachments, uint32_t attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer, char **error);
 
 void destroyFramebuffers(VkDevice device, VkFramebuffer *framebuffers, uint32_t count);
 

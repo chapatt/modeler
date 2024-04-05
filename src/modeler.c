@@ -15,6 +15,7 @@
 #include "image.h"
 #include "image_view.h"
 #include "render_pass.h"
+#include "descriptor.h"
 #include "pipeline.h"
 #include "framebuffer.h"
 #include "command_pool.h"
@@ -25,14 +26,16 @@
 #include "vulkan_utils.h"
 
 #ifdef EMBED_SHADERS
-#include "../shader_vert.h"
-#include "../shader_frag.h"
+#include "../shader_window_border.vert.h"
+#include "../shader_window_border.frag.h"
+#include "../shader_triangle.vert.h"
+#include "../shader_triangle.frag.h"
 #endif /* EMBED_SHADERS */
 
 #include "renderloop.h"
 
 void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, char **error);
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo);
+static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts);
 static void imVkCheck(VkResult result);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
@@ -53,7 +56,8 @@ void *threadProc(void *arg)
 	char **error = threadArgs->error;
 
 	VkInstance instance;
-	if (!createInstance(instanceExtensions, instanceExtensionCount, &instance, error)) {
+	VkDebugReportCallbackEXT debugCallback;
+	if (!createInstance(instanceExtensions, instanceExtensionCount, &instance, &debugCallback, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -90,6 +94,11 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	VkDescriptorPool descriptorPool;
+	VkDescriptorSet *imageDescriptorSets;
+	VkDescriptorSetLayout *imageDescriptorSetLayouts;
+	VkDescriptorSet *bufferDescriptorSets;
+	VkDescriptorSetLayout *bufferDescriptorSetLayouts;
 #ifdef DRAW_WINDOW_DECORATION
 	VkImage offscreenImage;
 	VmaAllocation offscreenImageAllocation;
@@ -101,56 +110,105 @@ void *threadProc(void *arg)
 	if (!createImageViews(device, &offscreenImage, 1, swapchainInfo.surfaceFormat.format, &offscreenImageView, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
-#endif
+
+	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+	VkSampler samplers[] = {VK_NULL_HANDLE};
+	CreateDescriptorSetInfo createDescriptorSetInfo = {
+		&offscreenImageView,
+		imageLayouts,
+		samplers,
+		1,
+		NULL,
+		NULL,
+		NULL,
+		0
+	};
+	createDescriptorSets(device, createDescriptorSetInfo, &descriptorPool, &imageDescriptorSets, &imageDescriptorSetLayouts, &bufferDescriptorSets, &bufferDescriptorSetLayouts, error);
+#endif /* DRAW_WINDOW_DECORATION */
 
 	VkRenderPass renderPass;
 	if (!createRenderPass(device, swapchainInfo, &renderPass, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	VkFramebuffer *framebuffers = malloc(sizeof(framebuffers) * swapchainInfo.imageCount);
+	for (uint32_t i = 0; i < swapchainInfo.imageCount; ++i) {
+#ifdef DRAW_WINDOW_DECORATION
+		VkImageView attachments[] = {offscreenImageView, imageViews[i]};
+		uint32_t attachmentCount = 2;
+#else
+		VkImageView attachments[] = {imageViews[i]};
+		uint32_t attachmentCount = 1;
+#endif /* DRAW_WINDOW_DECORATION */
+
+		if (!createFramebuffer(device, swapchainInfo, attachments, attachmentCount, renderPass, framebuffers + i, error)) {
+			sendThreadFailureSignal(platformWindow);
+		}
+	}
+
 #ifndef EMBED_SHADERS
+	char *vertexShaderPathTri;
+	char *fragmentShaderPathTri;
+	asprintf(&vertexShaderPathTri, "%s/%s", resourcePath, "triangle.vert.spv");
+	asprintf(&fragmentShaderPathTri, "%s/%s", resourcePath, "triangle.frag.spv");
+	char *vertexShaderBytesTri;
+	char *fragmentShaderBytesTri;
+	uint32_t vertexShaderSizeTri = 0;
+	uint32_t fragmentShaderSizeTri = 0;
+
+	if ((vertexShaderSizeTri = readFileToString(vertexShaderPathTri, &vertexShaderBytesTri)) == -1) {
+		asprintf(error, "Failed to open triangle vertex shader for reading.\n");
+		sendThreadFailureSignal(platformWindow);
+	}
+	if ((fragmentShaderSizeTri = readFileToString(fragmentShaderPathTri, &fragmentShaderBytesTri)) == -1) {
+		asprintf(error, "Failed to open triangle fragment shader for reading.\n");
+		sendThreadFailureSignal(platformWindow);
+	}
+
+#ifdef DRAW_WINDOW_DECORATION
 	char *vertexShaderPath;
 	char *fragmentShaderPath;
-	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "vert.spv");
-	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "frag.spv");
+	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "window_border.vert.spv");
+	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "window_border.frag.spv");
 	char *vertexShaderBytes;
 	char *fragmentShaderBytes;
 	uint32_t vertexShaderSize = 0;
 	uint32_t fragmentShaderSize = 0;
 
 	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
-		asprintf(error, "Failed to open vertex shader for reading.\n");
+		asprintf(error, "Failed to open window border vertex shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
 	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
-		asprintf(error, "Failed to open fragment shader for reading.\n");
+		asprintf(error, "Failed to open window border fragment shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
+#endif /* DRAW_WINDOW_DECORATION */
 #endif /* EMBED_SHADERS */
 
-#ifdef DRAW_WINDOW_DECORATION
-	VkPipelineLayout pipelineLayout;
-	VkPipeline pipeline;
-	if (!createPipeline(device, renderPass, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &pipelineLayout, &pipeline, error)) {
+	VkPipelineLayout pipelineLayoutTriangle;
+	VkPipeline pipelineTriangle;
+	bool pipelineCreateSuccessTriangle = createPipeline(device, renderPass, 0, vertexShaderBytesTri, vertexShaderSizeTri, fragmentShaderBytesTri, fragmentShaderSizeTri, swapchainInfo.extent, NULL, 0, &pipelineLayoutTriangle, &pipelineTriangle, error);
+#ifndef EMBED_SHADERS
+	free(fragmentShaderBytesTri);
+	free(vertexShaderBytesTri);
+#endif /* EMBED_SHADERS */
+	if (!pipelineCreateSuccessTriangle) {
 		sendThreadFailureSignal(platformWindow);
 	}
-#endif
 
-	VkPipelineLayout pipelineLayout;
-	VkPipeline pipeline;
-	bool pipelineCreationSuccess = createPipeline(device, renderPass, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, &pipelineLayout, &pipeline, error);
+#ifdef DRAW_WINDOW_DECORATION
+	VkPipelineLayout pipelineLayoutWindowDecoration;
+	VkPipeline pipelineWindowDecoration;
+	bool pipelineCreateSuccessWindowDecoration = createPipeline(device, renderPass, 1, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, imageDescriptorSetLayouts, 1, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
 #ifndef EMBED_SHADERS
 	free(fragmentShaderBytes);
 	free(vertexShaderBytes);
 #endif /* EMBED_SHADERS */
-	if (!pipelineCreationSuccess) {
+	if (!pipelineCreateSuccessWindowDecoration) {
 		sendThreadFailureSignal(platformWindow);
 	}
-
-	VkFramebuffer *framebuffers;
-	if (!createFramebuffers(device, swapchainInfo, imageViews, renderPass, &framebuffers, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
+#endif /* DRAW_WINDOW_DECORATION */
 
 	VkCommandPool commandPool;
 	if (!createCommandPool(device, queueInfo, &commandPool, error)) {
@@ -169,6 +227,7 @@ void *threadProc(void *arg)
 
 	SwapchainCreateInfo swapchainCreateInfo = {
 		.device = device,
+		.allocator = allocator,
 		.physicalDevice = physicalDevice,
 		.surface = surface,
 		.surfaceCharacteristics = &surfaceCharacteristics,
@@ -177,14 +236,41 @@ void *threadProc(void *arg)
 		.swapchainInfo = &swapchainInfo,
 		.extent = initialExtent,
 		.imageViews = &imageViews,
-		.framebuffers = &framebuffers
+		.framebuffers = &framebuffers,
+#ifdef DRAW_WINDOW_DECORATION
+		.descriptorPool = &descriptorPool,
+		.imageDescriptorSetLayouts = &imageDescriptorSetLayouts,
+		.imageDescriptorSets = &imageDescriptorSets,
+		.bufferDescriptorSetLayouts = &bufferDescriptorSetLayouts,
+		.bufferDescriptorSets = &bufferDescriptorSets,
+		.offscreenImage = &offscreenImage,
+		.offscreenImageCount = 1,
+		.offscreenImageView = &offscreenImageView,
+		.offscreenImageAllocation = &offscreenImageAllocation
+#else
+		.offscreenImage = NULL,
+		.offscreenImageCount = 0,
+		.offscreenImageView = NULL,
+		.offscreenImageAllocation = NULL
+#endif /* DRAW_WINDOW_DECORATION */
 	};
 
 	VkDescriptorPool imDescriptorPool;
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
-	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
+	// initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
-	if (!draw(device, renderPass, pipeline, pipelineLayout, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, imageViews, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
+#if DRAW_WINDOW_DECORATION
+	VkPipeline pipelines[] = {pipelineTriangle, pipelineWindowDecoration};
+	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutTriangle, pipelineLayoutWindowDecoration};
+	size_t pipelineCount = 2;
+	VkDescriptorSet **drawDescriptorSets = &imageDescriptorSets;
+#else
+	VkPipeline pipelines[] = {pipelineTriangle};
+	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutTriangle};
+	size_t pipelineCount = 1;
+	VkDescriptorSet **drawDescriptorSets = NULL;
+#endif /* DRAW_WINDOW_DECORATION */
+	if (!draw(device, drawDescriptorSets, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -192,13 +278,15 @@ void *threadProc(void *arg)
 	size_t offscreenImageCount = 1;
 	VkImage offscreenImages[] = {offscreenImage};
 	VmaAllocation offscreenImageAllocations[] = {offscreenImageAllocation};
+	VkImageView offscreenImageViews[] = {offscreenImageView};
 #else
 	VkImage *offscreenImages = NULL;
 	VmaAllocation *offscreenImageAllocations = NULL;
 	size_t offscreenImageCount = 0;
+	VkImageView *offscreenImageViews = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
 
-	cleanupVulkan(instance, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayout, pipeline, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo);
+	cleanupVulkan(instance, debugCallback, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayouts, pipelines, pipelineCount, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo, descriptorPool, imageDescriptorSets, imageDescriptorSetLayouts);
 
 	return NULL;
 }
@@ -256,6 +344,16 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
+#ifdef DRAW_WINDOW_DECORATION
+	for (size_t i = 0; i < swapchainCreateInfo.offscreenImageCount; ++i) {
+		destroyDescriptorSetLayout(swapchainCreateInfo.device, (*swapchainCreateInfo.imageDescriptorSetLayouts)[i]);
+	}
+	free(*swapchainCreateInfo.imageDescriptorSetLayouts);
+	destroyDescriptorPool(swapchainCreateInfo.device, *swapchainCreateInfo.descriptorPool);
+	free(*swapchainCreateInfo.imageDescriptorSets);
+	destroyImageViews(swapchainCreateInfo.device, swapchainCreateInfo.offscreenImageView, 1);
+	destroyImage(swapchainCreateInfo.allocator, *swapchainCreateInfo.offscreenImage, *swapchainCreateInfo.offscreenImageAllocation);
+#endif
 	destroyImageViews(swapchainCreateInfo.device, *swapchainCreateInfo.imageViews, swapchainCreateInfo.swapchainInfo->imageCount);
 	free(*swapchainCreateInfo.imageViews);
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.surfaceCharacteristics);
@@ -273,32 +371,78 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		return false;
 	}
 
-	if (!createFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, *swapchainCreateInfo.imageViews, swapchainCreateInfo.renderPass, swapchainCreateInfo.framebuffers, error)) {
+#ifdef DRAW_WINDOW_DECORATION
+	if (!createImage(swapchainCreateInfo.device, swapchainCreateInfo.allocator, swapchainCreateInfo.swapchainInfo->extent, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, swapchainCreateInfo.offscreenImage, swapchainCreateInfo.offscreenImageAllocation, error)) {
 		return false;
+	}
+
+	if (!createImageViews(swapchainCreateInfo.device, swapchainCreateInfo.offscreenImage, 1, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, swapchainCreateInfo.offscreenImageView, error)) {
+		return false;
+	}
+
+	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+	VkSampler samplers[] = {VK_NULL_HANDLE};
+	CreateDescriptorSetInfo createDescriptorSetInfo = {
+		swapchainCreateInfo.offscreenImageView,
+		imageLayouts,
+		samplers,
+		1,
+		NULL,
+		NULL,
+		NULL,
+		0
+	};
+	createDescriptorSets(swapchainCreateInfo.device, createDescriptorSetInfo, swapchainCreateInfo.descriptorPool, swapchainCreateInfo.imageDescriptorSets, swapchainCreateInfo.imageDescriptorSetLayouts, swapchainCreateInfo.bufferDescriptorSets, swapchainCreateInfo.bufferDescriptorSetLayouts, error);
+#endif /* DRAW_WINDOW_DECORATION */
+
+	*swapchainCreateInfo.framebuffers = malloc(sizeof(**swapchainCreateInfo.framebuffers) * swapchainCreateInfo.swapchainInfo->imageCount);
+	for (uint32_t i = 0; i < swapchainCreateInfo.swapchainInfo->imageCount; ++i) {
+#ifdef DRAW_WINDOW_DECORATION
+		VkImageView attachments[] = {*swapchainCreateInfo.offscreenImageView, (*swapchainCreateInfo.imageViews)[i]};
+		uint32_t attachmentCount = 2;
+#else
+		VkImageView attachments[] = {(*swapchainCreateInfo.imageViews)[i]};
+		uint32_t attachmentCount = 1;
+#endif /* DRAW_WINDOW_DECORATION */
+
+		if (!createFramebuffer(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, attachments, attachmentCount, swapchainCreateInfo.renderPass, *swapchainCreateInfo.framebuffers + i, error)) {
+			return false;
+		}
 	}
 
 	return true;
 }
 
-static void cleanupVulkan(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo)
+static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts)
 {
 	destroySynchronization(device, synchronizationInfo);
 	freeCommandBuffers(device, commandPool, commandBuffers, commandBufferCount);
 	destroyCommandPool(device, commandPool);
-	destroyFramebuffers(device, framebuffers, framebufferCount);
-	destroyPipeline(device, pipeline);
-	destroyPipelineLayout(device, pipelineLayout);
+	for (size_t i = 0; i < pipelineCount; ++i) {
+		destroyPipeline(device, pipelines[i]);
+		destroyPipelineLayout(device, pipelineLayouts[i]);
+	}
 	destroyRenderPass(device, renderPass);
-	destroyImageViews(device, imageViews, imageViewCount);
-	free(imageViews);
+	destroyFramebuffers(device, framebuffers, framebufferCount);
+#ifdef DRAW_WINDOW_DECORATION
+	for (size_t i = 0; i < offscreenImageCount; ++i) {
+		destroyDescriptorSetLayout(device, imageDescriptorSetLayouts[i]);
+	}
+	free(imageDescriptorSetLayouts);
+	destroyDescriptorPool(device, descriptorPool);
+	free(imageDescriptorSets);
+	destroyImageViews(device, offscreenImageViews, offscreenImageCount);
 	for (size_t i = 0; i < offscreenImageCount; ++i) {
 		destroyImage(allocator, offscreenImages[i], offscreenImageAllocations[i]);
 	}
+#endif
+	destroyImageViews(device, imageViews, imageViewCount);
+	free(imageViews);
 	destroySwapchain(device, swapchain);
-	destroyAllocator(allocator);
-	destroyDevice(device);
 	freePhysicalDeviceCharacteristics(characteristics);
 	freePhysicalDeviceSurfaceCharacteristics(surfaceCharacteristics);
 	destroySurface(instance, surface);
-	destroyInstance(instance);
+	destroyAllocator(allocator);
+	destroyDevice(device);
+	destroyInstance(instance, debugCallback);
 }

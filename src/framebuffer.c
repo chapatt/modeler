@@ -6,27 +6,24 @@
 
 #include "framebuffer.h"
 
-bool createFramebuffers(VkDevice device, SwapchainInfo swapchainInfo, VkImageView *imageViews, VkRenderPass renderPass, VkFramebuffer **framebuffers, char **error)
+bool createFramebuffer(VkDevice device, SwapchainInfo swapchainInfo, VkImageView *attachments, uint32_t attachmentCount, VkRenderPass renderPass, VkFramebuffer *framebuffer, char **error)
 {
-	*framebuffers = malloc(sizeof(*framebuffers) * swapchainInfo.imageCount);
-	for (uint32_t i = 0; i < swapchainInfo.imageCount; ++i) {
-		VkFramebufferCreateInfo framebufferCreateInfo = {
-			.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-			.pNext = NULL,
-			.flags = 0,
-			.renderPass = renderPass,
-			.attachmentCount = 1,
-			.pAttachments = imageViews + i,
-			.width = swapchainInfo.extent.width,
-			.height = swapchainInfo.extent.height,
- 			.layers = 1
-		};
+	VkFramebufferCreateInfo framebufferCreateInfo = {
+		.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+		.pNext = NULL,
+		.flags = 0,
+		.renderPass = renderPass,
+		.attachmentCount = attachmentCount,
+		.pAttachments = attachments,
+		.width = swapchainInfo.extent.width,
+		.height = swapchainInfo.extent.height,
+		.layers = 1
+	};
 
-		VkResult result;
-		if ((result = vkCreateFramebuffer(device, &framebufferCreateInfo, NULL, *framebuffers + i)) != VK_SUCCESS) {
-			asprintf(error, "Failed to create framebuffers: %s", string_VkResult(result));
-			return false;
-		}
+	VkResult result;
+	if ((result = vkCreateFramebuffer(device, &framebufferCreateInfo, NULL, framebuffer)) != VK_SUCCESS) {
+		asprintf(error, "Failed to create framebuffers: %s", string_VkResult(result));
+		return false;
 	}
 
 	return true;

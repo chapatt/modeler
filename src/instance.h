@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 
-bool createInstance(const char **extensions, size_t extensionCount, VkInstance *instance, char **error);
-void destroyInstance(VkInstance instance);
+bool createInstance(const char **extensions, size_t extensionCount, VkInstance *instance, VkDebugReportCallbackEXT *debugCallback, char **error);
+void destroyInstance(VkInstance instance, VkDebugReportCallbackEXT debugCallback);
 
 #endif /* MODELER_INSTANCE_H */
