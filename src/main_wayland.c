@@ -6,6 +6,7 @@
 #include <sys/epoll.h>
 #include <wayland-client.h>
 #include <wayland-client-protocol.h>
+#include <wayland-cursor.h>
 
 #include "../xdg-shell-client-protocol.h"
 
@@ -22,20 +23,50 @@ struct display {
 	struct wl_registry_listener registryListener;
 	struct wl_compositor *compositor;
 	struct wl_surface *surface;
+	struct wl_region *inputRegion;
+	struct wl_region *opaqueRegion;
+	struct wl_seat *seat;
+	struct wl_shm *shm;
+	struct wl_pointer *pointer;
 	struct xdg_surface_listener xdgSurfaceListener;
 	struct xdg_wm_base *xdgWmBase;
 	struct xdg_surface *xdgSurface;
 	struct xdg_toplevel *xdgToplevel;
+	struct wl_surface *cursorSurface;
+	struct wl_cursor_image *cursorImage;
 };
+
+typedef struct window_dimensions_t {
+	int offsetX;
+	int offsetY;
+	int activeWidth;
+	int activeHeight;
+} WindowDimensions;
 
 static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
 static void globalRegistryRemover(void *data, struct wl_registry *registry, uint32_t id);
 void connectDisplay(struct display *display);
 void createWindow(struct display *display);
+void createRegions(struct display *display, WindowDimensions windowDimensions);
+void destroyRegions(struct display *display);
 void destroyWindow(struct display *display);
 void disconnectDisplay(struct display *display);
 static void xdgSurfaceConfigure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
+void configurePointer(struct display *display);
+void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y);
+void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface);
+void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y);
+void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
+void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value);
 void handleFatalError(char *message);
+
+const struct wl_pointer_listener pointerListener = {
+	.enter = pointerEnterHandler,
+	.leave = pointerLeaveHandler,
+	.motion = pointerMotionHandler,
+	.button = pointerButtonHandler,
+	.axis = pointerAxisHandler
+};
 
 int main(int argc, char **argv)
 {
@@ -46,9 +77,16 @@ int main(int argc, char **argv)
 	if (pipe(threadPipe)) {
 		handleFatalError("Failed to create pipe");
 	}
+	WindowDimensions windowDimensions = {
+		.offsetX = 40,
+		.offsetY = 40,
+		.activeWidth = 600,
+		.activeHeight = 400
+	};
 
 	connectDisplay(&display);
 	createWindow(&display);
+	createRegions(&display, windowDimensions);
 
 	initializeQueue(&inputQueue);
 
@@ -91,8 +129,18 @@ int main(int argc, char **argv)
 
 	close(epollFd);
 
-	disconnectDisplay(&display);
+	destroyRegions(&display);
 	destroyWindow(&display);
+	disconnectDisplay(&display);
+}
+
+void destroyRegions(struct display *display)
+{
+	wl_region_destroy(display->inputRegion);
+	printf("Destroyed Wayland region\n");
+
+	wl_region_destroy(display->opaqueRegion);
+	printf("Destroyed Wayland region\n");
 }
 
 void destroyWindow(struct display *display)
@@ -130,6 +178,25 @@ void connectDisplay(struct display *display)
 	printf("Added Wayland registry listener\n");
 	wl_display_dispatch(display->display);
 	wl_display_roundtrip(display->display);
+
+	if (display->seat && display->shm) {
+		configurePointer(display);
+	}
+}
+
+void configurePointer(struct display *display)
+{
+	struct wl_cursor_theme *cursorTheme = wl_cursor_theme_load(NULL, 24, display->shm);
+	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(cursorTheme, "left_ptr");
+	display->cursorImage = cursor->images[0];
+	struct wl_buffer *cursorBuffer = wl_cursor_image_get_buffer(display->cursorImage);
+
+	display->cursorSurface = wl_compositor_create_surface(display->compositor);
+	wl_surface_attach(display->cursorSurface, cursorBuffer, 0, 0);
+	wl_surface_commit(display->cursorSurface);
+
+	display->pointer = wl_seat_get_pointer(display->seat);
+	wl_pointer_add_listener(display->pointer, &pointerListener, display);
 }
 
 void createWindow(struct display *display)
@@ -153,6 +220,37 @@ void createWindow(struct display *display)
 	wl_surface_commit(display->surface);
 }
 
+void createRegions(struct display *display, WindowDimensions windowDimensions)
+{
+	if (display->compositor == NULL) {
+		handleFatalError("Can't find Wayland compositor\n");
+	}
+	printf("Found Wayland compositor\n");
+
+	display->inputRegion = wl_compositor_create_region(display->compositor);
+	if (display->inputRegion == NULL) {
+		handleFatalError("Can't create Wayland region\n");
+	}
+	printf("Created Wayland region\n");
+	wl_region_add(display->inputRegion, 0, 0, 100, 100);
+
+	display->opaqueRegion = wl_compositor_create_region(display->compositor);
+	if (display->opaqueRegion == NULL) {
+		handleFatalError("Can't create Wayland region\n");
+	}
+	printf("Created Wayland region\n");
+	wl_region_add(
+		display->opaqueRegion,
+		windowDimensions.offsetX,
+		windowDimensions.offsetY,
+		windowDimensions.activeWidth,
+		windowDimensions.activeHeight
+	);
+
+	wl_surface_set_input_region(display->surface, display->inputRegion);
+	wl_surface_set_opaque_region(display->surface, display->opaqueRegion);
+}
+
 static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version)
 {
 	struct display *display = data;
@@ -170,6 +268,18 @@ static void globalRegistryHandler(void *data, struct wl_registry *registry, uint
 			handleFatalError("Can't bind xdg wm base\n");
 		}
 		printf("Bound xdg wm base\n");
+	} else if (strcmp(interface, "wl_shm") == 0) {
+		display->shm = wl_registry_bind(registry, id, &wl_shm_interface, 1);
+		if (display->shm == NULL) {
+			handleFatalError("Can't bind Wayland shared memory\n");
+		}
+		printf("Bound Wayland shared memory\n");
+	} else if (strcmp(interface, "wl_seat") == 0) {
+		display->seat = wl_registry_bind(registry, id, &wl_seat_interface, 1);
+		if (display->seat == NULL) {
+			handleFatalError("Can't bind Wayland seat\n");
+		}
+		printf("Bound Wayland seat\n");
 	}
 }
 
@@ -182,6 +292,32 @@ static void xdgSurfaceConfigure(void *data, struct xdg_surface *xdg_surface, uin
 {
 	struct display *display = data;
 	xdg_surface_ack_configure(xdg_surface, serial);
+}
+
+void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
+{
+	struct display *display = data;
+	wl_pointer_set_cursor(pointer, serial, display->cursorSurface, display->cursorImage->hotspot_x, display->cursorImage->hotspot_y);
+}
+
+void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
+{
+
+}
+
+void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
+{
+
+}
+
+void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
+{
+
+}
+
+void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
+{
+
 }
 
 void handleFatalError(char *message)

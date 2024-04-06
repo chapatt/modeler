@@ -43,7 +43,7 @@ pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface
 	threadArgs->initialExtent = (VkExtent2D) {
 		.width = 600,
 		.height = 400
-        };
+	};
 	if (threadArgs->initialExtent.width == 0 || threadArgs->initialExtent.height == 0) {
 		asprintf(error, "Failed to get window extent");
 		return 0;

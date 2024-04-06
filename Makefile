@@ -19,7 +19,7 @@ else
 	ifeq ($(UNAME_S),Linux)
 		CC=gcc
 		GLSLC=glslc
-		LDLIBS+=-lvulkan -lwayland-client
+		LDLIBS+=-lvulkan -lwayland-client -lwayland-cursor
 		ALL_TARGET=modeler
 		CFLAGS+=-DVK_USE_PLATFORM_WAYLAND_KHR
 	endif
