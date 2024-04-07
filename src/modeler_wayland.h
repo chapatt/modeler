@@ -12,6 +12,6 @@ typedef struct wayland_window_t {
 	int fd;
 } WaylandWindow;
 
-pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, WindowDimensions *windowDimensions, Queue *inputQueue, int fd, char **error);
+pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, WindowDimensions windowDimensions, Queue *inputQueue, int fd, char **error);
 
 #endif /* MODELER_MODELER_WAYLAND_H */

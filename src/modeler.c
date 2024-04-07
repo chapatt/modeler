@@ -52,7 +52,7 @@ void *threadProc(void *arg)
 	const char *resourcePath = threadArgs->resourcePath;
 	const char **instanceExtensions = threadArgs->instanceExtensions;
 	uint32_t instanceExtensionCount = threadArgs->instanceExtensionCount;
-	VkExtent2D initialExtent = threadArgs->initialExtent;
+	WindowDimensions windowDimensions = threadArgs->windowDimensions;
 	char **error = threadArgs->error;
 
 	VkInstance instance;
@@ -85,7 +85,7 @@ void *threadProc(void *arg)
 	}
 
 	SwapchainInfo swapchainInfo = {};
-	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, initialExtent, VK_NULL_HANDLE, &swapchainInfo, error)) {
+	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowDimensions.surfaceArea, VK_NULL_HANDLE, &swapchainInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -234,7 +234,7 @@ void *threadProc(void *arg)
 		.queueInfo = queueInfo,
 		.renderPass = renderPass,
 		.swapchainInfo = &swapchainInfo,
-		.extent = initialExtent,
+		.extent = windowDimensions.surfaceArea,
 		.imageViews = &imageViews,
 		.framebuffers = &framebuffers,
 #ifdef DRAW_WINDOW_DECORATION

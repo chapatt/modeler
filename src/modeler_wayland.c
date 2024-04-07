@@ -14,7 +14,7 @@
 
 static void imVkCheck(VkResult result);
 
-pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, WindowDimensions *windowDimensions, Queue *inputQueue, int fd, char **error)
+pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, WindowDimensions windowDimensions, Queue *inputQueue, int fd, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
@@ -40,14 +40,7 @@ pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface
 	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
 		threadArgs->instanceExtensions[i] = instanceExtensions[i];
 	}
-	threadArgs->initialExtent = (VkExtent2D) {
-		.width = 600,
-		.height = 400
-	};
-	if (threadArgs->initialExtent.width == 0 || threadArgs->initialExtent.height == 0) {
-		asprintf(error, "Failed to get window extent");
-		return 0;
-	}
+	threadArgs->windowDimensions = windowDimensions;
 	threadArgs->error = error;
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {

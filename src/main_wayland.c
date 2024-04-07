@@ -17,6 +17,11 @@
 
 #include "modeler_wayland.h"
 
+#define DEFAULT_WIDTH 600
+#define DEFAULT_HEIGHT 400
+#define MARGIN 20
+#define CORNER_RADIUS 10
+
 struct display {
 	struct wl_display *display;
 	struct wl_registry *registry;
@@ -77,14 +82,17 @@ int main(int argc, char **argv)
 		handleFatalError("Failed to create pipe");
 	}
 	display.windowDimensions = (WindowDimensions) {
-		.activeArea = {
-			.offset.x = 40,
-			.offset.y = 40,
-			.extent.width = 600,
-			.extent.height = 400
+		.surfaceArea = {
+			.width = DEFAULT_WIDTH + (MARGIN * 2),
+			.height = DEFAULT_HEIGHT + (MARGIN * 2)
 		},
-		.cornerRadius = 10,
-		.marginWidth = 10
+		.activeArea = {
+			.offset.x = MARGIN,
+			.offset.y = MARGIN,
+			.extent.width = DEFAULT_WIDTH,
+			.extent.height = DEFAULT_HEIGHT
+		},
+		.cornerRadius = CORNER_RADIUS,
 	};
 
 	connectDisplay(&display);
@@ -96,7 +104,7 @@ int main(int argc, char **argv)
 	initializeQueue(&inputQueue);
 
 	char *error;
-	if (!initVulkanWayland(display.display, display.surface, &display.windowDimensions, &inputQueue, threadPipe[1], &error)) {
+	if (!initVulkanWayland(display.display, display.surface, display.windowDimensions, &inputQueue, threadPipe[1], &error)) {
 		handleFatalError(error);
 	}
 
@@ -237,6 +245,7 @@ void createWindow(struct display *display)
 	xdg_toplevel_add_listener(display->xdgToplevel, &display->xdgToplevelListener, display);
 	xdg_toplevel_set_title(display->xdgToplevel, "Modeler");
 	wl_surface_commit(display->surface);
+	wl_display_roundtrip(display->display);
 }
 
 void createRegions(struct display *display)
@@ -251,7 +260,13 @@ void createRegions(struct display *display)
 		handleFatalError("Can't create Wayland region\n");
 	}
 	printf("Created Wayland region\n");
-	wl_region_add(display->inputRegion, 0, 0, 100, 100);
+	wl_region_add(
+		display->inputRegion,
+		0,
+		0,
+		display->windowDimensions.surfaceArea.width,
+		display->windowDimensions.surfaceArea.height
+	);
 
 	display->opaqueRegion = wl_compositor_create_region(display->compositor);
 	if (display->opaqueRegion == NULL) {
@@ -326,14 +341,21 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 	printf("Got a xdg surface configure event\n");
 	struct display *display = data;
 	xdg_surface_ack_configure(xdg_surface, serial);
+
+	// render here
 }
 
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)
 {
 	printf("Got a xdg toplevel configure event\n");
 	struct display *display = data;
-	display->windowDimensions.activeArea.extent.width = width;
-	display->windowDimensions.activeArea.extent.height = height;
+	if (width == 0 && height == 0) {
+		display->windowDimensions.activeArea.extent.width = DEFAULT_WIDTH;
+		display->windowDimensions.activeArea.extent.height = DEFAULT_HEIGHT;
+	} else {
+		display->windowDimensions.activeArea.extent.width = width;
+		display->windowDimensions.activeArea.extent.height = height;
+	}
 }
 
 void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)

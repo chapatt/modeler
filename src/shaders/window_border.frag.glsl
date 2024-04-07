@@ -25,7 +25,7 @@ void main()
 	float boxDistance = sdfRoundedRectangle(gl_FragCoord.xy - center, size, cornerRadius);
 
 	float boxAlpha = clamp(0.5 - boxDistance, 0.0, 1.0);
-	float shadowAlpha = 1.0 - smoothstep(-blurRadius, blurRadius, boxDistance);
+	float shadowAlpha = (1.0 - smoothstep(-blurRadius, blurRadius, boxDistance)) - 0.3;
 
 	vec3 boxColor = fragColor * boxAlpha;
 	vec3 shadowColor = shadowPaint * shadowAlpha;

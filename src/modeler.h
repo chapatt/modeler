@@ -10,21 +10,21 @@
 #include "swapchain.h"
 #include "queue.h"
 
+typedef struct window_dimensions_t {
+	VkExtent2D surfaceArea;
+	VkRect2D activeArea;
+	int cornerRadius;
+} WindowDimensions;
+
 struct threadArguments {
 	void *platformWindow;
 	Queue *inputQueue;
 	char *resourcePath;
 	const char **instanceExtensions;
 	size_t instanceExtensionCount;
-	VkExtent2D initialExtent;
+	WindowDimensions windowDimensions;
 	char **error;
 };
-
-typedef struct window_dimensions_t {
-	VkRect2D activeArea;
-	int cornerRadius;
-	int marginWidth;
-} WindowDimensions;
 
 typedef struct swapchain_create_info_t {
 	VkDevice device;
