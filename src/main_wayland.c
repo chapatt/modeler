@@ -28,30 +28,29 @@ struct display {
 	struct wl_seat *seat;
 	struct wl_shm *shm;
 	struct wl_pointer *pointer;
+	struct xdg_wm_base_listener xdgWmBaseListener;
 	struct xdg_surface_listener xdgSurfaceListener;
+	struct xdg_toplevel_listener xdgToplevelListener;
 	struct xdg_wm_base *xdgWmBase;
 	struct xdg_surface *xdgSurface;
 	struct xdg_toplevel *xdgToplevel;
 	struct wl_surface *cursorSurface;
 	struct wl_cursor_image *cursorImage;
+	WindowDimensions windowDimensions;
 };
-
-typedef struct window_dimensions_t {
-	int offsetX;
-	int offsetY;
-	int activeWidth;
-	int activeHeight;
-} WindowDimensions;
 
 static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
 static void globalRegistryRemover(void *data, struct wl_registry *registry, uint32_t id);
 void connectDisplay(struct display *display);
+void configureWmBase(struct display *display);
 void createWindow(struct display *display);
-void createRegions(struct display *display, WindowDimensions windowDimensions);
+void createRegions(struct display *display);
 void destroyRegions(struct display *display);
 void destroyWindow(struct display *display);
 void disconnectDisplay(struct display *display);
-static void xdgSurfaceConfigure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
+static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
+static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
+static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states);
 void configurePointer(struct display *display);
 void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y);
 void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface);
@@ -77,21 +76,27 @@ int main(int argc, char **argv)
 	if (pipe(threadPipe)) {
 		handleFatalError("Failed to create pipe");
 	}
-	WindowDimensions windowDimensions = {
-		.offsetX = 40,
-		.offsetY = 40,
-		.activeWidth = 600,
-		.activeHeight = 400
+	display.windowDimensions = (WindowDimensions) {
+		.activeArea = {
+			.offset.x = 40,
+			.offset.y = 40,
+			.extent.width = 600,
+			.extent.height = 400
+		},
+		.cornerRadius = 10,
+		.marginWidth = 10
 	};
 
 	connectDisplay(&display);
+	configurePointer(&display);
+	configureWmBase(&display);
 	createWindow(&display);
-	createRegions(&display, windowDimensions);
+	createRegions(&display);
 
 	initializeQueue(&inputQueue);
 
 	char *error;
-	if (!initVulkanWayland(display.display, display.surface, &inputQueue, threadPipe[1], &error)) {
+	if (!initVulkanWayland(display.display, display.surface, &display.windowDimensions, &inputQueue, threadPipe[1], &error)) {
 		handleFatalError(error);
 	}
 
@@ -173,19 +178,30 @@ void connectDisplay(struct display *display)
 
 	display->registryListener.global = globalRegistryHandler;
 	display->registryListener.global_remove = globalRegistryRemover;
-	if (wl_registry_add_listener(display->registry, &(display->registryListener), display))
+	if (wl_registry_add_listener(display->registry, &(display->registryListener), display)) {
 		printf("Can't add Wayland registry listener\n");
+	}
 	printf("Added Wayland registry listener\n");
 	wl_display_dispatch(display->display);
 	wl_display_roundtrip(display->display);
+}
 
-	if (display->seat && display->shm) {
-		configurePointer(display);
+void configureWmBase(struct display *display)
+{
+	if (display->xdgWmBase == NULL) {
+		handleFatalError("Can't find xdg wm base\n");
 	}
+
+	display->xdgWmBaseListener.ping = xdgWmBasePingHandler;
+	xdg_wm_base_add_listener(display->xdgWmBase, &display->xdgWmBaseListener, display);
 }
 
 void configurePointer(struct display *display)
 {
+	if (display->seat == NULL || display->shm == NULL) {
+		handleFatalError("Can't find Wayland seat or shared memory\n");
+	}
+
 	struct wl_cursor_theme *cursorTheme = wl_cursor_theme_load(NULL, 24, display->shm);
 	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(cursorTheme, "left_ptr");
 	display->cursorImage = cursor->images[0];
@@ -197,6 +213,8 @@ void configurePointer(struct display *display)
 
 	display->pointer = wl_seat_get_pointer(display->seat);
 	wl_pointer_add_listener(display->pointer, &pointerListener, display);
+
+	printf("Configured Wayland pointer\n");
 }
 
 void createWindow(struct display *display)
@@ -204,7 +222,6 @@ void createWindow(struct display *display)
 	if (display->compositor == NULL) {
 		handleFatalError("Can't find Wayland compositor\n");
 	}
-	printf("Found Wayland compositor\n");
 
 	display->surface = wl_compositor_create_surface(display->compositor);
 	if (display->surface == NULL) {
@@ -213,14 +230,16 @@ void createWindow(struct display *display)
 	printf("Created Wayland surface\n");
 
 	display->xdgSurface = xdg_wm_base_get_xdg_surface(display->xdgWmBase, display->surface);
-	display->xdgSurfaceListener.configure = xdgSurfaceConfigure;
+	display->xdgSurfaceListener.configure = xdgSurfaceConfigureHandler;
 	xdg_surface_add_listener(display->xdgSurface, &display->xdgSurfaceListener, display);
 	display->xdgToplevel = xdg_surface_get_toplevel(display->xdgSurface);
+	display->xdgToplevelListener.configure = xdgToplevelConfigureHandler;
+	xdg_toplevel_add_listener(display->xdgToplevel, &display->xdgToplevelListener, display);
 	xdg_toplevel_set_title(display->xdgToplevel, "Modeler");
 	wl_surface_commit(display->surface);
 }
 
-void createRegions(struct display *display, WindowDimensions windowDimensions)
+void createRegions(struct display *display)
 {
 	if (display->compositor == NULL) {
 		handleFatalError("Can't find Wayland compositor\n");
@@ -241,10 +260,17 @@ void createRegions(struct display *display, WindowDimensions windowDimensions)
 	printf("Created Wayland region\n");
 	wl_region_add(
 		display->opaqueRegion,
-		windowDimensions.offsetX,
-		windowDimensions.offsetY,
-		windowDimensions.activeWidth,
-		windowDimensions.activeHeight
+		display->windowDimensions.activeArea.offset.x + display->windowDimensions.cornerRadius,
+		display->windowDimensions.activeArea.offset.y,
+		display->windowDimensions.activeArea.extent.width - (2 * display->windowDimensions.cornerRadius),
+		display->windowDimensions.activeArea.extent.height
+	);
+	wl_region_add(
+		display->opaqueRegion,
+		display->windowDimensions.activeArea.offset.x,
+		display->windowDimensions.activeArea.offset.y + display->windowDimensions.cornerRadius,
+		display->windowDimensions.activeArea.extent.width,
+		display->windowDimensions.activeArea.extent.height - (2 * display->windowDimensions.cornerRadius)
 	);
 
 	wl_surface_set_input_region(display->surface, display->inputRegion);
@@ -288,10 +314,26 @@ static void globalRegistryRemover(void *data, struct wl_registry *registry, uint
 	printf("Got a Wayland registry remove event for %d\n", id);
 }
 
-static void xdgSurfaceConfigure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
+static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial)
 {
+	printf("Got a xdg wm base ping event\n");
+	struct display *display = data;
+	xdg_wm_base_pong(display->xdgWmBase, serial);
+}
+
+static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
+{
+	printf("Got a xdg surface configure event\n");
 	struct display *display = data;
 	xdg_surface_ack_configure(xdg_surface, serial);
+}
+
+static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)
+{
+	printf("Got a xdg toplevel configure event\n");
+	struct display *display = data;
+	display->windowDimensions.activeArea.extent.width = width;
+	display->windowDimensions.activeArea.extent.height = height;
 }
 
 void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)

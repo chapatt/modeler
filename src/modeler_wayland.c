@@ -14,7 +14,7 @@
 
 static void imVkCheck(VkResult result);
 
-pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, Queue *inputQueue, int fd, char **error)
+pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, WindowDimensions *windowDimensions, Queue *inputQueue, int fd, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));

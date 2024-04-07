@@ -20,6 +20,12 @@ struct threadArguments {
 	char **error;
 };
 
+typedef struct window_dimensions_t {
+	VkRect2D activeArea;
+	int cornerRadius;
+	int marginWidth;
+} WindowDimensions;
+
 typedef struct swapchain_create_info_t {
 	VkDevice device;
 	VmaAllocator allocator;
