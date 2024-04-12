@@ -24,19 +24,24 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 		return false;
 	}
 
-	VkSwapchainCreateInfoKHR createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	createInfo.surface = surface;
-	createInfo.imageFormat = swapchainInfo->surfaceFormat.format;
-	createInfo.imageColorSpace = swapchainInfo->surfaceFormat.colorSpace;
-	createInfo.imageExtent = swapchainInfo->extent;
-	createInfo.imageArrayLayers = 1;
-	createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-	createInfo.preTransform = surfaceCharacteristics.capabilities.currentTransform;
-	createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-	createInfo.presentMode = swapchainInfo->presentMode;
-	createInfo.clipped = VK_TRUE;
-	createInfo.oldSwapchain = oldSwapchain;
+	VkSwapchainCreateInfoKHR createInfo = {
+		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+		.surface = surface,
+		.imageFormat = swapchainInfo->surfaceFormat.format,
+		.imageColorSpace = swapchainInfo->surfaceFormat.colorSpace,
+		.imageExtent = swapchainInfo->extent,
+		.imageArrayLayers = 1,
+		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		.preTransform = surfaceCharacteristics.capabilities.currentTransform,
+#if DRAW_WINDOW_DECORATION
+		.compositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+#else
+		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+#endif /* DRAW_WINDOW_DECORATION */
+		.presentMode = swapchainInfo->presentMode,
+		.clipped = VK_TRUE,
+		.oldSwapchain = oldSwapchain
+	};
 
 	swapchainInfo->imageCount = surfaceCharacteristics.capabilities.minImageCount + 1;
 	if (surfaceCharacteristics.capabilities.maxImageCount > 0 && swapchainInfo->imageCount > surfaceCharacteristics.capabilities.maxImageCount) {
