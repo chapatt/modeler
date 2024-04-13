@@ -35,7 +35,6 @@ typedef struct swapchain_create_info_t {
 	QueueInfo queueInfo;
 	VkRenderPass renderPass;
 	SwapchainInfo *swapchainInfo;
-	VkExtent2D extent;
 	VkImage *offscreenImage;
 	uint32_t offscreenImageCount;
 	VkImageView *offscreenImageView;

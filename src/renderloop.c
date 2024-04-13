@@ -13,8 +13,9 @@
 
 #include "renderloop.h"
 
-bool draw(VkDevice device, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
+	WindowDimensions windowDimensions = initialWindowDimensions;
 	VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
 	VkRenderPassBeginInfo renderPassBeginInfos[swapchainInfo->imageCount];
 	VkClearValue clearValue = {0.1f, 0.3f, 0.3f, 1.0f};
@@ -113,22 +114,24 @@ bool draw(VkDevice device, VkDescriptorSet **descriptorSets, VkRenderPass render
 		// }
 		// previousTime.tv_sec = spec.tv_sec;
 		// previousTime.tv_nsec = spec.tv_nsec;
-		// cImGui_ImplVulkan_NewFrame();
-		// ImGui_ImplModeler_NewFrame();
-		// ImGui_NewFrame();
-		// ImGui_Begin("A Window", NULL, 0);
-		// ImGui_Text("fps: %ld", 1000000000 / elapsed);
-		// ImGui_End();
-		// ImGui_Render();
-		// ImDrawData *drawData = ImGui_GetDrawData();
-		// cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
+#ifdef ENABLE_IMGUI
+		cImGui_ImplVulkan_NewFrame();
+		ImGui_ImplModeler_NewFrame();
+		ImGui_NewFrame();
+		ImGui_Begin("A Window", NULL, 0);
+		ImGui_Text("fps: %ld", 1000000000 / elapsed);
+		ImGui_End();
+		ImGui_Render();
+		ImDrawData *drawData = ImGui_GetDrawData();
+		cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
+#endif /* ENABLE_IMGUI */
 
 		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0]);
 		VkViewport viewport = {
-			.x = 0.0f,
-			.y = 0.0f,
-			.width = swapchainInfo->extent.width,
-			.height = swapchainInfo->extent.height,
+			.x = windowDimensions.activeArea.offset.x,
+			.y = windowDimensions.activeArea.offset.y,
+			.width = windowDimensions.activeArea.extent.width,
+			.height = windowDimensions.activeArea.extent.height,
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};
@@ -143,7 +146,9 @@ bool draw(VkDevice device, VkDescriptorSet **descriptorSets, VkRenderPass render
 		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &viewport);
 		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
 		PushConstants pushConstants = {
-			.extent = {swapchainInfo->extent.width, swapchainInfo->extent.height}
+			.extent = {windowDimensions.activeArea.extent.width, windowDimensions.activeArea.extent.height},
+			.offset = {windowDimensions.activeArea.offset.x, windowDimensions.activeArea.offset.y},
+			.cornerRadius = windowDimensions.cornerRadius
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[0], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
@@ -168,10 +173,12 @@ bool draw(VkDevice device, VkDescriptorSet **descriptorSets, VkRenderPass render
 			.offset = scissorOffset,
 			.extent = swapchainInfo->extent
 		};
-		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &viewport);
-		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
+		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &secondViewport);
+		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &secondScissor);
 		PushConstants secondPushConstants = {
-			.extent = {swapchainInfo->extent.width, swapchainInfo->extent.height}
+			.extent = {windowDimensions.activeArea.extent.width, windowDimensions.activeArea.extent.height},
+			.offset = {windowDimensions.activeArea.offset.x, windowDimensions.activeArea.offset.y},
+			.cornerRadius = windowDimensions.cornerRadius
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[1], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(secondPushConstants), &secondPushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);

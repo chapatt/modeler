@@ -21,7 +21,7 @@ else
 		GLSLC=glslc
 		LDLIBS+=-lvulkan -lwayland-client -lwayland-cursor
 		ALL_TARGET=modeler
-		CFLAGS+=-DVK_USE_PLATFORM_WAYLAND_KHR
+		CFLAGS+=-DVK_USE_PLATFORM_WAYLAND_KHR -DDRAW_WINDOW_DECORATION
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		GLSLC=/Users/chase/VulkanSDK/1.3.250.0/macOS/bin/glslc
@@ -51,11 +51,11 @@ all: $(ALL_TARGET)
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $<
 
-modeler: $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o imgui.a
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o imgui.a xdg-shell-protocol.o $(LDLIBS)
+modeler: $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(LDLIBS)
 
-modeler.exe: $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o imgui.a
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o imgui.a $(LDLIBS)
+modeler.exe: $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(LDLIBS)
 	
 modeler.a: $(MODELER_OBJS) modeler_metal.o surface_metal.o
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o
@@ -75,6 +75,7 @@ modeler.o: src/modeler.c
 $(HEADER_SHADERS): shader_%.h: %.spv
 	./hexdump_include.sh fragmentShaderBytes fragmentShaderSize $< > $@
 
+ifdef ENABLE_IMGUI
 imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
 	$(AR) rvs $@ cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
 cimgui.o:
@@ -95,6 +96,7 @@ imgui_tables.o:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_tables.cpp
 imgui_widgets.o:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_widgets.cpp
+endif
 
 xdg-shell-protocol.o: xdg-shell-protocol.c xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c xdg-shell-protocol.c
@@ -108,6 +110,7 @@ xdg-shell-client-protocol.h:
 vma_implementation.o: src/vk_mem_alloc.h
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/vma_implementation.cpp
 
+.PHONY: clean
 clean:
 	$(RM) -rf modeler modeler.exe modeler.a main_wayland.o main_win32.o \
 		modeler.o modeler_win32.o modeler_wayland.o modeler_metal.o \

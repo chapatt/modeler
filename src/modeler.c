@@ -234,7 +234,6 @@ void *threadProc(void *arg)
 		.queueInfo = queueInfo,
 		.renderPass = renderPass,
 		.swapchainInfo = &swapchainInfo,
-		.extent = windowDimensions.surfaceArea,
 		.imageViews = &imageViews,
 		.framebuffers = &framebuffers,
 #ifdef DRAW_WINDOW_DECORATION
@@ -270,7 +269,7 @@ void *threadProc(void *arg)
 	size_t pipelineCount = 1;
 	VkDescriptorSet **drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
-	if (!draw(device, drawDescriptorSets, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
+	if (!draw(device, windowDimensions, drawDescriptorSets, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, ".", inputQueue, imVulkanInitInfo, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -316,6 +315,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
 		sendThreadFailureSignal(platformWindow);
 	}
+#ifdef ENABLE_IMGUI
 	ImGui_CreateContext(NULL);
 	ImGuiIO *io = ImGui_GetIO();
 	io->IniFilename = NULL;
@@ -337,6 +337,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		.CheckVkResultFn = imVkCheck
 	};
 	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
+#endif /* ENABLE_IMGUI */
 }
 
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error)

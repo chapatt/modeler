@@ -158,7 +158,7 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIn
 	VkPushConstantRange pushConstantRange = {
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.offset = 0,
-		.size = sizeof(PushConstants)
+		.size = 20
 	};
 
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/epoll.h>
+#include <linux/input-event-codes.h>
 #include <wayland-client.h>
 #include <wayland-client-protocol.h>
 #include <wayland-cursor.h>
@@ -17,10 +18,28 @@
 
 #include "modeler_wayland.h"
 
-#define DEFAULT_WIDTH 600
-#define DEFAULT_HEIGHT 400
-#define MARGIN 20
+#define RESIZE_BORDER 10
+#define MARGIN 25
+#define DEFAULT_SURFACE_WIDTH 600
+#define DEFAULT_SURFACE_HEIGHT 400
+#define DEFAULT_ACTIVE_WIDTH  550 /* DEFAULT_SURFACE_WIDTH - MARGIN * 2 */
+#define DEFAULT_ACTIVE_HEIGHT 350 /* DEFAULT_SURFACE_HEIGHT - MARGIN * 2 */
+#define OFFSET_X 25
+#define OFFSET_Y 15
 #define CORNER_RADIUS 10
+
+typedef enum window_region_t {
+	CLIENT,
+	CHROME,
+	TOP,
+	RIGHT,
+	BOTTOM,
+	LEFT,
+	TOP_RIGHT,
+	BOTTOM_RIGHT,
+	BOTTOM_LEFT,
+	TOP_LEFT
+} WindowRegion;
 
 struct display {
 	struct wl_display *display;
@@ -39,9 +58,11 @@ struct display {
 	struct xdg_wm_base *xdgWmBase;
 	struct xdg_surface *xdgSurface;
 	struct xdg_toplevel *xdgToplevel;
+	uint32_t pointerSerial;
 	struct wl_surface *cursorSurface;
-	struct wl_cursor_image *cursorImage;
+	struct wl_cursor_theme *cursorTheme;
 	WindowDimensions windowDimensions;
+	WindowRegion pointerRegion;
 };
 
 static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
@@ -57,11 +78,14 @@ static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, ui
 static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states);
 void configurePointer(struct display *display);
+void setCursor(struct display *display, char *name);
 void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y);
 void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface);
 void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y);
 void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
 void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value);
+WindowRegion hitTest(struct display *display, int x, int y);
+void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce);
 void handleFatalError(char *message);
 
 const struct wl_pointer_listener pointerListener = {
@@ -83,16 +107,16 @@ int main(int argc, char **argv)
 	}
 	display.windowDimensions = (WindowDimensions) {
 		.surfaceArea = {
-			.width = DEFAULT_WIDTH + (MARGIN * 2),
-			.height = DEFAULT_HEIGHT + (MARGIN * 2)
+			.width = DEFAULT_SURFACE_WIDTH,
+			.height = DEFAULT_SURFACE_HEIGHT
 		},
 		.activeArea = {
-			.offset.x = MARGIN,
-			.offset.y = MARGIN,
-			.extent.width = DEFAULT_WIDTH,
-			.extent.height = DEFAULT_HEIGHT
+			.offset.x = OFFSET_X,
+			.offset.y = OFFSET_Y,
+			.extent.width = DEFAULT_ACTIVE_WIDTH,
+			.extent.height = DEFAULT_ACTIVE_HEIGHT
 		},
-		.cornerRadius = CORNER_RADIUS,
+		.cornerRadius = CORNER_RADIUS
 	};
 
 	connectDisplay(&display);
@@ -210,19 +234,23 @@ void configurePointer(struct display *display)
 		handleFatalError("Can't find Wayland seat or shared memory\n");
 	}
 
-	struct wl_cursor_theme *cursorTheme = wl_cursor_theme_load(NULL, 24, display->shm);
-	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(cursorTheme, "left_ptr");
-	display->cursorImage = cursor->images[0];
-	struct wl_buffer *cursorBuffer = wl_cursor_image_get_buffer(display->cursorImage);
-
+	display->cursorTheme = wl_cursor_theme_load(NULL, 24, display->shm);
 	display->cursorSurface = wl_compositor_create_surface(display->compositor);
-	wl_surface_attach(display->cursorSurface, cursorBuffer, 0, 0);
-	wl_surface_commit(display->cursorSurface);
-
 	display->pointer = wl_seat_get_pointer(display->seat);
 	wl_pointer_add_listener(display->pointer, &pointerListener, display);
 
 	printf("Configured Wayland pointer\n");
+}
+
+void setCursor(struct display *display, char *name)
+{
+	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(display->cursorTheme, name);
+	struct wl_cursor_image *cursorImage = cursor->images[0];
+	struct wl_buffer *cursorBuffer = wl_cursor_image_get_buffer(cursorImage);
+
+	wl_surface_attach(display->cursorSurface, cursorBuffer, 0, 0);
+	wl_surface_commit(display->cursorSurface);
+	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x, cursorImage->hotspot_y);
 }
 
 void createWindow(struct display *display)
@@ -262,10 +290,10 @@ void createRegions(struct display *display)
 	printf("Created Wayland region\n");
 	wl_region_add(
 		display->inputRegion,
-		0,
-		0,
-		display->windowDimensions.surfaceArea.width,
-		display->windowDimensions.surfaceArea.height
+		display->windowDimensions.activeArea.offset.x - RESIZE_BORDER,
+		display->windowDimensions.activeArea.offset.y - RESIZE_BORDER,
+		display->windowDimensions.activeArea.extent.width + RESIZE_BORDER * 2,
+		display->windowDimensions.activeArea.extent.height + RESIZE_BORDER * 2
 	);
 
 	display->opaqueRegion = wl_compositor_create_region(display->compositor);
@@ -350,18 +378,20 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 	printf("Got a xdg toplevel configure event\n");
 	struct display *display = data;
 	if (width == 0 && height == 0) {
-		display->windowDimensions.activeArea.extent.width = DEFAULT_WIDTH;
-		display->windowDimensions.activeArea.extent.height = DEFAULT_HEIGHT;
+		display->windowDimensions.activeArea.extent.width = DEFAULT_ACTIVE_WIDTH;
+		display->windowDimensions.activeArea.extent.height = DEFAULT_ACTIVE_HEIGHT;
 	} else {
-		display->windowDimensions.activeArea.extent.width = width;
-		display->windowDimensions.activeArea.extent.height = height;
+		display->windowDimensions.activeArea.extent.width = width - MARGIN * 2;
+		display->windowDimensions.activeArea.extent.height = height - MARGIN * 2;
 	}
 }
 
 void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
 {
 	struct display *display = data;
-	wl_pointer_set_cursor(pointer, serial, display->cursorSurface, display->cursorImage->hotspot_x, display->cursorImage->hotspot_y);
+
+	display->pointerSerial = serial;
+	hitTestAndSetCursor(display, x, y, false);
 }
 
 void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
@@ -371,12 +401,155 @@ void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial
 
 void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
+	struct display *display = data;
+	hitTestAndSetCursor(display, x, y, true);
+}
 
+void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce)
+{
+	WindowRegion region = hitTest(display, wl_fixed_to_double(x), wl_fixed_to_double(y));
+
+	if (debounce && display->pointerRegion == region) {
+		return;
+	}
+
+	display->pointerRegion = region;
+
+	switch (region) {
+	case CLIENT:
+		setCursor(display, "left_ptr");
+		break;
+	case CHROME:
+		setCursor(display, "left_ptr");
+		break;
+	case TOP:
+		setCursor(display, "top_side");
+		break;
+	case RIGHT:
+		setCursor(display, "right_side");
+		break;
+	case BOTTOM:
+		setCursor(display, "bottom_side");
+		break;
+	case LEFT:
+		setCursor(display, "left_side");
+		break;
+	case TOP_RIGHT:
+		setCursor(display, "top_right_corner");
+		break;
+	case BOTTOM_RIGHT:
+		setCursor(display, "bottom_right_corner");
+		break;
+	case BOTTOM_LEFT:
+		setCursor(display, "bottom_left_corner");
+		break;
+	case TOP_LEFT:
+		setCursor(display, "top_left_corner");
+		break;
+	}
 }
 
 void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
 {
+	struct display *display = data;
 
+	switch (display->pointerRegion) {
+	case CLIENT:
+		break;
+	case CHROME:
+		if (button == BTN_LEFT && state == 1) {
+			xdg_toplevel_move(display->xdgToplevel, display->seat, serial);
+		}
+		break;
+	case TOP:
+		xdg_toplevel_resize(display->xdgToplevel, display->seat, serial, 1);
+		break;
+	case RIGHT:
+		xdg_toplevel_resize(display->xdgToplevel, display->seat, serial, 8);
+		break;
+	case BOTTOM:
+		xdg_toplevel_resize(display->xdgToplevel, display->seat, serial, 2);
+		break;
+	case LEFT:
+		xdg_toplevel_resize(display->xdgToplevel, display->seat, serial, 4);
+		break;
+	case TOP_RIGHT:
+		xdg_toplevel_resize(display->xdgToplevel, display->seat, serial, 9);
+		break;
+	case BOTTOM_RIGHT:
+		xdg_toplevel_resize(display->xdgToplevel, display->seat, serial, 10);
+		break;
+	case BOTTOM_LEFT:
+		xdg_toplevel_resize(display->xdgToplevel, display->seat, serial, 6);
+		break;
+	case TOP_LEFT:
+		xdg_toplevel_resize(display->xdgToplevel, display->seat, serial, 5);
+		break;
+	}
+}
+
+WindowRegion hitTest(struct display *display, int x, int y)
+{
+	printf("x: %d, y: %d\n", x, y);
+#define CHROME_HEIGHT 20
+	enum regionMask
+	{
+		_CLIENT = 0b00000,
+		_LEFT = 0b00001,
+		_RIGHT = 0b00010,
+		_TOP = 0b00100,
+		_BOTTOM = 0b01000,
+		_CHROME = 0b10000
+	};
+	enum regionMask result = _CLIENT;
+	VkExtent2D extent = display->windowDimensions.activeArea.extent;
+	VkOffset2D offset = display->windowDimensions.activeArea.offset;
+	printf("extent width: %d, extent height: %d\n", extent.width, extent.height);
+	printf("offset x: %d, offset y: %d\n", offset.x, offset.y);
+
+	if (x < offset.x) {
+		printf("it's on the left\n");
+		result |= _LEFT;
+	}
+
+	if (x >= extent.width + offset.x) {
+		printf("it's on the right\n");
+		result |= _RIGHT;
+	}
+
+	if (y < offset.y) {
+		printf("it's on the top\n");
+		result |= _TOP;
+	}
+
+	if (y >= extent.height + offset.y) {
+		printf("it's on the bottom\n");
+		result |= _BOTTOM;
+	}
+
+	if (!(result & (_LEFT | _RIGHT | _TOP | _BOTTOM)) && y < (offset.y + CHROME_HEIGHT)) {
+		printf("it's in the chrome\n");
+		result |= _CHROME;
+	}
+
+	if (result & _TOP)
+	{
+		if (result & _LEFT) return TOP_LEFT;
+		if (result & _RIGHT) return TOP_RIGHT;
+		return TOP;
+	} else if (result & _BOTTOM) {
+		if (result & _LEFT) return BOTTOM_LEFT;
+		if (result & _RIGHT) return BOTTOM_RIGHT;
+		return BOTTOM;
+	} else if (result & _LEFT) {
+		return LEFT;
+	} else if (result & _RIGHT) {
+		return RIGHT;
+	} else if (result & _CHROME) {
+		return CHROME;
+	} else {
+		return CLIENT;
+	}
 }
 
 void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
