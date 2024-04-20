@@ -34,3 +34,9 @@ void enqueueInputEventWithExtent(Queue *queue, InputEventType type, int width, i
 	enqueueInputEvent(queue, type, extent);
 }
 
+void enqueueInputEventWithWindowDimensions(Queue *queue, InputEventType type, WindowDimensions windowDimensions)
+{
+	WindowDimensions *windowDimensionsP = malloc(sizeof(*windowDimensionsP));
+	*windowDimensionsP = windowDimensions;
+	enqueueInputEvent(queue, type, windowDimensionsP);
+}

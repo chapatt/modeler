@@ -54,7 +54,8 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				free(inputEvent);
 				break;
 			case RESIZE:
-				windowExtent = *((VkExtent2D *) data);
+				windowDimensions = *((WindowDimensions *) data);
+				windowExtent = windowDimensions.surfaceArea;
 				windowResized = true;
 				free(data);
 				free(inputEvent);

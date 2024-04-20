@@ -20,10 +20,10 @@
 
 #define RESIZE_BORDER 10
 #define MARGIN 25
-#define DEFAULT_SURFACE_WIDTH 600
-#define DEFAULT_SURFACE_HEIGHT 400
-#define DEFAULT_ACTIVE_WIDTH  550 /* DEFAULT_SURFACE_WIDTH - MARGIN * 2 */
-#define DEFAULT_ACTIVE_HEIGHT 350 /* DEFAULT_SURFACE_HEIGHT - MARGIN * 2 */
+#define DEFAULT_SURFACE_WIDTH 600 /* DEFAULT_ACTIVE_WIDTH + MARGIN * 2 */
+#define DEFAULT_SURFACE_HEIGHT 400 /* DEFAULT_ACTIVE_HEIGHT + MARGIN * 2 */
+#define DEFAULT_ACTIVE_WIDTH  550
+#define DEFAULT_ACTIVE_HEIGHT 350
 #define OFFSET_X 25
 #define OFFSET_Y 15
 #define CORNER_RADIUS 10
@@ -47,8 +47,6 @@ struct display {
 	struct wl_registry_listener registryListener;
 	struct wl_compositor *compositor;
 	struct wl_surface *surface;
-	struct wl_region *inputRegion;
-	struct wl_region *opaqueRegion;
 	struct wl_seat *seat;
 	struct wl_shm *shm;
 	struct wl_pointer *pointer;
@@ -63,6 +61,7 @@ struct display {
 	struct wl_cursor_theme *cursorTheme;
 	WindowDimensions windowDimensions;
 	WindowRegion pointerRegion;
+	Queue inputQueue;
 };
 
 static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
@@ -70,8 +69,8 @@ static void globalRegistryRemover(void *data, struct wl_registry *registry, uint
 void connectDisplay(struct display *display);
 void configureWmBase(struct display *display);
 void createWindow(struct display *display);
-void createRegions(struct display *display);
-void destroyRegions(struct display *display);
+void setUpRegions(struct display *display);
+void destroyCursor(struct display *display);
 void destroyWindow(struct display *display);
 void disconnectDisplay(struct display *display);
 static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
@@ -98,8 +97,7 @@ const struct wl_pointer_listener pointerListener = {
 
 int main(int argc, char **argv)
 {
-	struct display display;
-	Queue inputQueue;
+	struct display display = {};
 	int threadPipe[2];
 	int epollFd;
 	if (pipe(threadPipe)) {
@@ -119,16 +117,16 @@ int main(int argc, char **argv)
 		.cornerRadius = CORNER_RADIUS
 	};
 
+	initializeQueue(&display.inputQueue);
+
 	connectDisplay(&display);
 	configurePointer(&display);
 	configureWmBase(&display);
 	createWindow(&display);
-	createRegions(&display);
-
-	initializeQueue(&inputQueue);
+	setUpRegions(&display);
 
 	char *error;
-	if (!initVulkanWayland(display.display, display.surface, display.windowDimensions, &inputQueue, threadPipe[1], &error)) {
+	if (!initVulkanWayland(display.display, display.surface, display.windowDimensions, &display.inputQueue, threadPipe[1], &error)) {
 		handleFatalError(error);
 	}
 
@@ -166,18 +164,14 @@ int main(int argc, char **argv)
 
 	close(epollFd);
 
-	destroyRegions(&display);
+	destroyCursor(&display);
 	destroyWindow(&display);
 	disconnectDisplay(&display);
 }
 
-void destroyRegions(struct display *display)
+void destroyCursor(struct display *display)
 {
-	wl_region_destroy(display->inputRegion);
-	printf("Destroyed Wayland region\n");
-
-	wl_region_destroy(display->opaqueRegion);
-	printf("Destroyed Wayland region\n");
+	wl_cursor_theme_destroy(display->cursorTheme);
 }
 
 void destroyWindow(struct display *display)
@@ -276,48 +270,51 @@ void createWindow(struct display *display)
 	wl_display_roundtrip(display->display);
 }
 
-void createRegions(struct display *display)
+void setUpRegions(struct display *display)
 {
 	if (display->compositor == NULL) {
 		handleFatalError("Can't find Wayland compositor\n");
 	}
 	printf("Found Wayland compositor\n");
 
-	display->inputRegion = wl_compositor_create_region(display->compositor);
-	if (display->inputRegion == NULL) {
+	struct wl_region *inputRegion = wl_compositor_create_region(display->compositor);
+	if (inputRegion == NULL) {
 		handleFatalError("Can't create Wayland region\n");
 	}
 	printf("Created Wayland region\n");
 	wl_region_add(
-		display->inputRegion,
+		inputRegion,
 		display->windowDimensions.activeArea.offset.x - RESIZE_BORDER,
 		display->windowDimensions.activeArea.offset.y - RESIZE_BORDER,
 		display->windowDimensions.activeArea.extent.width + RESIZE_BORDER * 2,
 		display->windowDimensions.activeArea.extent.height + RESIZE_BORDER * 2
 	);
 
-	display->opaqueRegion = wl_compositor_create_region(display->compositor);
-	if (display->opaqueRegion == NULL) {
+	struct wl_region *opaqueRegion = wl_compositor_create_region(display->compositor);
+	if (opaqueRegion == NULL) {
 		handleFatalError("Can't create Wayland region\n");
 	}
 	printf("Created Wayland region\n");
 	wl_region_add(
-		display->opaqueRegion,
+		opaqueRegion,
 		display->windowDimensions.activeArea.offset.x + display->windowDimensions.cornerRadius,
 		display->windowDimensions.activeArea.offset.y,
 		display->windowDimensions.activeArea.extent.width - (2 * display->windowDimensions.cornerRadius),
 		display->windowDimensions.activeArea.extent.height
 	);
 	wl_region_add(
-		display->opaqueRegion,
+		opaqueRegion,
 		display->windowDimensions.activeArea.offset.x,
 		display->windowDimensions.activeArea.offset.y + display->windowDimensions.cornerRadius,
 		display->windowDimensions.activeArea.extent.width,
 		display->windowDimensions.activeArea.extent.height - (2 * display->windowDimensions.cornerRadius)
 	);
 
-	wl_surface_set_input_region(display->surface, display->inputRegion);
-	wl_surface_set_opaque_region(display->surface, display->opaqueRegion);
+	wl_surface_set_input_region(display->surface, inputRegion);
+	wl_surface_set_opaque_region(display->surface, opaqueRegion);
+
+	wl_region_destroy(inputRegion);
+	wl_region_destroy(opaqueRegion);
 }
 
 static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version)
@@ -368,6 +365,15 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 {
 	printf("Got a xdg surface configure event\n");
 	struct display *display = data;
+
+	xdg_surface_set_window_geometry(
+		display->xdgSurface,
+		display->windowDimensions.activeArea.offset.x,
+		display->windowDimensions.activeArea.offset.y,
+		display->windowDimensions.activeArea.extent.width,
+		display->windowDimensions.activeArea.extent.height
+	);
+
 	xdg_surface_ack_configure(xdg_surface, serial);
 
 	// render here
@@ -378,12 +384,19 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 	printf("Got a xdg toplevel configure event\n");
 	struct display *display = data;
 	if (width == 0 && height == 0) {
+		display->windowDimensions.surfaceArea.width = DEFAULT_SURFACE_WIDTH;
+		display->windowDimensions.surfaceArea.height = DEFAULT_SURFACE_HEIGHT;
 		display->windowDimensions.activeArea.extent.width = DEFAULT_ACTIVE_WIDTH;
 		display->windowDimensions.activeArea.extent.height = DEFAULT_ACTIVE_HEIGHT;
 	} else {
-		display->windowDimensions.activeArea.extent.width = width - MARGIN * 2;
-		display->windowDimensions.activeArea.extent.height = height - MARGIN * 2;
+		display->windowDimensions.surfaceArea.width = width + MARGIN * 2;
+		display->windowDimensions.surfaceArea.height = height + MARGIN * 2;
+		display->windowDimensions.activeArea.extent.width = width;
+		display->windowDimensions.activeArea.extent.height = height;
 	}
+	printf("width: %d, height: %d\n", display->windowDimensions.activeArea.extent.width, display->windowDimensions.activeArea.extent.height);
+	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, display->windowDimensions);
+	setUpRegions(display);
 }
 
 void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
