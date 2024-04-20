@@ -147,39 +147,39 @@ void *threadProc(void *arg)
 	}
 
 #ifndef EMBED_SHADERS
-	char *vertexShaderPathTri;
-	char *fragmentShaderPathTri;
-	asprintf(&vertexShaderPathTri, "%s/%s", resourcePath, "triangle.vert.spv");
-	asprintf(&fragmentShaderPathTri, "%s/%s", resourcePath, "triangle.frag.spv");
-	char *vertexShaderBytesTri;
-	char *fragmentShaderBytesTri;
-	uint32_t vertexShaderSizeTri = 0;
-	uint32_t fragmentShaderSizeTri = 0;
+	char *triangleVertShaderPath;
+	char *triangleFragShaderPath;
+	asprintf(&triangleVertShaderPath, "%s/%s", resourcePath, "triangle.vert.spv");
+	asprintf(&triangleFragShaderPath, "%s/%s", resourcePath, "triangle.frag.spv");
+	char *triangleVertShaderBytes;
+	char *triangleFragShaderBytes;
+	uint32_t triangleVertShaderSize = 0;
+	uint32_t triangleFragShaderSize = 0;
 
-	if ((vertexShaderSizeTri = readFileToString(vertexShaderPathTri, &vertexShaderBytesTri)) == -1) {
+	if ((triangleVertShaderSize = readFileToString(triangleVertShaderPath, &triangleVertShaderBytes)) == -1) {
 		asprintf(error, "Failed to open triangle vertex shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
-	if ((fragmentShaderSizeTri = readFileToString(fragmentShaderPathTri, &fragmentShaderBytesTri)) == -1) {
+	if ((triangleFragShaderSize = readFileToString(triangleFragShaderPath, &triangleFragShaderBytes)) == -1) {
 		asprintf(error, "Failed to open triangle fragment shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
 
 #ifdef DRAW_WINDOW_DECORATION
-	char *vertexShaderPath;
-	char *fragmentShaderPath;
-	asprintf(&vertexShaderPath, "%s/%s", resourcePath, "window_border.vert.spv");
-	asprintf(&fragmentShaderPath, "%s/%s", resourcePath, "window_border.frag.spv");
-	char *vertexShaderBytes;
-	char *fragmentShaderBytes;
-	uint32_t vertexShaderSize = 0;
-	uint32_t fragmentShaderSize = 0;
+	char *windowBorderVertShaderPath;
+	char *windowBorderFragShaderPath;
+	asprintf(&windowBorderVertShaderPath, "%s/%s", resourcePath, "window_border.vert.spv");
+	asprintf(&windowBorderFragShaderPath, "%s/%s", resourcePath, "window_border.frag.spv");
+	char *windowBorderVertShaderBytes;
+	char *windowBorderFragShaderBytes;
+	uint32_t windowBorderVertShaderSize = 0;
+	uint32_t windowBorderFragShaderSize = 0;
 
-	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
+	if ((windowBorderVertShaderSize = readFileToString(windowBorderVertShaderPath, &windowBorderVertShaderBytes)) == -1) {
 		asprintf(error, "Failed to open window border vertex shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
-	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
+	if ((windowBorderFragShaderSize = readFileToString(windowBorderFragShaderPath, &windowBorderFragShaderBytes)) == -1) {
 		asprintf(error, "Failed to open window border fragment shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
@@ -188,10 +188,10 @@ void *threadProc(void *arg)
 
 	VkPipelineLayout pipelineLayoutTriangle;
 	VkPipeline pipelineTriangle;
-	bool pipelineCreateSuccessTriangle = createPipeline(device, renderPass, 0, vertexShaderBytesTri, vertexShaderSizeTri, fragmentShaderBytesTri, fragmentShaderSizeTri, swapchainInfo.extent, NULL, 0, &pipelineLayoutTriangle, &pipelineTriangle, error);
+	bool pipelineCreateSuccessTriangle = createPipeline(device, renderPass, 0, triangleVertShaderBytes, triangleVertShaderSize, triangleFragShaderBytes, triangleFragShaderSize, swapchainInfo.extent, NULL, 0, &pipelineLayoutTriangle, &pipelineTriangle, error);
 #ifndef EMBED_SHADERS
-	free(fragmentShaderBytesTri);
-	free(vertexShaderBytesTri);
+	free(triangleFragShaderBytes);
+	free(triangleVertShaderBytes);
 #endif /* EMBED_SHADERS */
 	if (!pipelineCreateSuccessTriangle) {
 		sendThreadFailureSignal(platformWindow);
@@ -200,10 +200,10 @@ void *threadProc(void *arg)
 #ifdef DRAW_WINDOW_DECORATION
 	VkPipelineLayout pipelineLayoutWindowDecoration;
 	VkPipeline pipelineWindowDecoration;
-	bool pipelineCreateSuccessWindowDecoration = createPipeline(device, renderPass, 1, vertexShaderBytes, vertexShaderSize, fragmentShaderBytes, fragmentShaderSize, swapchainInfo.extent, imageDescriptorSetLayouts, 1, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
+	bool pipelineCreateSuccessWindowDecoration = createPipeline(device, renderPass, 1, windowBorderVertShaderBytes, windowBorderVertShaderSize, windowBorderFragShaderBytes, windowBorderFragShaderSize, swapchainInfo.extent, imageDescriptorSetLayouts, 1, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
 #ifndef EMBED_SHADERS
-	free(fragmentShaderBytes);
-	free(vertexShaderBytes);
+	free(windowBorderFragShaderBytes);
+	free(windowBorderVertShaderBytes);
 #endif /* EMBED_SHADERS */
 	if (!pipelineCreateSuccessWindowDecoration) {
 		sendThreadFailureSignal(platformWindow);

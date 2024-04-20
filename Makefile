@@ -33,31 +33,32 @@ else
 endif
 
 CFLAGS+=-DENABLE_VSYNC
-ifdef DEBUG
-	CFLAGS+=-DDEBUG -g
-	ALL_TARGET+=$(SPIRV_SHADERS)
-else
-	CFLAGS+=-DEMBED_SHADERS -O3
-	LDFLAGS+=-static
-	ALL_TARGET+=$(HEADER_SHADERS)
-endif
 
 SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv triangle.vert.spv triangle.frag.spv
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_triangle.vert.h shader_triangle.frag.h
 MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o renderloop.o vma_implementation.o pipeline.o
+
+ifdef DEBUG
+	CFLAGS+=-DDEBUG -g
+	SHADERS=$(SPIRV_SHADERS)
+else
+	CFLAGS+=-DEMBED_SHADERS -O3
+	LDFLAGS+=-static
+	SHADERS=$(HEADER_SHADERS)
+endif
 
 all: $(ALL_TARGET)
 
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $<
 
-modeler: $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o
+modeler: $(SHADERS) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(LDLIBS)
 
-modeler.exe: $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o
+modeler.exe: $(SHADERS) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(LDLIBS)
 
-modeler.a: $(MODELER_OBJS) modeler_metal.o surface_metal.o
+modeler.a: $(SHADERS) $(MODELER_OBJS) modeler_metal.o surface_metal.o
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o
 
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
@@ -73,7 +74,7 @@ modeler.o: src/modeler.c
 	$(GLSLC) -fshader-stage=frag $< -o $@
 
 $(HEADER_SHADERS): shader_%.h: %.spv
-	./hexdump_include.sh fragmentShaderBytes fragmentShaderSize $< > $@
+	./hexdump_include.sh "`echo $(basename $<)ShaderBytes | gsed -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)ShaderSize | gsed -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 
 ifdef ENABLE_IMGUI
 imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
