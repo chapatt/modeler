@@ -106,9 +106,14 @@ class ModelerView: NSView, CALayerDelegate {
     @objc func handleFrameDidChange(object: NSView) {
         print("extentChange")
         let bounds: CGRect = layer!.bounds
-        let width = Int32(bounds.size.width)
-        let height = Int32(bounds.size.height)
-        enqueueInputEventWithExtent(inputQueue, RESIZE, width, height)
+        let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
+        let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
+        let windowDimensions = WindowDimensions(
+            surfaceArea: extent,
+            activeArea: rect,
+            cornerRadius: 0
+        )
+        enqueueInputEventWithWindowDimensions(inputQueue, RESIZE, windowDimensions)
     }
     
     func handleFatalError(message: String) {

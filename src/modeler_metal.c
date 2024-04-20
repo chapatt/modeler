@@ -35,9 +35,19 @@ pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char 
 	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
 	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
 	}
-	threadArgs->initialExtent = (VkExtent2D) {
-		.width = width,
-		.height = height
+	threadArgs->windowDimensions = (WindowDimensions) {
+		.surfaceArea = {
+			.width = width,
+			.height = height
+		},
+		.activeArea = {
+			.extent = {
+				.width = width,
+				.height = height
+			},
+			.offset = {0, 0}
+		},
+		.cornerRadius = 0
 	};
 	threadArgs->error = error;
 
