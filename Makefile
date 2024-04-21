@@ -8,6 +8,7 @@ ifeq ($(OS),Windows_NT)
 	CXX=/msys64/mingw64/bin/g++
 	RM=/msys64/usr/bin/rm
 	HEXDUMP=/msys64/usr/bin/hexdump
+	SED=/msys64/usr/bin/sed
 	GLSLC=/VulkanSDK/1.3.250.0/Bin/glslc
 	CFLAGS+=-I/VulkanSDK/1.3.250.0/Include -mwindows -municode
 	LDFLAGS+=-L/VulkanSDK/1.3.250.0/Lib
@@ -18,12 +19,14 @@ else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		CC=gcc
+		SED=sed
 		GLSLC=glslc
 		LDLIBS+=-lvulkan -lwayland-client -lwayland-cursor
 		ALL_TARGET=modeler
 		CFLAGS+=-DVK_USE_PLATFORM_WAYLAND_KHR -DDRAW_WINDOW_DECORATION
 	endif
 	ifeq ($(UNAME_S),Darwin)
+		SED=gsed
 		GLSLC=/Users/chase/VulkanSDK/1.3.250.0/macOS/bin/glslc
 		CFLAGS+=-I/Users/chase/VulkanSDK/1.3.250.0/macOS/include
 		LDLIBS+=-lvulkan
@@ -74,7 +77,7 @@ modeler.o: src/modeler.c
 	$(GLSLC) -fshader-stage=frag $< -o $@
 
 $(HEADER_SHADERS): shader_%.h: %.spv
-	./hexdump_include.sh "`echo $(basename $<)ShaderBytes | gsed -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)ShaderSize | gsed -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
+	./hexdump_include.sh "`echo $(basename $<)ShaderBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)ShaderSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 
 ifdef ENABLE_IMGUI
 imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
