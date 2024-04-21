@@ -37,12 +37,26 @@ pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, cha
 	for (size_t i = 0; i < threadArgs->instanceExtensionCount; ++i) {
 	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
 	}
-	threadArgs->initialExtent = getWindowExtent(window);
-	if (threadArgs->initialExtent.width == 0 || threadArgs->initialExtent.height == 0) {
+
+	VkExtent2D extent = getWindowExtent(window);
+	if (extent.width == 0 || extent.height == 0) {
 		asprintf(error, "Failed to get window extent");
 		return 0;
 	}
-	threadArgs->error = error;
+	threadArgs->windowDimensions = (WindowDimensions) {
+		.surfaceArea = {
+			.width = extent.width,
+			.height = extent.height
+		},
+		.activeArea = {
+			.extent = {
+				.width = extent.width,
+				.height = extent.height
+			},
+			.offset = {0, 0}
+		},
+		.cornerRadius = 0
+	};
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
 		free(threadArgs->resourcePath);
@@ -50,6 +64,8 @@ pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, cha
 		asprintf(error, "Failed to start Vulkan thread");
 		return 0;
 	}
+
+	threadArgs->error = error;
 
 	return thread;
 }

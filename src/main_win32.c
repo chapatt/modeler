@@ -102,7 +102,23 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return 0;
 	case WM_SIZE:
 		if (inputQueue) {
-			enqueueInputEventWithExtent(inputQueue, RESIZE, LOWORD(lParam), HIWORD(lParam));
+			uint32_t width = LOWORD(lParam);
+			uint32_t height = HIWORD(lParam);
+			WindowDimensions windowDimensions = {
+				.surfaceArea = {
+					.width = width,
+					.height = height
+				},
+				.activeArea = {
+					.extent = {
+						.width = width,
+						.height = height
+					},
+					.offset = {0, 0}
+				},
+				.cornerRadius = 0
+			};
+			enqueueInputEventWithWindowDimensions(inputQueue, RESIZE, windowDimensions);
 		}
 		return 0;
 	case WM_LBUTTONDOWN:

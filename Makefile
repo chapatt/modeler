@@ -8,7 +8,7 @@ ifeq ($(OS),Windows_NT)
 	CXX=/msys64/mingw64/bin/g++
 	RM=/msys64/usr/bin/rm
 	HEXDUMP=/msys64/usr/bin/hexdump
-	SED=/msys64/usr/bin/sed
+	SED=sed
 	GLSLC=/VulkanSDK/1.3.250.0/Bin/glslc
 	CFLAGS+=-I/VulkanSDK/1.3.250.0/Include -mwindows -municode
 	LDFLAGS+=-L/VulkanSDK/1.3.250.0/Lib
