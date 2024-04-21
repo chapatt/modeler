@@ -36,7 +36,6 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
 		bool windowResized = false;
-		VkExtent2D windowExtent = swapchainInfo->extent;
 
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
@@ -55,7 +54,6 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				break;
 			case RESIZE:
 				windowDimensions = *((WindowDimensions *) data);
-				windowExtent = windowDimensions.surfaceArea;
 				windowResized = true;
 				free(data);
 				free(inputEvent);
@@ -74,7 +72,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 		uint32_t imageIndex = 0;
 		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			if (!recreateSwapchain(swapchainCreateInfo, windowExtent, error)) {
+			if (!recreateSwapchain(swapchainCreateInfo, windowDimensions.surfaceArea, error)) {
 				return false;
 			}
 			continue;
@@ -219,7 +217,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 
 		result = vkQueuePresentKHR(presentationQueue, &presentInfo);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResized) {
-			if (!recreateSwapchain(swapchainCreateInfo, windowExtent, error)) {
+			if (!recreateSwapchain(swapchainCreateInfo, windowDimensions.surfaceArea, error)) {
 				return false;
 			}
 			windowResized = false;
