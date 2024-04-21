@@ -121,8 +121,7 @@ clean:
 		render_pass.o descriptor.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o \
 		input_event.o queue.o \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
-		window_border.vert.spv window_border.frag.spv shader_window_border.vert.h shader_window_border.frag.h \
-		triangle.vert.spv triangle.frag.spv shader_triangle.vert.h shader_triangle.frag.h \
+		$(SPIRV_SHADERS), $(HEADER_SHADERS) \
 		imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o \
 		vma_implementation.o \
 		renderloop.o
