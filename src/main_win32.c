@@ -101,6 +101,23 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		DestroyWindow(hWnd);
 		PostQuitMessage(0);
 		return 0;
+	case WM_COMMAND:
+		SendMessage(hWnd, WM_SYSCOMMAND, wParam, lParam);
+ 		return 0;
+	case WM_NCRBUTTONUP:
+		if (wParam == HTCAPTION) {
+			HMENU hMenu = GetSystemMenu(hWnd, false);
+			TrackPopupMenu(
+				hMenu,
+				TPM_RIGHTBUTTON,
+				GET_X_LPARAM(lParam),
+				GET_Y_LPARAM(lParam),
+				0,
+				hWnd,
+				NULL
+			);
+		}
+		return 0;
 	case WM_SIZE:
 		if (inputQueue) {
 			uint32_t width = LOWORD(lParam);
