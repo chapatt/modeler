@@ -72,7 +72,7 @@ pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, cha
 
 void sendThreadFailureSignal(void *platformWindow)
 {
-	HWND hwnd = ((Win32Window *) platformWindow)->hwnd;
-	PostMessageW(hwnd, THREAD_FAILURE_NOTIFICATION_MESSAGE, 0, 0);
+	HWND hWnd = ((Win32Window *) platformWindow)->hwnd;
+	PostMessageW(hWnd, THREAD_FAILURE_NOTIFICATION_MESSAGE, 0, 0);
 	pthread_exit(NULL);
 }

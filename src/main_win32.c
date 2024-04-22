@@ -14,13 +14,14 @@
 #include "modeler_win32.h"
 
 #define CHROME_HEIGHT 50
+#define IDM_MENU 3
 
 const LPCTSTR CLASS_NAME = L"Modeler Window Class";
-void handleFatalError(HWND hwnd, char *message);
+void handleFatalError(HWND hWnd, char *message);
 static wchar_t *utf8ToUtf16(const char *utf8);
-static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static LRESULT calcSize(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static LRESULT hitTest(HWND hwnd, int x, int y);
+static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT hitTest(HWND hWnd, int x, int y);
 
 static char *error = NULL;
 static pthread_t thread = 0;
@@ -52,7 +53,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		handleFatalError(NULL, "Can't register Windows window class");
 	}
 
-	HWND hwnd = CreateWindowEx(
+	HWND hWnd = CreateWindowEx(
 		WS_EX_APPWINDOW,
 		CLASS_NAME,
 		L"Modeler",
@@ -64,19 +65,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		NULL
 	);
 
-	if (!hwnd) {
+	if (!hWnd) {
 		handleFatalError(NULL, "Can't create window.");
 	}
 
-	if (ShowWindow(hwnd, nCmdShow) != 0) {
+	if (ShowWindow(hWnd, nCmdShow) != 0) {
 		handleFatalError(NULL, "Can't show window.");
 	}
 
 	Queue inputQueue;
 	initializeQueue(&inputQueue);
-	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) &inputQueue);
-	if (!(thread = initVulkanWin32(hInstance, hwnd, &inputQueue, &error))) {
-		handleFatalError(hwnd, error);
+	SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR) &inputQueue);
+	if (!(thread = initVulkanWin32(hInstance, hWnd, &inputQueue, &error))) {
+		handleFatalError(hWnd, error);
 	}
 
 	MSG msg = {};
@@ -89,15 +90,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 	return 0;
 }
 
-static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	Queue *inputQueue = (Queue *) GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	Queue *inputQueue = (Queue *) GetWindowLongPtr(hWnd, GWLP_USERDATA);
 	switch (uMsg) {
 	case THREAD_FAILURE_NOTIFICATION_MESSAGE:
-		handleFatalError(hwnd, error);
+		handleFatalError(hWnd, error);
 	case WM_CLOSE:
 		terminateVulkan(inputQueue, thread);
-		DestroyWindow(hwnd);
+		DestroyWindow(hWnd);
 		PostQuitMessage(0);
 		return 0;
 	case WM_SIZE:
@@ -131,7 +132,7 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		TRACKMOUSEEVENT trackMouseEvent = {
 			.cbSize = sizeof(TRACKMOUSEEVENT),
 			.dwFlags = TME_LEAVE,
-			.hwndTrack = hwnd
+			.hwndTrack = hWnd
 		};
 		TrackMouseEvent(&trackMouseEvent);
 
@@ -141,17 +142,17 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		enqueueInputEvent(inputQueue, POINTER_LEAVE, NULL);
 		return 0;
 	case WM_NCCALCSIZE:
-		return calcSize(hwnd, uMsg, wParam, lParam);
+		return calcSize(hWnd, uMsg, wParam, lParam);
 	case WM_NCHITTEST:
-		return hitTest(hwnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		return hitTest(hWnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 	default:
-		return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 }
 
-static LRESULT calcSize(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (!wParam) return DefWindowProc(hwnd, uMsg, wParam, lParam);
+	if (!wParam) return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
 	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
 	int expandX = GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXBORDER) + padding;
@@ -172,7 +173,7 @@ static LRESULT calcSize(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-static LRESULT hitTest(HWND hwnd, int x, int y)
+static LRESULT hitTest(HWND hWnd, int x, int y)
 {
 	enum regionMask
 	{
@@ -189,7 +190,7 @@ static LRESULT hitTest(HWND hwnd, int x, int y)
 	int borderY = GetSystemMetrics(SM_CYFRAME) + padding;
 
 	RECT windowRect;
-	if (!GetWindowRect(hwnd, &windowRect)) {
+	if (!GetWindowRect(hWnd, &windowRect)) {
 		return HTNOWHERE;
 	}
 
@@ -235,12 +236,12 @@ static LRESULT hitTest(HWND hwnd, int x, int y)
 	}
 }
 
-void handleFatalError(HWND hwnd, char *message)
+void handleFatalError(HWND hWnd, char *message)
 {
 	wchar_t *messageW = utf8ToUtf16(message);
 
 	MessageBox(
-		hwnd,
+		hWnd,
 		messageW,
 		L"Modeler Error",
 		MB_OK | MB_DEFBUTTON1 | MB_ICONERROR | MB_SYSTEMMODAL
