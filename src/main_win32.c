@@ -22,6 +22,7 @@ static wchar_t *utf8ToUtf16(const char *utf8);
 static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT hitTest(HWND hWnd, int x, int y);
+static bool isMaximized(HWND hWnd);
 
 static char *error = NULL;
 static pthread_t thread = 0;
@@ -162,14 +163,42 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return calcSize(hWnd, uMsg, wParam, lParam);
 	case WM_NCHITTEST:
 		return hitTest(hWnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+	case WM_GETMINMAXINFO:
+		MINMAXINFO* mmi = (MINMAXINFO*) lParam;
+
+ 		MONITORINFO mi = {};
+		const HMONITOR mh = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
+
+ 		mi.cbSize = sizeof(mi);
+		GetMonitorInfo(mh, &mi);
+
+		mmi->ptMaxPosition.x = mi.rcWork.left - mi.rcMonitor.left;
+		mmi->ptMaxPosition.y = mi.rcWork.top - mi.rcMonitor.top;
+		mmi->ptMaxSize.x = mi.rcWork.right - mi.rcWork.left;
+ 		mmi->ptMaxSize.y = mi.rcWork.bottom - mi.rcWork.top;
+
+		return 0;
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
 }
 
+static bool isMaximized(HWND hWnd)
+{
+	WINDOWPLACEMENT windowPlacement = {.length = sizeof(windowPlacement)};
+	if (!GetWindowPlacement(hWnd, &windowPlacement)) {
+		return -1;
+	}
+	return windowPlacement.showCmd == SW_SHOWMAXIMIZED;
+}
+
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (!wParam) return DefWindowProc(hWnd, uMsg, wParam, lParam);
+
+	if (isMaximized(hWnd)) {
+		return 0;
+	}
 
 	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
 	int expandX = GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXBORDER) + padding;
@@ -182,16 +211,24 @@ static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	clientRect->left += expandX;
 	clientRect->bottom -= expandY;
 
-	bool isMaximized = false;
-	if (isMaximized) {
-		clientRect->top += padding;
-	}
-
 	return 0;
 }
 
 static LRESULT hitTest(HWND hWnd, int x, int y)
 {
+	RECT windowRect;
+	if (!GetWindowRect(hWnd, &windowRect)) {
+		return HTNOWHERE;
+	}
+
+	if (isMaximized(hWnd)) {
+		if (y < (windowRect.top + CHROME_HEIGHT)) {
+			return HTCAPTION;
+		}
+
+		return HTCLIENT;
+	}
+
 	enum regionMask
 	{
 		CLIENT = 0b00000,
@@ -205,11 +242,6 @@ static LRESULT hitTest(HWND hWnd, int x, int y)
 	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
 	int borderX = GetSystemMetrics(SM_CXFRAME) + padding;
 	int borderY = GetSystemMetrics(SM_CYFRAME) + padding;
-
-	RECT windowRect;
-	if (!GetWindowRect(hWnd, &windowRect)) {
-		return HTNOWHERE;
-	}
 
 	enum regionMask result = CLIENT;
 
