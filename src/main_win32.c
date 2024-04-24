@@ -172,11 +172,9 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return hitTest(hWnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 	case WM_GETMINMAXINFO:
 		MINMAXINFO* mmi = (MINMAXINFO*) lParam;
-
  		MONITORINFO mi = {};
-		const HMONITOR mh = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
-
  		mi.cbSize = sizeof(mi);
+		const HMONITOR mh = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
 		GetMonitorInfo(mh, &mi);
 
 		mmi->ptMaxPosition.x = (mi.rcWork.left - mi.rcMonitor.left);
@@ -188,6 +186,19 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 		return 0;
 	case WM_DPICHANGED:
+		RECT *newWindowRect = (RECT *) lParam;
+
+		SetWindowPos(
+			hWnd,
+			NULL,
+			newWindowRect->left,
+			newWindowRect->top,
+			newWindowRect->right - newWindowRect->left,
+			newWindowRect->bottom - newWindowRect->top,
+			0
+		);
+
+		return 0;
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
