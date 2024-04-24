@@ -172,10 +172,12 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
  		mi.cbSize = sizeof(mi);
 		GetMonitorInfo(mh, &mi);
 
-		mmi->ptMaxPosition.x = mi.rcWork.left - mi.rcMonitor.left;
-		mmi->ptMaxPosition.y = mi.rcWork.top - mi.rcMonitor.top;
+		mmi->ptMaxPosition.x = (mi.rcWork.left - mi.rcMonitor.left);
+		mmi->ptMaxPosition.y = (mi.rcWork.top - mi.rcMonitor.top);
 		mmi->ptMaxSize.x = mi.rcWork.right - mi.rcWork.left;
  		mmi->ptMaxSize.y = mi.rcWork.bottom - mi.rcWork.top;
+		mmi->ptMaxTrackSize.x = mi.rcWork.right - mi.rcWork.left;
+ 		mmi->ptMaxTrackSize.y = mi.rcWork.bottom - mi.rcWork.top;
 
 		return 0;
 	default:
