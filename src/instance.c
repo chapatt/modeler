@@ -25,8 +25,8 @@ bool createInstance(const char **extensions, size_t extensionCount, VkInstance *
 	applicationInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
 	applicationInfo.pEngineName = "No Engine";
 	applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	applicationInfo.apiVersion = VK_API_VERSION_1_0;
-    
+	applicationInfo.apiVersion = VK_API_VERSION_1_2;
+
 	VkInstanceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	createInfo.pApplicationInfo = &applicationInfo;
@@ -67,7 +67,7 @@ bool createInstance(const char **extensions, size_t extensionCount, VkInstance *
 		createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 	}
 	createInfo.ppEnabledExtensionNames = requiredExtensions;
-    
+
 	VkResult result;
 	if ((result = vkCreateInstance(&createInfo, VK_NULL_HANDLE, instance)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create instance: %s", string_VkResult(result));

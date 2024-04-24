@@ -9,3 +9,14 @@ bsdextrautils (hexdump)
 
 ### Debug only
 vulkan-validationlayers
+
+# macOS
+
+## Vulkan SDK
+Set up locations of Vulkan libraries to which to link: Xcode > Settings > Locations > Custom Paths
+
+| Name			| Display Name		| Path							|
+|--			|--			|--							|
+| VULKAN_SDK		| Vulkan SDK		| <path_to_vulkan_sdk_including_version>		|
+| VULKAN_HEADERS	| Vulkan Headers	| <path_to_vulkan_sdk_including_version>/macOS/include	|
+| VULKAN_LIB		| Vulkan Libraries	| <path_to_vulkan_sdk_including_version>/macOS/lib	|
