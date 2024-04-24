@@ -65,8 +65,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		WS_EX_APPWINDOW,
 		CLASS_NAME,
 		L"Modeler",
-		WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
-		500, 500, 500, 300,
+		WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, CW_USEDEFAULT, 500, 300,
 		NULL,
 		NULL,
 		hInstance,
@@ -215,25 +215,29 @@ static bool isMaximized(HWND hWnd)
 
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (isMaximized(hWnd)) {
+		return 0;
+	}
+
 	typedef UINT (WINAPI *PFN_GetDpiForWindow)(HWND hwnd);
 	PFN_GetDpiForWindow _GetDpiForWindow = (PFN_GetDpiForWindow) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetDpiForWindow");
 
 	typedef int (WINAPI *PFN_GetSystemMetricsForDpi)(int nIndex, UINT dpi);
 	PFN_GetSystemMetricsForDpi _GetSystemMetricsForDpi = (PFN_GetSystemMetricsForDpi) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetSystemMetricsForDpi");
 
-	if (!wParam) return DefWindowProc(hWnd, uMsg, wParam, lParam);
-
-	if (isMaximized(hWnd)) {
-		return 0;
-	}
-
 	int dpi = _GetDpiForWindow(hWnd);
 	int padding = _GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 	int expandX = _GetSystemMetricsForDpi(SM_CXFRAME, dpi) - _GetSystemMetricsForDpi(SM_CXBORDER, dpi) + padding;
 	int expandY = _GetSystemMetricsForDpi(SM_CYFRAME, dpi) - _GetSystemMetricsForDpi(SM_CYBORDER, dpi) + padding;
 
-	NCCALCSIZE_PARAMS *params = (NCCALCSIZE_PARAMS *) lParam;
-	RECT *clientRect = params->rgrc;
+	RECT *clientRect;
+	if (!wParam) {
+		clientRect = (RECT *)lParam;
+	} else {
+		NCCALCSIZE_PARAMS *params = (NCCALCSIZE_PARAMS *) lParam;
+		clientRect = params->rgrc;
+	}
+
 
 	clientRect->right -= expandX;
 	clientRect->left += expandX;
