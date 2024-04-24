@@ -29,12 +29,19 @@ static pthread_t thread = 0;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
+	typedef BOOL (WINAPI *PFN_SetProcessDpiAwarenessContext)(DPI_AWARENESS_CONTEXT value);
+	PFN_SetProcessDpiAwarenessContext _SetProcessDpiAwarenessContext = (PFN_SetProcessDpiAwarenessContext) GetProcAddress(GetModuleHandle(L"User32.dll"), "SetProcessDpiAwarenessContext");
+
 	#ifdef DEBUG
 	if (AllocConsole()) {
 		FILE* fi = 0;
 		freopen_s(&fi, "CONOUT$", "w", stdout);
 	}
 	#endif /* DEBUG */
+
+	if (!_SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) {
+		handleFatalError(NULL, "Failed to advertise DPI awareness");
+	}
 
 	WNDCLASSEXW wc = {};
 	wc.cbSize = sizeof(WNDCLASSEX);
@@ -180,6 +187,7 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
  		mmi->ptMaxTrackSize.y = mi.rcWork.bottom - mi.rcWork.top;
 
 		return 0;
+	case WM_DPICHANGED:
 	default:
 		return DefWindowProc(hWnd, uMsg, wParam, lParam);
 	}
@@ -196,15 +204,22 @@ static bool isMaximized(HWND hWnd)
 
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	typedef UINT (WINAPI *PFN_GetDpiForWindow)(HWND hwnd);
+	PFN_GetDpiForWindow _GetDpiForWindow = (PFN_GetDpiForWindow) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetDpiForWindow");
+
+	typedef int (WINAPI *PFN_GetSystemMetricsForDpi)(int nIndex, UINT dpi);
+	PFN_GetSystemMetricsForDpi _GetSystemMetricsForDpi = (PFN_GetSystemMetricsForDpi) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetSystemMetricsForDpi");
+
 	if (!wParam) return DefWindowProc(hWnd, uMsg, wParam, lParam);
 
 	if (isMaximized(hWnd)) {
 		return 0;
 	}
 
-	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
-	int expandX = GetSystemMetrics(SM_CXFRAME) - GetSystemMetrics(SM_CXBORDER) + padding;
-	int expandY = GetSystemMetrics(SM_CYFRAME) - GetSystemMetrics(SM_CYBORDER) + padding;
+	int dpi = _GetDpiForWindow(hWnd);
+	int padding = _GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+	int expandX = _GetSystemMetricsForDpi(SM_CXFRAME, dpi) - _GetSystemMetricsForDpi(SM_CXBORDER, dpi) + padding;
+	int expandY = _GetSystemMetricsForDpi(SM_CYFRAME, dpi) - _GetSystemMetricsForDpi(SM_CYBORDER, dpi) + padding;
 
 	NCCALCSIZE_PARAMS *params = (NCCALCSIZE_PARAMS *) lParam;
 	RECT *clientRect = params->rgrc;
@@ -218,6 +233,12 @@ static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static LRESULT hitTest(HWND hWnd, int x, int y)
 {
+	typedef UINT (WINAPI *PFN_GetDpiForWindow)(HWND hwnd);
+	PFN_GetDpiForWindow _GetDpiForWindow = (PFN_GetDpiForWindow) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetDpiForWindow");
+
+	typedef int (WINAPI *PFN_GetSystemMetricsForDpi)(int nIndex, UINT dpi);
+	PFN_GetSystemMetricsForDpi _GetSystemMetricsForDpi = (PFN_GetSystemMetricsForDpi) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetSystemMetricsForDpi");
+
 	RECT windowRect;
 	if (!GetWindowRect(hWnd, &windowRect)) {
 		return HTNOWHERE;
@@ -241,9 +262,10 @@ static LRESULT hitTest(HWND hWnd, int x, int y)
 		CHROME = 0b10000
 	};
 
-	int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
-	int borderX = GetSystemMetrics(SM_CXFRAME) + padding;
-	int borderY = GetSystemMetrics(SM_CYFRAME) + padding;
+	int dpi = _GetDpiForWindow(hWnd);
+	int padding = _GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
+	int borderX = _GetSystemMetricsForDpi(SM_CXFRAME, dpi) + padding;
+	int borderY = _GetSystemMetricsForDpi(SM_CYFRAME, dpi) + padding;
 
 	enum regionMask result = CLIENT;
 
@@ -312,4 +334,10 @@ static wchar_t *utf8ToUtf16(const char *utf8)
 	MultiByteToWideChar(CP_UTF8, 0, utf8, -1, output, outputSize);
  
 	return output;
+}
+
+static char *getLastErrorString(void) {
+	//LPWSTR messageBuffer = NULL;
+	//FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR) &messageBuffer, 0, NULL);
+	//LocalFree(messageBuffer);
 }
