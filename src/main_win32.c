@@ -170,21 +170,6 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return calcSize(hWnd, uMsg, wParam, lParam);
 	case WM_NCHITTEST:
 		return hitTest(hWnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-	case WM_GETMINMAXINFO:
-		MINMAXINFO* mmi = (MINMAXINFO*) lParam;
- 		MONITORINFO mi = {};
- 		mi.cbSize = sizeof(mi);
-		const HMONITOR mh = MonitorFromWindow(hWnd, MONITOR_DEFAULTTONEAREST);
-		GetMonitorInfo(mh, &mi);
-
-		mmi->ptMaxPosition.x = (mi.rcWork.left - mi.rcMonitor.left);
-		mmi->ptMaxPosition.y = (mi.rcWork.top - mi.rcMonitor.top);
-		mmi->ptMaxSize.x = mi.rcWork.right - mi.rcWork.left;
- 		mmi->ptMaxSize.y = mi.rcWork.bottom - mi.rcWork.top;
-		mmi->ptMaxTrackSize.x = mi.rcWork.right - mi.rcWork.left;
- 		mmi->ptMaxTrackSize.y = mi.rcWork.bottom - mi.rcWork.top;
-
-		return 0;
 	case WM_DPICHANGED:
 		RECT *newWindowRect = (RECT *) lParam;
 
