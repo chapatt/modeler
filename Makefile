@@ -124,7 +124,7 @@ clean:
 		render_pass.o descriptor.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o \
 		input_event.o queue.o \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
-		$(SPIRV_SHADERS), $(HEADER_SHADERS) \
+		$(SPIRV_SHADERS) $(HEADER_SHADERS) \
 		imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o \
 		vma_implementation.o \
 		renderloop.o
