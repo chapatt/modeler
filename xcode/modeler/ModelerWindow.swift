@@ -22,7 +22,7 @@ class ModelerWindow: NSWindow {
             backing: .buffered,
             defer: false)
         
-        self.contentView = ModelerView()
+        self.contentViewController = ModelerViewController(view: ModelerView(frame: contentRect, scale: self.backingScaleFactor))
 
         self.title = "Modeler"
         self.isOpaque = false

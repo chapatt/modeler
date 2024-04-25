@@ -1,14 +1,14 @@
 import AppKit
 
-class ModelerView: NSView, CALayerDelegate {
+class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     private var trackingArea: NSTrackingArea!
     private var inputQueue: UnsafeMutablePointer<Queue>
     private var thread: pthread_t?
     private var errorPointerPointer: UnsafeMutablePointer<UnsafeMutablePointer<CChar>?>?
 
-    override init(frame frameRect: NSRect) {
+    override init(frame: NSRect) {
         self.inputQueue = createQueue()
-        super.init(frame: frameRect)
+        super.init(frame: frame)
         self.postsFrameChangedNotifications = true
         self.wantsLayer = true
         let layer = CAMetalLayer()
@@ -23,6 +23,11 @@ class ModelerView: NSView, CALayerDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleFrameDidChange), name: NSView.frameDidChangeNotification, object: nil)
     }
     
+    convenience init(frame: NSRect, scale: CGFloat) {
+        self.init(frame: frame)
+        self.layer?.contentsScale = scale
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -34,7 +39,7 @@ class ModelerView: NSView, CALayerDelegate {
         
         let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
             
-        let bounds: CGRect = layer.bounds
+        let bounds: CGRect = convertToBacking(layer.bounds)
         let width = Int32(bounds.size.width)
         let height = Int32(bounds.size.height)
         
@@ -105,7 +110,7 @@ class ModelerView: NSView, CALayerDelegate {
     
     @objc func handleFrameDidChange(object: NSView) {
         print("extentChange")
-        let bounds: CGRect = layer!.bounds
+        let bounds: CGRect = convertToBacking(layer!.bounds)
         let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
         let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
         let windowDimensions = WindowDimensions(
@@ -126,5 +131,9 @@ class ModelerView: NSView, CALayerDelegate {
             alert.runModal()
             NSApplication.shared.terminate(nil)
         }
+    }
+    
+    func layer(_ layer: CALayer, shouldInheritContentsScale newScale: CGFloat, from window: NSWindow) -> Bool {
+        return true
     }
 }

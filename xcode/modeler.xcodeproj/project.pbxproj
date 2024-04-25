@@ -19,6 +19,7 @@
 		AB330EE52BD992AD00FC06CE /* libvulkan.1.3.280.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.3.280.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE72BD993E600FC06CE /* libMoltenVK.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; };
 		AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EEB2BD9D46700FC06CE /* ModelerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */; };
 		AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */; };
 		AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
 		AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB60A70E2A6CFBE0001D4DB2 /* main.swift */; };
@@ -70,6 +71,8 @@
 		AB330ED72BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_shader_object.dylib; path = macOS/lib/libVkLayer_khronos_shader_object.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_screenshot.dylib; path = macOS/lib/libVkLayer_screenshot.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMoltenVK.dylib; path = macOS/lib/libMoltenVK.dylib; sourceTree = VULKAN_SDK; };
+		AB330EE92BD99D3A00FC06CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewController.swift; sourceTree = "<group>"; };
 		AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindow.swift; sourceTree = "<group>"; };
 		AB4D1BE92B384A0200717FEC /* modeler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = modeler.a; path = ../modeler.a; sourceTree = "<group>"; };
 		AB4D1BEB2B384AC500717FEC /* imgui.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = imgui.a; path = ../imgui.a; sourceTree = "<group>"; };
@@ -144,6 +147,7 @@
 		ABF162372A34E3A7007655F7 /* modeler */ = {
 			isa = PBXGroup;
 			children = (
+				AB330EE92BD99D3A00FC06CE /* Info.plist */,
 				ABF1623A2A34E3A7007655F7 /* ModelerView.swift */,
 				ABF1623C2A34E3AC007655F7 /* Assets.xcassets */,
 				ABF162412A34E3AC007655F7 /* modeler.entitlements */,
@@ -153,6 +157,7 @@
 				AB60A70E2A6CFBE0001D4DB2 /* main.swift */,
 				AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */,
 				ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */,
+				AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */,
 			);
 			path = modeler;
 			sourceTree = "<group>";
@@ -266,6 +271,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ABD9E0172B2BA4F8008932DB /* ModelerWindowController.swift in Sources */,
+				AB330EEB2BD9D46700FC06CE /* ModelerViewController.swift in Sources */,
 				AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */,
 				AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */,
 				ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */,
@@ -406,6 +412,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = $VULKAN_HEADERS;
+				INFOPLIST_FILE = modeler/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -441,6 +448,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = $VULKAN_HEADERS;
+				INFOPLIST_FILE = modeler/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
