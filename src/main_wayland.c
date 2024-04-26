@@ -18,6 +18,7 @@
 
 #include "modeler_wayland.h"
 
+#define CHROME_HEIGHT 20
 #define RESIZE_BORDER 10
 #define MARGIN 25
 #define DEFAULT_SURFACE_WIDTH 600 /* DEFAULT_ACTIVE_WIDTH + MARGIN * 2 */
@@ -72,6 +73,7 @@ struct display {
 	struct xdg_toplevel_listener xdgToplevelListener;
 	struct wl_pointer_listener pointerListener;
 	uint32_t pointerSerial;
+	uint32_t scale;
 	WindowDimensions windowDimensions;
 	WindowRegion pointerRegion;
 	Queue inputQueue;
@@ -79,16 +81,16 @@ struct display {
 
 static void registryGlobalHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
 static void registryGlobalRemoveHandler(void *data, struct wl_registry *registry, uint32_t id);
-void connectDisplay(struct display *display);
-void configureWmBase(struct display *display);
-void configureOutput(struct display *display, struct wl_output *output, uint32_t id);
-void createWindow(struct display *display);
-void setUpRegions(struct display *display);
-void destroyCursor(struct display *display);
-void destroyWindow(struct display *display);
-void disconnectDisplay(struct display *display);
-void configurePointer(struct display *display);
-void setCursor(struct display *display, char *name);
+static void connectDisplay(struct display *display);
+static void configureWmBase(struct display *display);
+static void configureOutput(struct display *display, struct wl_output *output, uint32_t id);
+static void createWindow(struct display *display);
+static void setUpRegions(struct display *display);
+static void destroyCursor(struct display *display);
+static void destroyWindow(struct display *display);
+static void disconnectDisplay(struct display *display);
+static void configurePointer(struct display *display);
+static void setCursor(struct display *display, char *name);
 static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output);
 static void surfaceLeaveHandler(void *data, struct wl_surface *surface, struct wl_output *output);
 static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
@@ -100,14 +102,16 @@ static void outputDoneHandler(void *data, struct wl_output *output);
 static void outputScaleHandler(void *data, struct wl_output *output, int32_t factor);
 static void outputNameHandler(void *data, struct wl_output *output, const char *name);
 static void outputDescriptionHandler(void *data, struct wl_output *output, const char *description);
-void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y);
-void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface);
-void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y);
-void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
-void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value);
-WindowRegion hitTest(struct display *display, int x, int y);
-void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce);
-void handleFatalError(char *message);
+static void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y);
+static void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface);
+static void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y);
+static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
+static void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value);
+static void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale);
+static void setSurfaceScale(struct display *display);
+static WindowRegion hitTest(struct display *display, int x, int y);
+static void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce);
+static void handleFatalError(char *message);
 
 struct wl_output_listener outputListener = {
 	.geometry = outputGeometryHandler,
@@ -120,7 +124,7 @@ struct wl_output_listener outputListener = {
 
 int main(int argc, char **argv)
 {
-	struct display display = {};
+	struct display display = {.scale = 1};
 	int threadPipe[2];
 	int epollFd;
 	if (pipe(threadPipe)) {
@@ -192,18 +196,18 @@ int main(int argc, char **argv)
 	disconnectDisplay(&display);
 }
 
-void destroyCursor(struct display *display)
+static void destroyCursor(struct display *display)
 {
 	wl_cursor_theme_destroy(display->cursorTheme);
 }
 
-void destroyWindow(struct display *display)
+static void destroyWindow(struct display *display)
 {
 	wl_surface_destroy(display->surface);
 	printf("Destroyed Wayland surface\n");
 }
 
-void disconnectDisplay(struct display *display)
+static void disconnectDisplay(struct display *display)
 {
 	wl_registry_destroy(display->registry);
 	printf("Destroyed Wayland registry\n");
@@ -212,7 +216,7 @@ void disconnectDisplay(struct display *display)
 	printf("Disconnected from Wayland display\n");
 }
 
-void connectDisplay(struct display *display)
+static void connectDisplay(struct display *display)
 {
 	display->display = wl_display_connect(NULL);
 	if (display->display == NULL) {
@@ -235,7 +239,7 @@ void connectDisplay(struct display *display)
 	wl_display_roundtrip(display->display);
 }
 
-void configureWmBase(struct display *display)
+static void configureWmBase(struct display *display)
 {
 	if (display->xdgWmBase == NULL) {
 		handleFatalError("Can't find xdg wm base\n");
@@ -245,7 +249,7 @@ void configureWmBase(struct display *display)
 	xdg_wm_base_add_listener(display->xdgWmBase, &display->xdgWmBaseListener, display);
 }
 
-void configurePointer(struct display *display)
+static void configurePointer(struct display *display)
 {
 	if (display->seat == NULL || display->shm == NULL) {
 		handleFatalError("Can't find Wayland seat or shared memory\n");
@@ -266,7 +270,7 @@ void configurePointer(struct display *display)
 	printf("Configured Wayland pointer\n");
 }
 
-void setCursor(struct display *display, char *name)
+static void setCursor(struct display *display, char *name)
 {
 	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(display->cursorTheme, name);
 	struct wl_cursor_image *cursorImage = cursor->images[0];
@@ -277,7 +281,7 @@ void setCursor(struct display *display, char *name)
 	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x, cursorImage->hotspot_y);
 }
 
-void createWindow(struct display *display)
+static void createWindow(struct display *display)
 {
 	if (display->compositor == NULL) {
 		handleFatalError("Can't find Wayland compositor\n");
@@ -307,7 +311,7 @@ void createWindow(struct display *display)
 	wl_display_roundtrip(display->display);
 }
 
-void setUpRegions(struct display *display)
+static void setUpRegions(struct display *display)
 {
 	if (display->compositor == NULL) {
 		handleFatalError("Can't find Wayland compositor\n");
@@ -393,7 +397,7 @@ static void registryGlobalHandler(void *data, struct wl_registry *registry, uint
 	}
 }
 
-void configureOutput(struct display *display, struct wl_output *output, uint32_t id)
+static void configureOutput(struct display *display, struct wl_output *output, uint32_t id)
 {
 	display->outputInfos = realloc(display->outputInfos, sizeof(*display->outputInfos) * ++display->outputInfoCount);
 	OutputInfo *outputInfo = malloc(sizeof(*outputInfo));
@@ -408,16 +412,18 @@ void configureOutput(struct display *display, struct wl_output *output, uint32_t
 	wl_output_add_listener(display->outputInfos[display->outputInfoCount - 1]->output, &outputListener, display->outputInfos[display->outputInfoCount - 1]);
 }
 
-size_t findIndexOfOutputInfoWithGlobalId(struct display *display, uint32_t id)
+static int findIndexOfOutputInfoWithGlobalId(struct display *display, uint32_t id)
 {
 	for (size_t i = 0; i < display->outputInfoCount; ++i) {
 		if (display->outputInfos[i]->id == id) {
 			return i;
 		}
 	}
+
+	return -1;
 }
 
-size_t findIndexOfOutputInfoWithOutput(struct display *display, struct wl_output *output)
+static size_t findIndexOfOutputInfoWithOutput(struct display *display, struct wl_output *output)
 {
 	for (size_t i = 0; i < display->outputInfoCount; ++i) {
 		if (display->outputInfos[i]->output == output) {
@@ -431,7 +437,10 @@ static void registryGlobalRemoveHandler(void *data, struct wl_registry *registry
 	struct display *display = data;
 
 	printf("Got a Wayland registry remove event for %d\n", id);
-	size_t outputIndex = findIndexOfOutputInfoWithGlobalId(display, id);
+	int outputIndex = findIndexOfOutputInfoWithGlobalId(display, id);
+	if (outputIndex < 0) {
+		return;
+	}
 	printf("output index: %d\n", outputIndex);
 	free(display->outputInfos[outputIndex]);
 	for (size_t i = outputIndex; i < display->outputInfoCount - 1; ++i) {
@@ -443,6 +452,23 @@ static void registryGlobalRemoveHandler(void *data, struct wl_registry *registry
 	}
 }
 
+void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale)
+{
+	*windowDimensions = (WindowDimensions) {
+		.surfaceArea = {
+			.width = windowDimensions->surfaceArea.width * scale,
+			.height = windowDimensions->surfaceArea.height * scale
+		},
+		.activeArea = {
+			.offset.x = windowDimensions->activeArea.offset.x * scale,
+			.offset.y = windowDimensions->activeArea.offset.y * scale,
+			.extent.width = windowDimensions->activeArea.extent.width * scale,
+			.extent.height = windowDimensions->activeArea.extent.height * scale
+		},
+		.cornerRadius = windowDimensions->cornerRadius * scale
+	};
+}
+
 void setSurfaceScale(struct display *display)
 {
 	uint32_t scale = 1;
@@ -451,22 +477,11 @@ void setSurfaceScale(struct display *display)
 			scale = display->activeOutputInfos[i]->scale;
 		}
 	}
+	display->scale = scale;
 
-	wl_surface_set_buffer_scale(display->surface, scale);
-
-	WindowDimensions windowDimensions = {
-		.surfaceArea = {
-			.width = display->windowDimensions.surfaceArea.width * scale,
-			.height = display->windowDimensions.surfaceArea.height * scale
-		},
-		.activeArea = {
-			.offset.x = display->windowDimensions.activeArea.offset.x * scale,
-			.offset.y = display->windowDimensions.activeArea.offset.y * scale,
-			.extent.width = display->windowDimensions.activeArea.extent.width * scale,
-			.extent.height = display->windowDimensions.activeArea.extent.height * scale
-		},
-		.cornerRadius = CORNER_RADIUS * scale
-	};
+	wl_surface_set_buffer_scale(display->surface, display->scale);
+	WindowDimensions windowDimensions = display->windowDimensions;
+	scaleWindowDimensions(&windowDimensions, display->scale);
 	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
 }
 
@@ -534,9 +549,11 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 		display->windowDimensions.activeArea.extent.width = width;
 		display->windowDimensions.activeArea.extent.height = height;
 	}
-	printf("width: %d, height: %d\n", display->windowDimensions.activeArea.extent.width, display->windowDimensions.activeArea.extent.height);
-	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, display->windowDimensions);
+	WindowDimensions windowDimensions = display->windowDimensions;
+	scaleWindowDimensions(&windowDimensions, display->scale);
+	printf("width: %d, height: %d\n", windowDimensions.activeArea.extent.width, windowDimensions.activeArea.extent.height);
 	setUpRegions(display);
+	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
 }
 
 static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, enum wl_output_subpixel subpixel, const char *make, const char *model, enum wl_output_transform transform)
@@ -579,7 +596,7 @@ static void outputDescriptionHandler(void *data, struct wl_output *output, const
 }
 
 
-void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
+static void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
 {
 	struct display *display = data;
 
@@ -587,18 +604,18 @@ void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial
 	hitTestAndSetCursor(display, x, y, false);
 }
 
-void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
+static void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
 {
 
 }
 
-void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
+static void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
 	struct display *display = data;
 	hitTestAndSetCursor(display, x, y, true);
 }
 
-void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce)
+static void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce)
 {
 	WindowRegion region = hitTest(display, wl_fixed_to_double(x), wl_fixed_to_double(y));
 
@@ -642,7 +659,7 @@ void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bo
 	}
 }
 
-void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
+static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
 {
 	struct display *display = data;
 
@@ -681,10 +698,9 @@ void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t seria
 	}
 }
 
-WindowRegion hitTest(struct display *display, int x, int y)
+static WindowRegion hitTest(struct display *display, int x, int y)
 {
 	printf("x: %d, y: %d\n", x, y);
-#define CHROME_HEIGHT 20
 	enum regionMask
 	{
 		_CLIENT = 0b00000,
@@ -745,12 +761,12 @@ WindowRegion hitTest(struct display *display, int x, int y)
 	}
 }
 
-void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
+static void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value)
 {
 
 }
 
-void handleFatalError(char *message)
+static void handleFatalError(char *message)
 {
 	fprintf(stderr, "%s\n", message);
 	exit(1);
