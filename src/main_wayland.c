@@ -41,6 +41,12 @@ typedef enum window_region_t {
 	TOP_LEFT
 } WindowRegion;
 
+typedef struct output_info_t {
+	uint32_t id;
+	struct wl_output *output;
+	uint32_t scale;
+} OutputInfo;
+
 struct display {
 	struct wl_display *display;
 	struct wl_registry *registry;
@@ -50,34 +56,50 @@ struct display {
 	struct wl_seat *seat;
 	struct wl_shm *shm;
 	struct wl_pointer *pointer;
-	struct xdg_wm_base_listener xdgWmBaseListener;
-	struct xdg_surface_listener xdgSurfaceListener;
-	struct xdg_toplevel_listener xdgToplevelListener;
+	OutputInfo **outputInfos;
+	size_t outputInfoCount;
+	OutputInfo **activeOutputInfos;
+	size_t activeOutputInfoCount;
 	struct xdg_wm_base *xdgWmBase;
 	struct xdg_surface *xdgSurface;
 	struct xdg_toplevel *xdgToplevel;
-	uint32_t pointerSerial;
 	struct wl_surface *cursorSurface;
 	struct wl_cursor_theme *cursorTheme;
+	struct wl_output_listener outputListener;
+	struct wl_surface_listener surfaceListener;
+	struct xdg_wm_base_listener xdgWmBaseListener;
+	struct xdg_surface_listener xdgSurfaceListener;
+	struct xdg_toplevel_listener xdgToplevelListener;
+	struct wl_pointer_listener pointerListener;
+	uint32_t pointerSerial;
 	WindowDimensions windowDimensions;
 	WindowRegion pointerRegion;
 	Queue inputQueue;
 };
 
-static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
-static void globalRegistryRemover(void *data, struct wl_registry *registry, uint32_t id);
+static void registryGlobalHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
+static void registryGlobalRemoveHandler(void *data, struct wl_registry *registry, uint32_t id);
 void connectDisplay(struct display *display);
 void configureWmBase(struct display *display);
+void configureOutput(struct display *display, struct wl_output *output, uint32_t id);
 void createWindow(struct display *display);
 void setUpRegions(struct display *display);
 void destroyCursor(struct display *display);
 void destroyWindow(struct display *display);
 void disconnectDisplay(struct display *display);
+void configurePointer(struct display *display);
+void setCursor(struct display *display, char *name);
+static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output);
+static void surfaceLeaveHandler(void *data, struct wl_surface *surface, struct wl_output *output);
 static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
 static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states);
-void configurePointer(struct display *display);
-void setCursor(struct display *display, char *name);
+static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, enum wl_output_subpixel subpixel, const char *make, const char *model, enum wl_output_transform transform);
+static void outputModeHandler(void *data, struct wl_output *output, enum wl_output_mode mode, int32_t width, int32_t height, int32_t refresh);
+static void outputDoneHandler(void *data, struct wl_output *output);
+static void outputScaleHandler(void *data, struct wl_output *output, int32_t factor);
+static void outputNameHandler(void *data, struct wl_output *output, const char *name);
+static void outputDescriptionHandler(void *data, struct wl_output *output, const char *description);
 void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y);
 void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface);
 void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y);
@@ -87,12 +109,13 @@ WindowRegion hitTest(struct display *display, int x, int y);
 void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce);
 void handleFatalError(char *message);
 
-const struct wl_pointer_listener pointerListener = {
-	.enter = pointerEnterHandler,
-	.leave = pointerLeaveHandler,
-	.motion = pointerMotionHandler,
-	.button = pointerButtonHandler,
-	.axis = pointerAxisHandler
+struct wl_output_listener outputListener = {
+	.geometry = outputGeometryHandler,
+	.mode = outputModeHandler,
+	.done = outputDoneHandler,
+	.scale = outputScaleHandler,
+	.name = outputNameHandler,
+	.description = outputDescriptionHandler
 };
 
 int main(int argc, char **argv)
@@ -202,8 +225,8 @@ void connectDisplay(struct display *display)
 	}
 	printf("Got a Wayland registry\n");
 
-	display->registryListener.global = globalRegistryHandler;
-	display->registryListener.global_remove = globalRegistryRemover;
+	display->registryListener.global = registryGlobalHandler;
+	display->registryListener.global_remove = registryGlobalRemoveHandler;
 	if (wl_registry_add_listener(display->registry, &(display->registryListener), display)) {
 		printf("Can't add Wayland registry listener\n");
 	}
@@ -231,7 +254,14 @@ void configurePointer(struct display *display)
 	display->cursorTheme = wl_cursor_theme_load(NULL, 24, display->shm);
 	display->cursorSurface = wl_compositor_create_surface(display->compositor);
 	display->pointer = wl_seat_get_pointer(display->seat);
-	wl_pointer_add_listener(display->pointer, &pointerListener, display);
+	display->pointerListener = (struct wl_pointer_listener) {
+		.enter = pointerEnterHandler,
+		.leave = pointerLeaveHandler,
+		.motion = pointerMotionHandler,
+		.button = pointerButtonHandler,
+		.axis = pointerAxisHandler
+	};
+	wl_pointer_add_listener(display->pointer, &display->pointerListener, display);
 
 	printf("Configured Wayland pointer\n");
 }
@@ -258,14 +288,21 @@ void createWindow(struct display *display)
 		handleFatalError("Can't create Wayland surface\n");
 	}
 	printf("Created Wayland surface\n");
+	display->surfaceListener = (struct wl_surface_listener) {
+		.enter = surfaceEnterHandler,
+		.leave = surfaceLeaveHandler
+	};
+	wl_surface_add_listener(display->surface, &display->surfaceListener, display);
 
 	display->xdgSurface = xdg_wm_base_get_xdg_surface(display->xdgWmBase, display->surface);
 	display->xdgSurfaceListener.configure = xdgSurfaceConfigureHandler;
 	xdg_surface_add_listener(display->xdgSurface, &display->xdgSurfaceListener, display);
+
 	display->xdgToplevel = xdg_surface_get_toplevel(display->xdgSurface);
 	display->xdgToplevelListener.configure = xdgToplevelConfigureHandler;
 	xdg_toplevel_add_listener(display->xdgToplevel, &display->xdgToplevelListener, display);
 	xdg_toplevel_set_title(display->xdgToplevel, "Modeler");
+
 	wl_surface_commit(display->surface);
 	wl_display_roundtrip(display->display);
 }
@@ -317,13 +354,13 @@ void setUpRegions(struct display *display)
 	wl_region_destroy(opaqueRegion);
 }
 
-static void globalRegistryHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version)
+static void registryGlobalHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version)
 {
 	struct display *display = data;
 
 	printf("Got a Wayland registry event for %s ID %d\n", interface, id);
 	if (strcmp(interface, "wl_compositor") == 0) {
-		display->compositor = wl_registry_bind(registry, id, &wl_compositor_interface, 1);
+		display->compositor = wl_registry_bind(registry, id, &wl_compositor_interface, 3);
 		if (display->compositor == NULL) {
 			handleFatalError("Can't bind Wayland compositor\n");
 		}
@@ -346,12 +383,115 @@ static void globalRegistryHandler(void *data, struct wl_registry *registry, uint
 			handleFatalError("Can't bind Wayland seat\n");
 		}
 		printf("Bound Wayland seat\n");
+	} else if (strcmp(interface, "wl_output") == 0) {
+		struct wl_output *output = wl_registry_bind(registry, id, &wl_output_interface, 2);
+		if (output == NULL) {
+			handleFatalError("Can't bind Wayland output\n");
+		}
+		printf("Bound Wayland output\n");
+		configureOutput(display, output, id);
 	}
 }
 
-static void globalRegistryRemover(void *data, struct wl_registry *registry, uint32_t id)
+void configureOutput(struct display *display, struct wl_output *output, uint32_t id)
 {
+	display->outputInfos = realloc(display->outputInfos, sizeof(*display->outputInfos) * ++display->outputInfoCount);
+	OutputInfo *outputInfo = malloc(sizeof(*outputInfo));
+	*outputInfo = (OutputInfo) {
+		.output = output,
+		.id = id
+	};
+	display->outputInfos[display->outputInfoCount - 1] = outputInfo;
+	for (size_t i = 0; i < display->outputInfoCount; ++i) {
+		printf("output id: %d\n", display->outputInfos[i]->id);
+	}
+	wl_output_add_listener(display->outputInfos[display->outputInfoCount - 1]->output, &outputListener, display->outputInfos[display->outputInfoCount - 1]);
+}
+
+size_t findIndexOfOutputInfoWithGlobalId(struct display *display, uint32_t id)
+{
+	for (size_t i = 0; i < display->outputInfoCount; ++i) {
+		if (display->outputInfos[i]->id == id) {
+			return i;
+		}
+	}
+}
+
+size_t findIndexOfOutputInfoWithOutput(struct display *display, struct wl_output *output)
+{
+	for (size_t i = 0; i < display->outputInfoCount; ++i) {
+		if (display->outputInfos[i]->output == output) {
+			return i;
+		}
+	}
+}
+
+static void registryGlobalRemoveHandler(void *data, struct wl_registry *registry, uint32_t id)
+{
+	struct display *display = data;
+
 	printf("Got a Wayland registry remove event for %d\n", id);
+	size_t outputIndex = findIndexOfOutputInfoWithGlobalId(display, id);
+	printf("output index: %d\n", outputIndex);
+	free(display->outputInfos[outputIndex]);
+	for (size_t i = outputIndex; i < display->outputInfoCount - 1; ++i) {
+		display->outputInfos[i] = display->outputInfos[i + 1];
+	}
+	--display->outputInfoCount;
+	for (size_t i = 0; i < display->outputInfoCount; ++i) {
+		printf("output id: %d\n", display->outputInfos[i]->id);
+	}
+}
+
+void setSurfaceScale(struct display *display)
+{
+	uint32_t scale = 1;
+	for (size_t i = 0; i < display->activeOutputInfoCount; ++i) {
+		if (display->activeOutputInfos[i]->scale > scale) {
+			scale = display->activeOutputInfos[i]->scale;
+		}
+	}
+
+	wl_surface_set_buffer_scale(display->surface, scale);
+
+	WindowDimensions windowDimensions = {
+		.surfaceArea = {
+			.width = display->windowDimensions.surfaceArea.width * scale,
+			.height = display->windowDimensions.surfaceArea.height * scale
+		},
+		.activeArea = {
+			.offset.x = display->windowDimensions.activeArea.offset.x * scale,
+			.offset.y = display->windowDimensions.activeArea.offset.y * scale,
+			.extent.width = display->windowDimensions.activeArea.extent.width * scale,
+			.extent.height = display->windowDimensions.activeArea.extent.height * scale
+		},
+		.cornerRadius = CORNER_RADIUS * scale
+	};
+	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
+}
+
+static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output)
+{
+	printf("Got a Wayland surface enter event\n");
+	struct display *display = data;
+	size_t outputIndex = findIndexOfOutputInfoWithOutput(display, output);
+	OutputInfo *outputInfo = display->outputInfos[outputIndex];
+	printf("scale: %d\n", outputInfo->scale);
+	display->activeOutputInfos = realloc(display->activeOutputInfos, sizeof(*display->activeOutputInfos) * ++display->activeOutputInfoCount);
+	display->activeOutputInfos[display->activeOutputInfoCount - 1] = outputInfo;
+	setSurfaceScale(display);
+}
+
+static void surfaceLeaveHandler(void *data, struct wl_surface *surface, struct wl_output *output)
+{
+	printf("Got a Wayland surface leave event\n");
+	struct display *display = data;
+	size_t outputIndex = findIndexOfOutputInfoWithOutput(display, output);
+	for (size_t i = outputIndex; i < display->activeOutputInfoCount - 1; ++i) {
+		display->activeOutputInfos[i] = display->activeOutputInfos[i + 1];
+	}
+	--display->activeOutputInfoCount;
+	setSurfaceScale(display);
 }
 
 static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial)
@@ -398,6 +538,46 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, display->windowDimensions);
 	setUpRegions(display);
 }
+
+static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, enum wl_output_subpixel subpixel, const char *make, const char *model, enum wl_output_transform transform)
+{
+	printf("Got an output geometry event\n");
+	OutputInfo *outputInfo = data;
+}
+
+static void outputModeHandler(void *data, struct wl_output *output, enum wl_output_mode mode, int32_t width, int32_t height, int32_t refresh)
+{
+	printf("Got an output mode event\n");
+	OutputInfo *outputInfo = data;
+}
+
+
+static void outputDoneHandler(void *data, struct wl_output *output)
+{
+	printf("Got an output done event\n");
+	OutputInfo *outputInfo = data;
+}
+
+static void outputScaleHandler(void *data, struct wl_output *output, int32_t factor)
+{
+	printf("Got an output scale event\n");
+	OutputInfo *outputInfo = data;
+	outputInfo->scale = factor;
+	printf("scale: %d\n", factor);
+}
+
+static void outputNameHandler(void *data, struct wl_output *output, const char *name)
+{
+	printf("Got an output name event\n");
+	OutputInfo *outputInfo = data;
+}
+
+static void outputDescriptionHandler(void *data, struct wl_output *output, const char *description)
+{
+	printf("Got an output description event\n");
+	OutputInfo *outputInfo = data;
+}
+
 
 void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
 {
