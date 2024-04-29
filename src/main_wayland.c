@@ -255,7 +255,6 @@ static void configurePointer(struct display *display)
 		handleFatalError("Can't find Wayland seat or shared memory\n");
 	}
 
-	display->cursorTheme = wl_cursor_theme_load(NULL, 24, display->shm);
 	display->cursorSurface = wl_compositor_create_surface(display->compositor);
 	display->pointer = wl_seat_get_pointer(display->seat);
 	display->pointerListener = (struct wl_pointer_listener) {
@@ -272,13 +271,14 @@ static void configurePointer(struct display *display)
 
 static void setCursor(struct display *display, char *name)
 {
+	display->cursorTheme = wl_cursor_theme_load(NULL, 24 * display->scale, display->shm);
 	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(display->cursorTheme, name);
 	struct wl_cursor_image *cursorImage = cursor->images[0];
 	struct wl_buffer *cursorBuffer = wl_cursor_image_get_buffer(cursorImage);
 
 	wl_surface_attach(display->cursorSurface, cursorBuffer, 0, 0);
 	wl_surface_commit(display->cursorSurface);
-	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x, cursorImage->hotspot_y);
+	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x / display->scale, cursorImage->hotspot_y / display->scale);
 }
 
 static void createWindow(struct display *display)
@@ -477,6 +477,11 @@ void setSurfaceScale(struct display *display)
 			scale = display->activeOutputInfos[i]->scale;
 		}
 	}
+
+	if (display->scale == scale) {
+		return;
+	}
+
 	display->scale = scale;
 
 	wl_surface_set_buffer_scale(display->surface, display->scale);
@@ -530,12 +535,11 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 	);
 
 	xdg_surface_ack_configure(xdg_surface, serial);
-
-	// render here
 }
 
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)
 {
+	printf("width from xdgToplevelConfigure: %d\n", width);
 	printf("Got a xdg toplevel configure event\n");
 	struct display *display = data;
 	if (width == 0 && height == 0) {
@@ -550,7 +554,9 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 		display->windowDimensions.activeArea.extent.height = height;
 	}
 	WindowDimensions windowDimensions = display->windowDimensions;
+	printf("scale when xdgToplevelConfigure: %d\n", display->scale);
 	scaleWindowDimensions(&windowDimensions, display->scale);
+	printf("width: %d, height: %d\n", display->windowDimensions.activeArea.extent.width, display->windowDimensions.activeArea.extent.height);
 	printf("width: %d, height: %d\n", windowDimensions.activeArea.extent.width, windowDimensions.activeArea.extent.height);
 	setUpRegions(display);
 	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
