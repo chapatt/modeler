@@ -30,6 +30,7 @@
 #define CORNER_RADIUS 10
 
 typedef enum window_region_t {
+	UNKNOWN_REGION,
 	CLIENT,
 	CHROME,
 	TOP,
@@ -77,6 +78,8 @@ struct display {
 	WindowDimensions windowDimensions;
 	WindowRegion pointerRegion;
 	Queue inputQueue;
+	int threadPipe[2];
+	bool vulkanInitialized;
 };
 
 static void registryGlobalHandler(void *data, struct wl_registry *registry, uint32_t id, const char *interface, uint32_t version);
@@ -91,6 +94,7 @@ static void destroyWindow(struct display *display);
 static void disconnectDisplay(struct display *display);
 static void configurePointer(struct display *display);
 static void setCursor(struct display *display, char *name);
+static void setCursorFromWindowRegion(struct display *display, WindowRegion region);
 static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output);
 static void surfaceLeaveHandler(void *data, struct wl_surface *surface, struct wl_output *output);
 static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
@@ -111,6 +115,9 @@ static void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale
 static void setSurfaceScale(struct display *display);
 static WindowRegion hitTest(struct display *display, int x, int y);
 static void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce);
+static int findIndexOfOutputInfoWithGlobalId(struct display *display, uint32_t id);
+static size_t findIndexOfOutputInfoWithOutput(struct display *display, struct wl_output *output);
+static size_t findIndexOfActiveOutputInfoWithOutput(struct display *display, struct wl_output *output);
 static void handleFatalError(char *message);
 
 struct wl_output_listener outputListener = {
@@ -125,9 +132,8 @@ struct wl_output_listener outputListener = {
 int main(int argc, char **argv)
 {
 	struct display display = {.scale = 1};
-	int threadPipe[2];
 	int epollFd;
-	if (pipe(threadPipe)) {
+	if (pipe(display.threadPipe)) {
 		handleFatalError("Failed to create pipe");
 	}
 	display.windowDimensions = (WindowDimensions) {
@@ -153,9 +159,6 @@ int main(int argc, char **argv)
 	setUpRegions(&display);
 
 	char *error;
-	if (!initVulkanWayland(display.display, display.surface, display.windowDimensions, &display.inputQueue, threadPipe[1], &error)) {
-		handleFatalError(error);
-	}
 
 	int wlFd = wl_display_get_fd(display.display);
 	if ((epollFd = epoll_create1(0)) == -1) {
@@ -165,9 +168,9 @@ int main(int argc, char **argv)
 	}
 	struct epoll_event epollConfigurationEvent1 = {
 		.events = EPOLLIN,
-		.data.fd = threadPipe[0]
+		.data.fd = display.threadPipe[0]
 	};
-	epoll_ctl(epollFd, EPOLL_CTL_ADD, threadPipe[0], &epollConfigurationEvent1);
+	epoll_ctl(epollFd, EPOLL_CTL_ADD, display.threadPipe[0], &epollConfigurationEvent1);
 	struct epoll_event epollConfigurationEvent2 = {
 		.events = EPOLLIN,
 		.data.fd = wlFd
@@ -184,7 +187,7 @@ int main(int argc, char **argv)
 
 		if (epollEventBuffer.data.fd == wlFd) {
 			wl_display_dispatch(display.display);
-		} else if (epollEventBuffer.data.fd == threadPipe[0]) {
+		} else if (epollEventBuffer.data.fd == display.threadPipe[0]) {
 			handleFatalError(error);
 		}
 	}
@@ -271,12 +274,14 @@ static void configurePointer(struct display *display)
 
 static void setCursor(struct display *display, char *name)
 {
+	printf("setting cursor to size: %d, and theme: %c\n", 24 * display->scale, NULL);
 	display->cursorTheme = wl_cursor_theme_load(NULL, 24 * display->scale, display->shm);
 	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(display->cursorTheme, name);
 	struct wl_cursor_image *cursorImage = cursor->images[0];
 	struct wl_buffer *cursorBuffer = wl_cursor_image_get_buffer(cursorImage);
 
 	wl_surface_attach(display->cursorSurface, cursorBuffer, 0, 0);
+	wl_surface_damage(display->cursorSurface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_commit(display->cursorSurface);
 	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x / display->scale, cursorImage->hotspot_y / display->scale);
 }
@@ -406,9 +411,6 @@ static void configureOutput(struct display *display, struct wl_output *output, u
 		.id = id
 	};
 	display->outputInfos[display->outputInfoCount - 1] = outputInfo;
-	for (size_t i = 0; i < display->outputInfoCount; ++i) {
-		printf("output id: %d\n", display->outputInfos[i]->id);
-	}
 	wl_output_add_listener(display->outputInfos[display->outputInfoCount - 1]->output, &outputListener, display->outputInfos[display->outputInfoCount - 1]);
 }
 
@@ -432,6 +434,15 @@ static size_t findIndexOfOutputInfoWithOutput(struct display *display, struct wl
 	}
 }
 
+static size_t findIndexOfActiveOutputInfoWithOutput(struct display *display, struct wl_output *output)
+{
+	for (size_t i = 0; i < display->activeOutputInfoCount; ++i) {
+		if (display->activeOutputInfos[i]->output == output) {
+			return i;
+		}
+	}
+}
+
 static void registryGlobalRemoveHandler(void *data, struct wl_registry *registry, uint32_t id)
 {
 	struct display *display = data;
@@ -441,15 +452,11 @@ static void registryGlobalRemoveHandler(void *data, struct wl_registry *registry
 	if (outputIndex < 0) {
 		return;
 	}
-	printf("output index: %d\n", outputIndex);
 	free(display->outputInfos[outputIndex]);
 	for (size_t i = outputIndex; i < display->outputInfoCount - 1; ++i) {
 		display->outputInfos[i] = display->outputInfos[i + 1];
 	}
 	--display->outputInfoCount;
-	for (size_t i = 0; i < display->outputInfoCount; ++i) {
-		printf("output id: %d\n", display->outputInfos[i]->id);
-	}
 }
 
 void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale)
@@ -471,6 +478,7 @@ void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale)
 
 void setSurfaceScale(struct display *display)
 {
+	printf("setSurfaceScale\n");
 	uint32_t scale = 1;
 	for (size_t i = 0; i < display->activeOutputInfoCount; ++i) {
 		if (display->activeOutputInfos[i]->scale > scale) {
@@ -484,10 +492,14 @@ void setSurfaceScale(struct display *display)
 
 	display->scale = scale;
 
-	wl_surface_set_buffer_scale(display->surface, display->scale);
+	display->pointerRegion = UNKNOWN_REGION;
+
 	WindowDimensions windowDimensions = display->windowDimensions;
 	scaleWindowDimensions(&windowDimensions, display->scale);
 	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
+
+	wl_surface_commit(display->surface);
+	wl_surface_set_buffer_scale(display->surface, display->scale);
 }
 
 static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output)
@@ -496,7 +508,6 @@ static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct w
 	struct display *display = data;
 	size_t outputIndex = findIndexOfOutputInfoWithOutput(display, output);
 	OutputInfo *outputInfo = display->outputInfos[outputIndex];
-	printf("scale: %d\n", outputInfo->scale);
 	display->activeOutputInfos = realloc(display->activeOutputInfos, sizeof(*display->activeOutputInfos) * ++display->activeOutputInfoCount);
 	display->activeOutputInfos[display->activeOutputInfoCount - 1] = outputInfo;
 	setSurfaceScale(display);
@@ -506,7 +517,7 @@ static void surfaceLeaveHandler(void *data, struct wl_surface *surface, struct w
 {
 	printf("Got a Wayland surface leave event\n");
 	struct display *display = data;
-	size_t outputIndex = findIndexOfOutputInfoWithOutput(display, output);
+	size_t outputIndex = findIndexOfActiveOutputInfoWithOutput(display, output);
 	for (size_t i = outputIndex; i < display->activeOutputInfoCount - 1; ++i) {
 		display->activeOutputInfos[i] = display->activeOutputInfos[i + 1];
 	}
@@ -516,7 +527,6 @@ static void surfaceLeaveHandler(void *data, struct wl_surface *surface, struct w
 
 static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial)
 {
-	printf("Got a xdg wm base ping event\n");
 	struct display *display = data;
 	xdg_wm_base_pong(display->xdgWmBase, serial);
 }
@@ -526,6 +536,18 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 	printf("Got a xdg surface configure event\n");
 	struct display *display = data;
 
+	xdg_surface_ack_configure(xdg_surface, serial);
+
+	char *error;
+	if (!display->vulkanInitialized) {
+		if (!initVulkanWayland(display->display, display->surface, display->windowDimensions, &display->inputQueue, display->threadPipe[1], &error)) {
+			handleFatalError(error);
+		}
+		display->vulkanInitialized = true;
+	}
+
+	wl_surface_commit(display->surface);
+
 	xdg_surface_set_window_geometry(
 		display->xdgSurface,
 		display->windowDimensions.activeArea.offset.x,
@@ -533,15 +555,13 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 		display->windowDimensions.activeArea.extent.width,
 		display->windowDimensions.activeArea.extent.height
 	);
-
-	xdg_surface_ack_configure(xdg_surface, serial);
 }
 
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)
 {
-	printf("width from xdgToplevelConfigure: %d\n", width);
 	printf("Got a xdg toplevel configure event\n");
 	struct display *display = data;
+
 	if (width == 0 && height == 0) {
 		display->windowDimensions.surfaceArea.width = DEFAULT_SURFACE_WIDTH;
 		display->windowDimensions.surfaceArea.height = DEFAULT_SURFACE_HEIGHT;
@@ -553,13 +573,14 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 		display->windowDimensions.activeArea.extent.width = width;
 		display->windowDimensions.activeArea.extent.height = height;
 	}
-	WindowDimensions windowDimensions = display->windowDimensions;
-	printf("scale when xdgToplevelConfigure: %d\n", display->scale);
-	scaleWindowDimensions(&windowDimensions, display->scale);
-	printf("width: %d, height: %d\n", display->windowDimensions.activeArea.extent.width, display->windowDimensions.activeArea.extent.height);
-	printf("width: %d, height: %d\n", windowDimensions.activeArea.extent.width, windowDimensions.activeArea.extent.height);
+
 	setUpRegions(display);
-	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
+
+	if (display->vulkanInitialized) {
+		WindowDimensions windowDimensions = display->windowDimensions;
+		scaleWindowDimensions(&windowDimensions, display->scale);
+		enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
+	}
 }
 
 static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, enum wl_output_subpixel subpixel, const char *make, const char *model, enum wl_output_transform transform)
@@ -586,7 +607,6 @@ static void outputScaleHandler(void *data, struct wl_output *output, int32_t fac
 	printf("Got an output scale event\n");
 	OutputInfo *outputInfo = data;
 	outputInfo->scale = factor;
-	printf("scale: %d\n", factor);
 }
 
 static void outputNameHandler(void *data, struct wl_output *output, const char *name)
@@ -630,7 +650,11 @@ static void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_
 	}
 
 	display->pointerRegion = region;
+	setCursorFromWindowRegion(display, region);
+}
 
+static void setCursorFromWindowRegion(struct display *display, WindowRegion region)
+{
 	switch (region) {
 	case CLIENT:
 		setCursor(display, "left_ptr");
@@ -706,7 +730,6 @@ static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_
 
 static WindowRegion hitTest(struct display *display, int x, int y)
 {
-	printf("x: %d, y: %d\n", x, y);
 	enum regionMask
 	{
 		_CLIENT = 0b00000,
@@ -719,31 +742,24 @@ static WindowRegion hitTest(struct display *display, int x, int y)
 	enum regionMask result = _CLIENT;
 	VkExtent2D extent = display->windowDimensions.activeArea.extent;
 	VkOffset2D offset = display->windowDimensions.activeArea.offset;
-	printf("extent width: %d, extent height: %d\n", extent.width, extent.height);
-	printf("offset x: %d, offset y: %d\n", offset.x, offset.y);
 
 	if (x < offset.x) {
-		printf("it's on the left\n");
 		result |= _LEFT;
 	}
 
 	if (x >= extent.width + offset.x) {
-		printf("it's on the right\n");
 		result |= _RIGHT;
 	}
 
 	if (y < offset.y) {
-		printf("it's on the top\n");
 		result |= _TOP;
 	}
 
 	if (y >= extent.height + offset.y) {
-		printf("it's on the bottom\n");
 		result |= _BOTTOM;
 	}
 
 	if (!(result & (_LEFT | _RIGHT | _TOP | _BOTTOM)) && y < (offset.y + CHROME_HEIGHT)) {
-		printf("it's in the chrome\n");
 		result |= _CHROME;
 	}
 
