@@ -18,6 +18,8 @@ Functionality is nearly feature-complete. The following major tasks remain:
 
 `make` builds the binary on Linux (modeler) and Windows (modeler.exe), and a static library (modeler.a) on macOS. The macos application can be built via the Xcode project under `xcode/`.
 
+To enable debugging symbols, external SPIR-V files, and dynamic libraries, set the `DEBUG` environment variable `make DEBUG=true`
+
 ## Linux
 
 ### Build Dependencies
