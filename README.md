@@ -12,7 +12,9 @@ Functionality is nearly feature-complete. The following major tasks remain:
 	* Disabling window border/shadow renderpass on wayland when transitioning to fullscreen
 * Apply this framework via a game/application beyond drawing a triangle :)
 
-<img src="docs/images/window_triangle_macos.png" alt="macOS" height=250/> <img src="docs/images/window_triangle_windows.png" alt="Windows" height=250 /> <img src="docs/images/window_triangle_linux.png" alt="Linux" height=250 />
+<img src="docs/images/window_triangle_macos.png" alt="macOS" width=400 /><br />
+<img src="docs/images/window_triangle_windows.png" alt="Windows" width=400 /><br />
+<img src="docs/images/window_triangle_linux.png" alt="Linux" width=400 /><br />
 
 ## Building
 
