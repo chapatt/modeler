@@ -77,6 +77,7 @@ struct display {
 	uint32_t scale;
 	WindowDimensions windowDimensions;
 	WindowRegion pointerRegion;
+	VkOffset2D pointerPosition;
 	Queue inputQueue;
 	int threadPipe[2];
 	bool vulkanInitialized;
@@ -643,7 +644,10 @@ static void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_
 
 static void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce)
 {
-	WindowRegion region = hitTest(display, wl_fixed_to_double(x), wl_fixed_to_double(y));
+	int cursorX = wl_fixed_to_double(x);
+	int cursorY = wl_fixed_to_double(y);
+	display->pointerPosition = (VkOffset2D) {x: cursorX - RESIZE_BORDER, y: cursorY - RESIZE_BORDER};
+	WindowRegion region = hitTest(display, cursorX, cursorY);
 
 	if (debounce && display->pointerRegion == region) {
 		return;
@@ -699,6 +703,8 @@ static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_
 	case CHROME:
 		if (button == BTN_LEFT && state == 1) {
 			xdg_toplevel_move(display->xdgToplevel, display->seat, serial);
+		} else if (button == BTN_RIGHT && state == 1) {
+			xdg_toplevel_show_window_menu(display->xdgToplevel, display->seat, serial, display->pointerPosition.x, display->pointerPosition.y);
 		}
 		break;
 	case TOP:
