@@ -7,10 +7,15 @@ A cross-platform (macOS, Windows, Linux) application implementing native, border
 * Multi-monitor HiDPI awareness is implemented on all platforms
 
 Functionality is nearly feature-complete. The following major tasks remain:
-* Fullscreen mode
-	* Attempting to acquire exclusive fullscreen access if possible (VK_EXT_full_screen_exclusive extension)
-	* Disabling window border/shadow renderpass on wayland when transitioning to fullscreen
-* Apply this framework via a game/application beyond drawing a triangle :)
+- [ ] Fullscreen mode
+	- [ ] Attempt to acquire exclusive fullscreen access if possible (`VK_EXT_full_screen_exclusive` extension)
+	- [ ] Disable window border/shadow renderpass on wayland when transitioning to fullscreen (`DRAW_WINDOW_DECORATION` conditionals)
+- [ ] Apply this framework via a game/application beyond drawing a triangle :)
+
+Nice-to-haves:
+- [ ] Refactor functions with long parameter lists to take structs
+- [ ] Integrate dear imgui with application swapchain (reimplement `imgui_impl_vulkan`)
+- [ ] Add test suite and run via CI pipeline
 
 macOS:<br />
 <img src="docs/images/window_triangle_macos.png" alt="macOS" width=400 /><br />
@@ -21,9 +26,15 @@ Linux:<br />
 
 ## Building
 
-`make` builds the binary on Linux (modeler) and Windows (modeler.exe), and a static library (modeler.a) on macOS. The macos application can be built via the Xcode project under `xcode/`.
+```shell
+make
+```
+builds the binary on Linux (`modeler`) and Windows (`modeler.exe`), and a static library (`modeler.a`) on macOS. The macos application can be built via the Xcode project under `xcode/`.
 
-To enable debugging symbols, external SPIR-V files, and dynamic libraries, set the `DEBUG` environment variable `make DEBUG=true`
+To enable debugging symbols, external SPIR-V files, and dynamic libraries, set the `DEBUG` environment variable
+```shell
+make DEBUG=true
+```
 
 ## Linux
 
