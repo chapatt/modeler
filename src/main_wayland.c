@@ -94,6 +94,7 @@ static void destroyCursor(struct display *display);
 static void destroyWindow(struct display *display);
 static void disconnectDisplay(struct display *display);
 static void configurePointer(struct display *display);
+static void loadCursorTheme(struct display *display);
 static void setCursor(struct display *display, char *name);
 static void setCursorFromWindowRegion(struct display *display, WindowRegion region);
 static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output);
@@ -260,6 +261,8 @@ static void configurePointer(struct display *display)
 	}
 
 	display->cursorSurface = wl_compositor_create_surface(display->compositor);
+	loadCursorTheme(display);
+
 	display->pointer = wl_seat_get_pointer(display->seat);
 	display->pointerListener = (struct wl_pointer_listener) {
 		.enter = pointerEnterHandler,
@@ -273,15 +276,23 @@ static void configurePointer(struct display *display)
 	printf("Configured Wayland pointer\n");
 }
 
-static void setCursor(struct display *display, char *name)
+static void loadCursorTheme(struct display *display)
 {
 	printf("setting cursor to size: %d, and theme: %c\n", 24 * display->scale, NULL);
+	if (display->cursorTheme) {
+		wl_cursor_theme_destroy(display->cursorTheme);
+	}
 	display->cursorTheme = wl_cursor_theme_load(NULL, 24 * display->scale, display->shm);
+}
+
+static void setCursor(struct display *display, char *name)
+{
 	struct wl_cursor *cursor = wl_cursor_theme_get_cursor(display->cursorTheme, name);
 	struct wl_cursor_image *cursorImage = cursor->images[0];
 	struct wl_buffer *cursorBuffer = wl_cursor_image_get_buffer(cursorImage);
 
 	wl_surface_attach(display->cursorSurface, cursorBuffer, 0, 0);
+	wl_surface_set_buffer_scale(display->cursorSurface, display->scale);
 	wl_surface_damage(display->cursorSurface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_commit(display->cursorSurface);
 	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x / display->scale, cursorImage->hotspot_y / display->scale);
@@ -484,7 +495,6 @@ void setSurfaceScale(struct display *display)
 	for (size_t i = 0; i < display->activeOutputInfoCount; ++i) {
 		if (display->activeOutputInfos[i]->scale > scale) {
 			scale = display->activeOutputInfos[i]->scale;
-			printf("increasing scale to %d\n", scale);
 		}
 	}
 
@@ -496,13 +506,13 @@ void setSurfaceScale(struct display *display)
 
 	display->scale = scale;
 
+	loadCursorTheme(display);
+
 	wl_surface_set_buffer_scale(display->surface, display->scale);
 
 	WindowDimensions windowDimensions = display->windowDimensions;
 	scaleWindowDimensions(&windowDimensions, display->scale);
 	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
-	// only commit vv after receiving a callback that this resize is done ^^
-	// wl_surface_commit(display->surface);
 }
 
 static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output)
@@ -550,7 +560,7 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 	}
 
 	setUpRegions(display);
-	printf("Setting window geometry to--width: %d, height: %d\n", display->windowDimensions.activeArea.extent.width, display->windowDimensions.activeArea.extent.height);
+
 	xdg_surface_set_window_geometry(
 		display->xdgSurface,
 		display->windowDimensions.activeArea.offset.x,
@@ -558,17 +568,15 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 		display->windowDimensions.activeArea.extent.width,
 		display->windowDimensions.activeArea.extent.height
 	);
+
 	WindowDimensions windowDimensions = display->windowDimensions;
 	scaleWindowDimensions(&windowDimensions, display->scale);
 	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
-	// only commit vv after receiving a callback that this resize is done ^^
-	//wl_surface_commit(display->surface);
 }
 
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)
 {
 	printf("Got a xdg toplevel configure event\n");
-	printf("width: %d; height: %d\n", width, height);
 	struct display *display = data;
 
 	if (width != 0 || height != 0) {
