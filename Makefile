@@ -117,14 +117,10 @@ vma_implementation.o: src/vk_mem_alloc.h
 .PHONY: clean
 clean:
 	$(RM) -rf modeler modeler.exe modeler.a main_wayland.o main_win32.o \
-		modeler.o modeler_win32.o modeler_wayland.o modeler_metal.o \
-		surface.o surface_win32.o surface_wayland.o surface_metal.o \
-		utils.o utils_win32.o \
-		instance.o physical_device.o device.o allocator.o swapchain.o image.o image_view.o \
-		render_pass.o descriptor.o pipeline.o framebuffer.o command_pool.o command_buffer.o synchronization.o \
-		input_event.o queue.o \
+		modeler_win32.o modeler_wayland.o modeler_metal.o \
+		surface_win32.o surface_wayland.o surface_metal.o \
+		utils_win32.o \
+		$(MODELER_OBJS) \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
 		$(SPIRV_SHADERS) $(HEADER_SHADERS) \
-		imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o \
-		vma_implementation.o \
-		renderloop.o
+		imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
