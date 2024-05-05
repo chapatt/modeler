@@ -110,7 +110,7 @@ static void outputDescriptionHandler(void *data, struct wl_output *output, const
 static void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y);
 static void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface);
 static void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y);
-static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
+static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, enum wl_pointer_button_state state);
 static void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t time, uint32_t axis, wl_fixed_t value);
 static void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale);
 static void setSurfaceScale(struct display *display);
@@ -484,6 +484,7 @@ void setSurfaceScale(struct display *display)
 	for (size_t i = 0; i < display->activeOutputInfoCount; ++i) {
 		if (display->activeOutputInfos[i]->scale > scale) {
 			scale = display->activeOutputInfos[i]->scale;
+			printf("increasing scale to %d\n", scale);
 		}
 	}
 
@@ -491,16 +492,17 @@ void setSurfaceScale(struct display *display)
 		return;
 	}
 
+	display->pointerRegion = UNKNOWN_REGION;
+
 	display->scale = scale;
 
-	display->pointerRegion = UNKNOWN_REGION;
+	wl_surface_set_buffer_scale(display->surface, display->scale);
 
 	WindowDimensions windowDimensions = display->windowDimensions;
 	scaleWindowDimensions(&windowDimensions, display->scale);
 	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
-
-	wl_surface_commit(display->surface);
-	wl_surface_set_buffer_scale(display->surface, display->scale);
+	// only commit vv after receiving a callback that this resize is done ^^
+	// wl_surface_commit(display->surface);
 }
 
 static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output)
@@ -547,8 +549,8 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 		display->vulkanInitialized = true;
 	}
 
-	wl_surface_commit(display->surface);
-
+	setUpRegions(display);
+	printf("Setting window geometry to--width: %d, height: %d\n", display->windowDimensions.activeArea.extent.width, display->windowDimensions.activeArea.extent.height);
 	xdg_surface_set_window_geometry(
 		display->xdgSurface,
 		display->windowDimensions.activeArea.offset.x,
@@ -556,31 +558,24 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 		display->windowDimensions.activeArea.extent.width,
 		display->windowDimensions.activeArea.extent.height
 	);
+	WindowDimensions windowDimensions = display->windowDimensions;
+	scaleWindowDimensions(&windowDimensions, display->scale);
+	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
+	// only commit vv after receiving a callback that this resize is done ^^
+	//wl_surface_commit(display->surface);
 }
 
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)
 {
 	printf("Got a xdg toplevel configure event\n");
+	printf("width: %d; height: %d\n", width, height);
 	struct display *display = data;
 
-	if (width == 0 && height == 0) {
-		display->windowDimensions.surfaceArea.width = DEFAULT_SURFACE_WIDTH;
-		display->windowDimensions.surfaceArea.height = DEFAULT_SURFACE_HEIGHT;
-		display->windowDimensions.activeArea.extent.width = DEFAULT_ACTIVE_WIDTH;
-		display->windowDimensions.activeArea.extent.height = DEFAULT_ACTIVE_HEIGHT;
-	} else {
+	if (width != 0 || height != 0) {
 		display->windowDimensions.surfaceArea.width = width + MARGIN * 2;
 		display->windowDimensions.surfaceArea.height = height + MARGIN * 2;
 		display->windowDimensions.activeArea.extent.width = width;
 		display->windowDimensions.activeArea.extent.height = height;
-	}
-
-	setUpRegions(display);
-
-	if (display->vulkanInitialized) {
-		WindowDimensions windowDimensions = display->windowDimensions;
-		scaleWindowDimensions(&windowDimensions, display->scale);
-		enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
 	}
 }
 
@@ -693,7 +688,7 @@ static void setCursorFromWindowRegion(struct display *display, WindowRegion regi
 	}
 }
 
-static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
+static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_t serial, uint32_t time, uint32_t button, enum wl_pointer_button_state state)
 {
 	struct display *display = data;
 
