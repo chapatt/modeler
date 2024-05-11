@@ -53,8 +53,13 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				free(inputEvent);
 				break;
 			case RESIZE:
-				windowDimensions = *((WindowDimensions *) data);
-				windowResized = true;
+				ResizeInfo *resizeInfo = (ResizeInfo *) data;
+				windowDimensions = resizeInfo->windowDimensions;
+				if (swapchainInfo->extent.width != windowDimensions.surfaceArea.width || swapchainInfo->extent.height != windowDimensions.surfaceArea.height) {
+					windowResized = true;
+				}
+				ackResize(resizeInfo);
+				free(resizeInfo->platformWindow);
 				free(data);
 				free(inputEvent);
 				break;
@@ -62,6 +67,13 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				free(inputEvent);
 				goto cancelMainLoop;
 			}
+		}
+
+		if (windowResized) {
+			if (!recreateSwapchain(swapchainCreateInfo, windowDimensions.surfaceArea, error)) {
+				return false;
+			}
+			windowResized = false;
 		}
 
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
@@ -216,11 +228,10 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 		};
 
 		result = vkQueuePresentKHR(presentationQueue, &presentInfo);
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || windowResized) {
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 			if (!recreateSwapchain(swapchainCreateInfo, windowDimensions.surfaceArea, error)) {
 				return false;
 			}
-			windowResized = false;
 			continue;
 		} else if (result != VK_SUCCESS) {
 			asprintf(error, "Failed to present swapchain image: %s", string_VkResult(result));

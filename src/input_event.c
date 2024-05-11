@@ -40,3 +40,10 @@ void enqueueInputEventWithWindowDimensions(Queue *queue, InputEventType type, Wi
 	*windowDimensionsP = windowDimensions;
 	enqueueInputEvent(queue, type, windowDimensionsP);
 }
+
+void enqueueInputEventWithResizeInfo(Queue *queue, InputEventType type, ResizeInfo resizeInfo)
+{
+	ResizeInfo *resizeInfoP = malloc(sizeof(*resizeInfoP));
+	*resizeInfoP = resizeInfo;
+	enqueueInputEvent(queue, type, resizeInfoP);
+}

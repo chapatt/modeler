@@ -16,6 +16,12 @@ typedef struct window_dimensions_t {
 	int cornerRadius;
 } WindowDimensions;
 
+typedef struct resize_info_t {
+	WindowDimensions windowDimensions;
+	int scale;
+	void *platformWindow;
+} ResizeInfo;
+
 struct threadArguments {
 	void *platformWindow;
 	Queue *inputQueue;
@@ -52,5 +58,6 @@ void *threadProc(void *arg);
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error);
 void sendThreadFailureSignal(void *platformWindow);
 void terminateVulkan(Queue *inputQueue, pthread_t thread);
+void ackResize(ResizeInfo *resizeInfo);
 
 #endif /* MODELER_H */

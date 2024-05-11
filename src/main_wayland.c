@@ -120,6 +120,7 @@ static void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_
 static int findIndexOfOutputInfoWithGlobalId(struct display *display, uint32_t id);
 static size_t findIndexOfOutputInfoWithOutput(struct display *display, struct wl_output *output);
 static size_t findIndexOfActiveOutputInfoWithOutput(struct display *display, struct wl_output *output);
+static void enqueueResizeEvent(struct display *display);
 static void handleFatalError(char *message);
 
 struct wl_output_listener outputListener = {
@@ -278,7 +279,6 @@ static void configurePointer(struct display *display)
 
 static void loadCursorTheme(struct display *display)
 {
-	printf("setting cursor to size: %d, and theme: %c\n", 24 * display->scale, NULL);
 	if (display->cursorTheme) {
 		wl_cursor_theme_destroy(display->cursorTheme);
 	}
@@ -508,11 +508,27 @@ void setSurfaceScale(struct display *display)
 
 	loadCursorTheme(display);
 
-	wl_surface_set_buffer_scale(display->surface, display->scale);
+	enqueueResizeEvent(display);
+}
 
+static void enqueueResizeEvent(struct display *display)
+{
 	WindowDimensions windowDimensions = display->windowDimensions;
 	scaleWindowDimensions(&windowDimensions, display->scale);
-	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
+	WaylandWindow *window = malloc(sizeof(WaylandWindow));
+	*window = (WaylandWindow) {
+		.display = display->display,
+		.surface = display->surface,
+		.xdgSurface = display->xdgSurface,
+		.fd = display->threadPipe[0]
+	};
+	ResizeInfo *resizeInfo = malloc(sizeof(WaylandWindow));
+	*resizeInfo = (ResizeInfo) {
+		.windowDimensions = windowDimensions,
+		.scale = display->scale,
+		.platformWindow = window
+	};
+	enqueueInputEvent(&display->inputQueue, RESIZE, resizeInfo);
 }
 
 static void surfaceEnterHandler(void *data, struct wl_surface *surface, struct wl_output *output)
@@ -553,7 +569,7 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 
 	char *error;
 	if (!display->vulkanInitialized) {
-		if (!initVulkanWayland(display->display, display->surface, display->windowDimensions, &display->inputQueue, display->threadPipe[1], &error)) {
+		if (!initVulkanWayland(display->display, display->surface, display->xdgSurface, display->windowDimensions, &display->inputQueue, display->threadPipe[1], &error)) {
 			handleFatalError(error);
 		}
 		display->vulkanInitialized = true;
@@ -561,17 +577,7 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 
 	setUpRegions(display);
 
-	xdg_surface_set_window_geometry(
-		display->xdgSurface,
-		display->windowDimensions.activeArea.offset.x,
-		display->windowDimensions.activeArea.offset.y,
-		display->windowDimensions.activeArea.extent.width,
-		display->windowDimensions.activeArea.extent.height
-	);
-
-	WindowDimensions windowDimensions = display->windowDimensions;
-	scaleWindowDimensions(&windowDimensions, display->scale);
-	enqueueInputEventWithWindowDimensions(&display->inputQueue, RESIZE, windowDimensions);
+	enqueueResizeEvent(display);
 }
 
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)

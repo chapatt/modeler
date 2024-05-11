@@ -342,6 +342,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error)
 {
+	printf("recreating swapchain: %d x %d\n", windowExtent.width, windowExtent.height);
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);

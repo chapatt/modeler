@@ -14,14 +14,17 @@
 
 static void imVkCheck(VkResult result);
 
-pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, WindowDimensions windowDimensions, Queue *inputQueue, int fd, char **error)
+pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, struct xdg_surface *xdgSurface, WindowDimensions windowDimensions, Queue *inputQueue, int fd, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
 	WaylandWindow *window = malloc(sizeof(WaylandWindow));
-	window->display = waylandDisplay;
-	window->surface = waylandSurface;
-	window->fd = fd;
+	*window = (WaylandWindow) {
+		.display = waylandDisplay,
+		.surface = waylandSurface,
+		.xdgSurface = xdgSurface,
+		.fd = fd
+	};
 	threadArgs->platformWindow = window;
 	threadArgs->inputQueue = inputQueue;
 	asprintf(&threadArgs->resourcePath, ".");
@@ -60,4 +63,17 @@ void sendThreadFailureSignal(void *platformWindow)
 	write(fd, &c, 1);
 	close(fd);
 	pthread_exit(NULL);
+}
+
+void ackResize(ResizeInfo *resizeInfo)
+{
+	WaylandWindow *window = (WaylandWindow *) resizeInfo->platformWindow;
+	wl_surface_set_buffer_scale(window->surface, resizeInfo->scale);
+	xdg_surface_set_window_geometry(
+		window->xdgSurface,
+		resizeInfo->windowDimensions.activeArea.offset.x,
+		resizeInfo->windowDimensions.activeArea.offset.y,
+		resizeInfo->windowDimensions.activeArea.extent.width,
+		resizeInfo->windowDimensions.activeArea.extent.height
+	);
 }
