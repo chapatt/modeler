@@ -387,7 +387,7 @@ static void registryGlobalHandler(void *data, struct wl_registry *registry, uint
 		}
 		printf("Bound Wayland compositor\n");
 	} else if (strcmp(interface, "xdg_wm_base") == 0) {
-		display->xdgWmBase = wl_registry_bind(registry, id, &xdg_wm_base_interface, 1);
+		display->xdgWmBase = wl_registry_bind(registry, id, &xdg_wm_base_interface, 2);
 		if (display->xdgWmBase == NULL) {
 			handleFatalError("Can't bind xdg wm base\n");
 		}
@@ -579,9 +579,53 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 	printf("Got a xdg toplevel configure event\n");
 	struct display *display = data;
 
+	bool leftTiled = false;
+	bool rightTiled = false;
+	bool topTiled = false;
+	bool bottomTiled = false;
+
+	enum xdg_toplevel_state *state;
+	wl_array_for_each(state, states) {
+		switch (*state) {
+		case XDG_TOPLEVEL_STATE_MAXIMIZED:
+			printf("maximized\n");
+			leftTiled = rightTiled = topTiled = bottomTiled = true;
+			break;
+		case XDG_TOPLEVEL_STATE_RESIZING:
+			printf("resizing\n");
+			break;
+		case XDG_TOPLEVEL_STATE_TILED_LEFT:
+			printf("tiled left\n");
+			leftTiled = true;
+			break;
+		case XDG_TOPLEVEL_STATE_TILED_RIGHT:
+			printf("tiled right\n");
+			rightTiled = true;
+			break;
+		case XDG_TOPLEVEL_STATE_TILED_TOP:
+			printf("tiled top\n");
+			topTiled = true;
+			break;
+		case XDG_TOPLEVEL_STATE_TILED_BOTTOM:
+			printf("tiled bottom\n");
+			bottomTiled = true;
+			break;
+		default:
+			printf("other state\n");
+			break;
+		}
+	}
+
+	int marginLeft = leftTiled ? 0 : OFFSET_X;
+	int marginRight = rightTiled ? 0 : (MARGIN * 2) - OFFSET_X;
+	int marginTop = topTiled ? 0 : OFFSET_Y; 
+	int marginBottom = bottomTiled ? 0 : (MARGIN * 2) - OFFSET_Y;
+
 	if (width != 0 || height != 0) {
-		display->windowDimensions.surfaceArea.width = width + MARGIN * 2;
-		display->windowDimensions.surfaceArea.height = height + MARGIN * 2;
+		display->windowDimensions.surfaceArea.width = width + marginLeft + marginRight;
+		display->windowDimensions.surfaceArea.height = height + marginTop + marginLeft;
+		display->windowDimensions.activeArea.offset.x = marginLeft;
+		display->windowDimensions.activeArea.offset.y = marginTop;
 		display->windowDimensions.activeArea.extent.width = width;
 		display->windowDimensions.activeArea.extent.height = height;
 	}
@@ -704,9 +748,9 @@ static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_
 	case CLIENT:
 		break;
 	case CHROME:
-		if (button == BTN_LEFT && state == 1) {
+		if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED) {
 			xdg_toplevel_move(display->xdgToplevel, display->seat, serial);
-		} else if (button == BTN_RIGHT && state == 1) {
+		} else if (button == BTN_RIGHT && state == WL_POINTER_BUTTON_STATE_PRESSED) {
 			xdg_toplevel_show_window_menu(display->xdgToplevel, display->seat, serial, display->pointerPosition.x, display->pointerPosition.y);
 		}
 		break;
