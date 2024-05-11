@@ -62,6 +62,6 @@ Set up locations of Vulkan libraries to which to link: Xcode > Settings > Locati
 | VULKAN_LIB		| Vulkan Libraries	| <path_to_vulkan_sdk_including_version>/macOS/lib	|
 
 ## Windows
-Install mingw_w64 (preferrable via msys64).
+Install mingw_w64 (preferrably via msys64).
 
-Install Vulkan SDK. Paths in Makefile may need to be updated for install location and version.
+Install Vulkan SDK. Paths in `Makefile` may need to be updated for install location and version.
