@@ -5,10 +5,10 @@
 
 VkExtent2D getWindowExtent(void *platformWindow)
 {
-	HWND hwnd = ((Win32Window *) platformWindow)->hwnd;
+	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
 	RECT rect;
 	VkExtent2D windowExtent = {};
-	if (GetClientRect(hwnd, &rect)) {
+	if (GetClientRect(hWnd, &rect)) {
 		windowExtent = (VkExtent2D) {
 			.width = rect.right - rect.left,
 			.height = rect.bottom - rect.top

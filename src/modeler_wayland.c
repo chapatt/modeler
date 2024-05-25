@@ -67,7 +67,7 @@ void sendThreadFailureSignal(void *platformWindow)
 
 void ackResize(ResizeInfo *resizeInfo)
 {
-	WaylandWindow *window = (WaylandWindow *) resizeInfo->platformWindow;
+	WaylandWindow *window = resizeInfo->platformWindow;
 	wl_surface_set_buffer_scale(window->surface, resizeInfo->scale);
 	xdg_surface_set_window_geometry(
 		window->xdgSurface,

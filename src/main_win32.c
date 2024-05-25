@@ -23,6 +23,7 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT hitTest(HWND hWnd, int x, int y);
 static bool isMaximized(HWND hWnd);
+static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, int scale, HINSTANCE hInstance, HWND hWnd);
 
 static char *error = NULL;
 static pthread_t thread = 0;
@@ -100,6 +101,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	typedef UINT (WINAPI *PFN_GetDpiForWindow)(HWND hwnd);
+	PFN_GetDpiForWindow _GetDpiForWindow = (PFN_GetDpiForWindow) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetDpiForWindow");
+
 	Queue *inputQueue = (Queue *) GetWindowLongPtr(hWnd, GWLP_USERDATA);
 	switch (uMsg) {
 	case THREAD_FAILURE_NOTIFICATION_MESSAGE:
@@ -144,7 +148,9 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 				},
 				.cornerRadius = 0
 			};
-			enqueueInputEventWithWindowDimensions(inputQueue, RESIZE, windowDimensions);
+			int dpi = _GetDpiForWindow(hWnd);
+			HINSTANCE hInstance = GetModuleHandle(NULL);
+			enqueueResizeEvent(inputQueue, windowDimensions, dpi, hInstance, hWnd);
 		}
 		return 0;
 	case WM_LBUTTONDOWN:
@@ -340,4 +346,20 @@ static char *getLastErrorString(void) {
 	//LPWSTR messageBuffer = NULL;
 	//FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR) &messageBuffer, 0, NULL);
 	//LocalFree(messageBuffer);
+}
+
+static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, int scale, HINSTANCE hInstance, HWND hWnd)
+{
+	Win32Window *window = malloc(sizeof(*window));
+	*window = (Win32Window) {
+		.hInstance = hInstance,
+		.hWnd = hWnd
+	};
+	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
+	*resizeInfo = (ResizeInfo) {
+		.windowDimensions = windowDimensions,
+		.scale = scale,
+		.platformWindow = window
+	};
+	enqueueInputEvent(queue, RESIZE, resizeInfo);
 }

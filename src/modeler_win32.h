@@ -10,10 +10,10 @@
 #define THREAD_FAILURE_NOTIFICATION_MESSAGE (WM_USER + 0)
 
 typedef struct win32_window_t {
-	HINSTANCE hinstance;
-	HWND hwnd;
+	HINSTANCE hInstance;
+	HWND hWnd;
 } Win32Window;
 
-pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error);
+pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, char **error);
 
 #endif /* MODELER_WIN32_H */

@@ -12,13 +12,13 @@
 
 static void imVkCheck(VkResult result);
 
-pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, char **error)
+pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
 	Win32Window *window = malloc(sizeof(Win32Window));
-	window->hinstance = hinstance;
-	window->hwnd = hwnd;
+	window->hInstance = hInstance;
+	window->hWnd = hWnd;
 	threadArgs->platformWindow = window;
 	threadArgs->inputQueue = inputQueue;
 	asprintf(&threadArgs->resourcePath, ".");
@@ -72,7 +72,12 @@ pthread_t initVulkanWin32(HINSTANCE hinstance, HWND hwnd, Queue *inputQueue, cha
 
 void sendThreadFailureSignal(void *platformWindow)
 {
-	HWND hWnd = ((Win32Window *) platformWindow)->hwnd;
+	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
 	PostMessageW(hWnd, THREAD_FAILURE_NOTIFICATION_MESSAGE, 0, 0);
 	pthread_exit(NULL);
+}
+
+void ackResize(ResizeInfo *resizeInfo)
+{
+	/* Unnecessary on win32 */
 }
