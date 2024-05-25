@@ -41,6 +41,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
 			InputEventType type = inputEvent->type;
 			void *data = inputEvent->data;
+			ResizeInfo *resizeInfo;
 
 			switch(type) {
 			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
@@ -53,7 +54,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				free(inputEvent);
 				break;
 			case RESIZE:
-				ResizeInfo *resizeInfo = (ResizeInfo *) data;
+				resizeInfo = (ResizeInfo *) data;
 				windowDimensions = resizeInfo->windowDimensions;
 				if (swapchainInfo->extent.width != windowDimensions.surfaceArea.width || swapchainInfo->extent.height != windowDimensions.surfaceArea.height) {
 					windowResized = true;
