@@ -67,6 +67,21 @@ void sendThreadFailureSignal(void *platformWindow)
 	pthread_exit(NULL);
 }
 
+void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, int scale, void *surfaceLayer)
+{
+	MetalWindow *window = malloc(sizeof(*window));
+	*window = (MetalWindow) {
+		.surfaceLayer = surfaceLayer
+	};
+	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
+	*resizeInfo = (ResizeInfo) {
+		.windowDimensions = windowDimensions,
+		.scale = scale,
+		.platformWindow = window
+	};
+	enqueueInputEvent(queue, RESIZE, resizeInfo);
+}
+
 static void sendNSNotification(char *message)
 {
 	id (*postNotification)(id, SEL, id) = (id (*)(id, SEL, id)) objc_msgSend;
@@ -88,4 +103,9 @@ static void sendNSNotification(char *message)
 
 	SEL postNotificationSelector = sel_registerName("postNotification:");
 	postNotification(notificationCenter, postNotificationSelector, notification);
+}
+
+void ackResize(ResizeInfo *resizeInfo)
+{
+	/* Unnecessary on Metal/Cocoa */
 }

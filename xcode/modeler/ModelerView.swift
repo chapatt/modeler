@@ -110,15 +110,19 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     
     @objc func handleFrameDidChange(object: NSView) {
         print("extentChange")
-        let bounds: CGRect = convertToBacking(layer!.bounds)
-        let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
-        let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
-        let windowDimensions = WindowDimensions(
-            surfaceArea: extent,
-            activeArea: rect,
-            cornerRadius: 0
-        )
-        enqueueInputEventWithWindowDimensions(inputQueue, RESIZE, windowDimensions)
+        if let layer = self.layer {
+            let bounds: CGRect = convertToBacking(layer.bounds)
+            let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
+            let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
+            let windowDimensions = WindowDimensions(
+                surfaceArea: extent,
+                activeArea: rect,
+                cornerRadius: 0
+            )
+            let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
+            
+            enqueueResizeEvent(inputQueue, windowDimensions, 1, layerPointer)
+        }
     }
     
     func handleFatalError(message: String) {

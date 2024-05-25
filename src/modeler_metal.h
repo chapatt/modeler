@@ -14,5 +14,6 @@ typedef struct metal_window_t {
 } MetalWindow;
 
 pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error);
+void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, int scale, void *surfaceLayer);
 
 #endif /* MODELER_METAL_H */
