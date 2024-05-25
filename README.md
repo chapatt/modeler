@@ -7,17 +7,17 @@ A cross-platform (macOS, Windows, Linux) application implementing native, border
 * Multi-monitor HiDPI awareness is implemented on all platforms
 
 Functionality is nearly feature-complete. The following major tasks remain:
-- [ ] Handle wayland tiling/maximize hints (`stages` argument from `xdg_toplevel::configure` event)
+- [x] Handle wayland tiling/maximize hints (`stages` argument from `xdg_toplevel::configure` event)
 - [ ] Fullscreen mode
 	- [ ] Attempt to acquire exclusive fullscreen access if possible (`VK_EXT_full_screen_exclusive` extension)
 	- [ ] Disable window border/shadow renderpass on wayland when transitioning to fullscreen (`DRAW_WINDOW_DECORATION` conditionals)
-- [ ] Apply this framework via a game/application beyond drawing a triangle :)
 
 Nice-to-haves:
 - [ ] Get system cursor theme on wayland
 - [ ] Refactor functions with long parameter lists to take structs
 - [ ] Integrate dear imgui with application swapchain (reimplement `imgui_impl_vulkan`)
 - [ ] Add test suite and run via CI pipeline
+- [ ] Apply this framework via a game/application beyond drawing a triangle :)
 
 macOS:<br />
 <img src="docs/images/window_triangle_macos.png" alt="macOS" width=400 /><br />
