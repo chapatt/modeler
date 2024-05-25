@@ -515,14 +515,14 @@ static void enqueueResizeEvent(struct display *display)
 {
 	WindowDimensions windowDimensions = display->windowDimensions;
 	scaleWindowDimensions(&windowDimensions, display->scale);
-	WaylandWindow *window = malloc(sizeof(WaylandWindow));
+	WaylandWindow *window = malloc(sizeof(*window));
 	*window = (WaylandWindow) {
 		.display = display->display,
 		.surface = display->surface,
 		.xdgSurface = display->xdgSurface,
 		.fd = display->threadPipe[0]
 	};
-	ResizeInfo *resizeInfo = malloc(sizeof(WaylandWindow));
+	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
 	*resizeInfo = (ResizeInfo) {
 		.windowDimensions = windowDimensions,
 		.scale = display->scale,
@@ -624,7 +624,7 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 
 	int marginLeft = leftTiled ? 0 : OFFSET_X;
 	int marginRight = rightTiled ? 0 : (MARGIN * 2) - OFFSET_X;
-	int marginTop = topTiled ? 0 : OFFSET_Y; 
+	int marginTop = topTiled ? 0 : OFFSET_Y;
 	int marginBottom = bottomTiled ? 0 : (MARGIN * 2) - OFFSET_Y;
 
 	if (width != 0 || height != 0) {
