@@ -27,6 +27,7 @@
 		AB6C10252BA0F9A9004667E0 /* triangle.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB3270862B83303E000500E5 /* triangle.vert.spv */; };
 		AB6C10262BA0F9A9004667E0 /* window_border.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */; };
 		AB6C10272BA0F9A9004667E0 /* window_border.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */; };
+		ABC0F3052C02C93700771076 /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		ABD9E0172B2BA4F8008932DB /* ModelerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */; };
 		ABE1DEF52A3592D600A963A6 /* vulkan in Resources */ = {isa = PBXBuildFile; fileRef = ABE1DEF42A3592D600A963A6 /* vulkan */; };
 		ABE1DF2A2A40C18800A963A6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE1DF292A40C18800A963A6 /* AppDelegate.swift */; };
@@ -94,6 +95,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ABC0F3052C02C93700771076 /* imgui.a in Frameworks */,
 				AB330EDA2BD9920800FC06CE /* libvulkan.dylib in Frameworks */,
 				AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */,
 				AB330EE72BD993E600FC06CE /* libMoltenVK.dylib in Frameworks */,
@@ -261,7 +263,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C ../ modeler.a\n#make -C ../ imgui.a\n";
+			shellScript = "make -C ../ modeler.a ENABLE_IMGUI=true\nmake -C ../ imgui.a ENABLE_IMGUI=true\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
