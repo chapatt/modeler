@@ -83,10 +83,8 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         if event.type == .mouseMoved {
             print("mouseMoved")
         }
-        let height = layer!.bounds.size.height
-        let x = Int32(event.locationInWindow.x)
-        let y = Int32(height - event.locationInWindow.y)
-        enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, x, y)
+        
+        enqueuePositionEventWithWindowCoord(event.locationInWindow)
     }
     
     override func mouseDragged(with event: NSEvent) {
@@ -94,9 +92,15 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         if event.type == .leftMouseDragged {
             print("mouseDragged")
         }
-        let height = layer!.bounds.size.height
-        let x = Int32(event.locationInWindow.x)
-        let y = Int32(height - event.locationInWindow.y)
+        
+        enqueuePositionEventWithWindowCoord(event.locationInWindow)
+    }
+    
+    private func enqueuePositionEventWithWindowCoord(_ windowCoord: NSPoint) {
+        let viewPoint = convert(windowCoord, from: nil)
+        let backingPoint = convertToBacking(viewPoint)
+        let x = Int32(backingPoint.x)
+        let y = Int32(-backingPoint.y)
         enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, x, y)
     }
 
@@ -139,5 +143,11 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     
     func layer(_ layer: CALayer, shouldInheritContentsScale newScale: CGFloat, from window: NSWindow) -> Bool {
         return true
+    }
+    
+    override var isFlipped: Bool {
+        get {
+            return true
+        }
     }
 }
