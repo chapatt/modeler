@@ -51,6 +51,57 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.dependencyFlags = 0
 	};
 
+#define ENABLE_IMGUI true
+#ifdef ENABLE_IMGUI
+ 	VkAttachmentDescription imAttachmentDescription = {
+		.flags = 0,
+		.format = swapchainInfo.surfaceFormat.format,
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+#ifdef DRAW_WINDOW_DECORATION
+		.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+#else
+		.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+#endif
+#ifdef DRAW_WINDOW_DECORATION
+		.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+#else
+		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+#endif
+	};
+
+	VkAttachmentReference imAttachmentReference = {
+		.attachment = 0,
+		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+	};
+
+	VkSubpassDescription imSubpassDescription = {
+		.flags = 0,
+		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+		.inputAttachmentCount = 1,
+		.pInputAttachments = NULL,
+		.colorAttachmentCount = 1,
+		.pColorAttachments = &attachmentReference,
+		.pResolveAttachments = NULL,
+		.pDepthStencilAttachment = NULL,
+		.preserveAttachmentCount = 0,
+		.pPreserveAttachments = NULL
+	};
+
+	VkSubpassDependency imSubpassDependency = {
+		.srcSubpass = 0,
+		.dstSubpass = 1,
+		.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		.dependencyFlags = 0
+	};
+#endif /* ENABLE_IMGUI */
+
 #if DRAW_WINDOW_DECORATION
 	VkAttachmentDescription secondAttachmentDescription = {
 		.flags = 0,
@@ -88,8 +139,8 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 	};
 
 	VkSubpassDependency secondSubpassDependency = {
-		.srcSubpass = 0,
-		.dstSubpass = 1,
+		.srcSubpass = 1,
+		.dstSubpass = 2,
 		.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 		.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
@@ -97,13 +148,13 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.dependencyFlags = 0
 	};
 
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, secondAttachmentDescription};
-	VkSubpassDescription subpassDescriptions[] = {subpassDescription, secondSubpassDescription};
-	VkSubpassDependency subpassDependencies[] = {subpassDependency, secondSubpassDependency};
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, imAttachmentDescription, secondAttachmentDescription};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, secondSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, secondSubpassDependency};
 #else
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription};
-	VkSubpassDescription subpassDescriptions[] = {subpassDescription};
-	VkSubpassDependency subpassDependencies[] = {subpassDependency};
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, imAttachmentDescription};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency};
 #endif
 
 	VkRenderPassCreateInfo renderPassCreateInfo = {
@@ -117,15 +168,15 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 #endif
 		.pAttachments = attachmentDescriptions,
 #if DRAW_WINDOW_DECORATION
-		.subpassCount = 2,
+		.subpassCount = 3,
 #else
-		.subpassCount = 1,
+		.subpassCount = 2,
 #endif
 		.pSubpasses = subpassDescriptions,
 #if DRAW_WINDOW_DECORATION
-		.dependencyCount = 2,
+		.dependencyCount = 3,
 #else
-		.dependencyCount = 1,
+		.dependencyCount = 2,
 #endif
 		.pDependencies = subpassDependencies
 	};
