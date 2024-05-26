@@ -200,7 +200,7 @@ void *threadProc(void *arg)
 #ifdef DRAW_WINDOW_DECORATION
 	VkPipelineLayout pipelineLayoutWindowDecoration;
 	VkPipeline pipelineWindowDecoration;
-	bool pipelineCreateSuccessWindowDecoration = createPipeline(device, renderPass, 1, windowBorderVertShaderBytes, windowBorderVertShaderSize, windowBorderFragShaderBytes, windowBorderFragShaderSize, swapchainInfo.extent, imageDescriptorSetLayouts, 1, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
+	bool pipelineCreateSuccessWindowDecoration = createPipeline(device, renderPass, 2, windowBorderVertShaderBytes, windowBorderVertShaderSize, windowBorderFragShaderBytes, windowBorderFragShaderSize, swapchainInfo.extent, imageDescriptorSetLayouts, 1, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
 #ifndef EMBED_SHADERS
 	free(windowBorderFragShaderBytes);
 	free(windowBorderVertShaderBytes);
@@ -256,7 +256,7 @@ void *threadProc(void *arg)
 
 	VkDescriptorPool imDescriptorPool;
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
-	// initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
+	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
 #if DRAW_WINDOW_DECORATION
 	VkPipeline pipelines[] = {pipelineTriangle, pipelineWindowDecoration};
@@ -329,7 +329,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		.Queue = queueInfo.graphicsQueue,
 		.PipelineCache = VK_NULL_HANDLE,
 		.DescriptorPool = descriptorPool,
-		.Subpass = 0,
+		.Subpass = 1,
 		.MinImageCount = surfaceCharacteristics.capabilities.minImageCount,
 		.ImageCount = swapchainInfo->imageCount,
 		.MSAASamples = VK_SAMPLE_COUNT_1_BIT,

@@ -50,19 +50,24 @@ else
 	SHADERS=$(HEADER_SHADERS)
 endif
 
+ifdef ENABLE_IMGUI
+	CFLAGS+=-DENABLE_IMGUI
+	IMGUI_LIBS=imgui.a
+endif
+
 all: $(ALL_TARGET)
 
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $<
 
-modeler: $(SHADERS) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(LDLIBS)
+modeler: $(SHADERS) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(IMGUI_LIBS)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.exe: $(SHADERS) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(LDLIBS)
+modeler.exe: $(SHADERS) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.a: $(SHADERS) $(MODELER_OBJS) modeler_metal.o surface_metal.o
-	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o
+modeler.a: $(SHADERS) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(IMGUI_LIBS)
+	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o $(IMGUI_LIBS)
 
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c

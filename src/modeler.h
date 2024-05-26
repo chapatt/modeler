@@ -1,6 +1,8 @@
 #ifndef MODELER_H
 #define MODELER_H
 
+#define ENABLE_IMGUI true
+
 #include <vulkan/vulkan.h>
 
 #include "vk_mem_alloc.h"

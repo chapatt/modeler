@@ -115,29 +115,6 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 		vkBeginCommandBuffer((*commandBuffers)[imageIndex], &commandBufferBeginInfos[imageIndex]);
 		vkCmdBeginRenderPass((*commandBuffers)[imageIndex], &(renderPassBeginInfos[imageIndex]), VK_SUBPASS_CONTENTS_INLINE);
 
-		// struct timespec spec;
-		// clock_gettime(CLOCK_MONOTONIC, &spec);
-		// 	head = (head + 1) % queueLength;
-		// 	elapsedQueue[head] = spec.tv_nsec + ((1000000000 * (spec.tv_sec - previousTime.tv_sec)) - previousTime.tv_nsec);
-		// if (spec.tv_sec > previousTime.tv_sec) {
-		// 	for (size_t i = 0; i < queueLength; ++i) {
-		// 		elapsed = (elapsed + elapsedQueue[i]) / 2;
-		// 	}
-		// }
-		// previousTime.tv_sec = spec.tv_sec;
-		// previousTime.tv_nsec = spec.tv_nsec;
-#ifdef ENABLE_IMGUI
-		cImGui_ImplVulkan_NewFrame();
-		ImGui_ImplModeler_NewFrame();
-		ImGui_NewFrame();
-		ImGui_Begin("A Window", NULL, 0);
-		ImGui_Text("fps: %ld", 1000000000 / elapsed);
-		ImGui_End();
-		ImGui_Render();
-		ImDrawData *drawData = ImGui_GetDrawData();
-		cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
-#endif /* ENABLE_IMGUI */
-
 		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0]);
 		VkViewport viewport = {
 			.x = windowDimensions.activeArea.offset.x,
@@ -164,6 +141,33 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[0], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
+
+#ifdef ENABLE_IMGUI
+		vkCmdNextSubpass((*commandBuffers)[imageIndex], VK_SUBPASS_CONTENTS_INLINE);
+
+		struct timespec spec;
+		clock_gettime(CLOCK_MONOTONIC, &spec);
+			head = (head + 1) % queueLength;
+			elapsedQueue[head] = spec.tv_nsec + ((1000000000 * (spec.tv_sec - previousTime.tv_sec)) - previousTime.tv_nsec);
+		if (spec.tv_sec > previousTime.tv_sec) {
+			for (size_t i = 0; i < queueLength; ++i) {
+				elapsed = (elapsed + elapsedQueue[i]) / 2;
+			}
+		}
+		previousTime.tv_sec = spec.tv_sec;
+		previousTime.tv_nsec = spec.tv_nsec;
+
+		cImGui_ImplVulkan_NewFrame();
+		ImGui_ImplModeler_NewFrame();
+		ImGui_NewFrame();
+		ImGui_Begin("A Window", NULL, 0);
+		ImGui_Text("fps: %ld", 1000000000 / elapsed);
+		ImGui_End();
+		ImGui_Render();
+		ImDrawData *drawData = ImGui_GetDrawData();
+		cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
+#endif /* ENABLE_IMGUI */
+
 #if DRAW_WINDOW_DECORATION
 		vkCmdNextSubpass((*commandBuffers)[imageIndex], VK_SUBPASS_CONTENTS_INLINE);
 
