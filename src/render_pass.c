@@ -138,8 +138,13 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 	};
 
 	VkSubpassDependency secondSubpassDependency = {
+#if ENABLE_IMGUI
 		.srcSubpass = 1,
 		.dstSubpass = 2,
+#else /* ENABLE_IMGUI */
+		.srcSubpass = 0,
+		.dstSubpass = 1,
+#endif /* ENABLE_IMGUI */
 		.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
 		.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
@@ -147,14 +152,26 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.dependencyFlags = 0
 	};
 
+#if ENABLE_IMGUI
 	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, imAttachmentDescription, secondAttachmentDescription};
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, secondSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, secondSubpassDependency};
-#else
+#else /* ENABLE_IMGUI */
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, secondAttachmentDescription};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, secondSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, secondSubpassDependency};
+#endif /* ENABLE_IMGUI */
+#else /* DRAW_WINDOW_DECORATION */
+#if ENABLE_IMGUI
 	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, imAttachmentDescription};
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency};
-#endif
+#else
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency};
+#endif /* ENABLE_IMGUI */
+#endif /* DRAW_WINDOW_DECORATION */
 
 	VkRenderPassCreateInfo renderPassCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -162,21 +179,28 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.flags = 0,
 #if DRAW_WINDOW_DECORATION
 		.attachmentCount = 2,
-#else
+#else /* DRAW_WINDOW_DECORATION */
 		.attachmentCount = 1,
-#endif
+#endif /* DRAW_WINDOW_DECORATION */
 		.pAttachments = attachmentDescriptions,
 #if DRAW_WINDOW_DECORATION
+#if ENABLE_IMGUI
 		.subpassCount = 3,
-#else
-		.subpassCount = 2,
-#endif
-		.pSubpasses = subpassDescriptions,
-#if DRAW_WINDOW_DECORATION
 		.dependencyCount = 3,
-#else
+#else /* ENABLE_IMGUI */
+		.subpassCount = 2,
 		.dependencyCount = 2,
-#endif
+#endif /* ENABLE_IMGUI */
+#else /* DRAW_WINDOW_DECORATION */
+#if ENABLE_IMGUI
+		.subpassCount = 2,
+		.dependencyCount = 2,
+#else /* ENABLE_IMGUI */
+		.subpassCount = 1,
+		.dependencyCount = 1,
+#endif /* ENABLE_IMGUI */
+#endif /* DRAW_WINDOW_DECORATION */
+		.pSubpasses = subpassDescriptions,
 		.pDependencies = subpassDependencies
 	};
 
