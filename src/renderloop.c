@@ -45,11 +45,15 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 
 			switch(type) {
 			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
-				// ImGui_ImplModeler_HandleInput(inputEvent);
+#ifdef ENABLE_IMGUI
+				ImGui_ImplModeler_HandleInput(inputEvent);
+#endif
 				free(inputEvent);
 				break;
 			case POINTER_MOVE:
-				// ImGui_ImplModeler_HandleInput(inputEvent);
+#ifdef ENABLE_IMGUI
+				ImGui_ImplModeler_HandleInput(inputEvent);
+#endif
 				free(data);
 				free(inputEvent);
 				break;
