@@ -66,8 +66,8 @@ modeler: $(SHADERS) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_way
 modeler.exe: $(SHADERS) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS)
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.a: $(SHADERS) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(IMGUI_LIBS)
-	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o $(IMGUI_LIBS)
+modeler.a: $(SHADERS) $(MODELER_OBJS) modeler_metal.o surface_metal.o
+	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o
 
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
@@ -84,7 +84,6 @@ modeler.o: src/modeler.c
 $(HEADER_SHADERS): shader_%.h: %.spv
 	./hexdump_include.sh "`echo $(basename $<)ShaderBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)ShaderSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 
-ifdef ENABLE_IMGUI
 imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
 	$(AR) rvs $@ cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
 cimgui.o:
@@ -105,7 +104,6 @@ imgui_tables.o:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_tables.cpp
 imgui_widgets.o:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui_widgets.cpp
-endif
 
 xdg-shell-protocol.o: xdg-shell-protocol.c xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c xdg-shell-protocol.c
