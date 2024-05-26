@@ -51,7 +51,6 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.dependencyFlags = 0
 	};
 
-#define ENABLE_IMGUI true
 #ifdef ENABLE_IMGUI
  	VkAttachmentDescription imAttachmentDescription = {
 		.flags = 0,
