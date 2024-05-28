@@ -124,8 +124,9 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
                 cornerRadius: 0
             )
             let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
+            let scale = Int32(window?.backingScaleFactor ?? 1);
             
-            enqueueResizeEvent(inputQueue, windowDimensions, 1, layerPointer)
+            enqueueResizeEvent(inputQueue, windowDimensions, scale, layerPointer)
         }
     }
     
