@@ -15,7 +15,7 @@ Functionality is nearly feature-complete. The following major tasks remain:
 Nice-to-haves:
 - [ ] Get system cursor theme on wayland
 - [ ] Refactor functions with long parameter lists to take structs
-- [ ] Integrate dear imgui with application swapchain (reimplement `imgui_impl_vulkan`)
+- [x] Integrate dear imgui with application renderpass
 - [ ] Add test suite and run via CI pipeline
 - [ ] Apply this framework via a game/application beyond drawing a triangle :)
 
