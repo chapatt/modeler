@@ -20,7 +20,7 @@ typedef struct font_t {
 
 static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, int scale);
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, int scale);
-static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, int scale);
+static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, int scale, const char *resourcePath);
 
 bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
@@ -47,7 +47,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 	size_t head = 0;
 	long elapsed = 1;
 
-	rescaleImGui(&fonts, &fontCount, &currentFont, scale);
+	rescaleImGui(&fonts, &fontCount, &currentFont, scale, resourcePath);
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
@@ -81,7 +81,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				}
 				if (resizeInfo->scale != scale) {
 					scale = resizeInfo->scale;
-					rescaleImGui(&fonts, &fontCount, &currentFont, scale);
+					rescaleImGui(&fonts, &fontCount, &currentFont, scale, resourcePath);
 				}
 				ackResize(resizeInfo);
 				free(resizeInfo->platformWindow);
@@ -295,11 +295,13 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, int scale)
 	return NULL;
 }
 
-static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, int scale)
+static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, int scale, const char *resourcePath)
 {
 	if (!(*currentFont = findFontWithScale(*fonts, *fontCount, scale))) {
 		ImGuiIO *io = ImGui_GetIO();
-		ImFont *font = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "roboto.ttf", 16 * scale, NULL, NULL);
+		char *fontPath;
+		asprintf(&fontPath, "%s/%s", resourcePath, "roboto.ttf");
+		ImFont *font = ImFontAtlas_AddFontFromFileTTF(io->Fonts, fontPath, 16 * scale, NULL, NULL);
 		pushFont(fonts, fontCount, font, scale);
 		ImFontAtlas_Build(io->Fonts);
 		cImGui_ImplVulkan_CreateFontsTexture();
