@@ -150,7 +150,7 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 			};
 			int dpi = _GetDpiForWindow(hWnd);
 			HINSTANCE hInstance = GetModuleHandle(NULL);
-			enqueueResizeEvent(inputQueue, windowDimensions, dpi, hInstance, hWnd);
+			enqueueResizeEvent(inputQueue, windowDimensions, dpi / 96, hInstance, hWnd);
 		}
 		return 0;
 	case WM_LBUTTONDOWN:

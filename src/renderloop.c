@@ -13,8 +13,21 @@
 
 #include "renderloop.h"
 
+typedef struct font_t {
+	ImFont *font;
+	int scale;
+} Font;
+
+static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, int scale);
+static ImFont *findFontWithScale(Font *fonts, size_t fontCount, int scale);
+static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, int scale);
+
 bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
+	Font *fonts = NULL;
+	size_t fontCount = 0;
+	ImFont *currentFont = NULL;
+	int scale = 1;
 	WindowDimensions windowDimensions = initialWindowDimensions;
 	VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
 	VkRenderPassBeginInfo renderPassBeginInfos[swapchainInfo->imageCount];
@@ -33,6 +46,9 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 	long elapsedQueue[queueLength];
 	size_t head = 0;
 	long elapsed = 1;
+
+	rescaleImGui(&fonts, &fontCount, &currentFont, scale);
+
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
 		bool windowResized = false;
@@ -62,6 +78,10 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				windowDimensions = resizeInfo->windowDimensions;
 				if (swapchainInfo->extent.width != windowDimensions.surfaceArea.width || swapchainInfo->extent.height != windowDimensions.surfaceArea.height) {
 					windowResized = true;
+				}
+				if (resizeInfo->scale != scale) {
+					scale = resizeInfo->scale;
+					rescaleImGui(&fonts, &fontCount, &currentFont, scale);
 				}
 				ackResize(resizeInfo);
 				free(resizeInfo->platformWindow);
@@ -164,9 +184,11 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 		cImGui_ImplVulkan_NewFrame();
 		ImGui_ImplModeler_NewFrame();
 		ImGui_NewFrame();
+		ImGui_PushFont(currentFont);
 		ImGui_Begin("A Window", NULL, 0);
 		ImGui_Text("fps: %ld", 1000000000 / elapsed);
 		ImGui_End();
+		ImGui_PopFont();
 		ImGui_Render();
 		ImDrawData *drawData = ImGui_GetDrawData();
 		cImGui_ImplVulkan_RenderDrawData(drawData, (*commandBuffers)[imageIndex]);
@@ -251,4 +273,36 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 cancelMainLoop:
 	vkDeviceWaitIdle(device);
 	return true;
+}
+
+static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, int scale)
+{
+	*fonts = realloc(*fonts, sizeof(**fonts) * ++*fontCount);
+	(*fonts)[*fontCount - 1] = (Font) {
+		.font = font,
+		.scale = scale
+	};
+}
+
+static ImFont *findFontWithScale(Font *fonts, size_t fontCount, int scale)
+{
+	for (size_t i = 0; i < fontCount; ++i) {
+		if (fonts[i].scale == scale) {
+			return fonts[i].font;
+		}
+	}
+
+	return NULL;
+}
+
+static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, int scale)
+{
+	if (!(*currentFont = findFontWithScale(*fonts, *fontCount, scale))) {
+		ImGuiIO *io = ImGui_GetIO();
+		ImFont *font = ImFontAtlas_AddFontFromFileTTF(io->Fonts, "roboto.ttf", 16 * scale, NULL, NULL);
+		pushFont(fonts, fontCount, font, scale);
+		ImFontAtlas_Build(io->Fonts);
+		cImGui_ImplVulkan_CreateFontsTexture();
+		*currentFont = font;
+	}
 }
