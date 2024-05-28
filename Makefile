@@ -35,7 +35,9 @@ else
 	endif
 endif
 
-CFLAGS+=-DENABLE_VSYNC
+ifdef ENABLE_VSYNC
+	CFLAGS+=-DENABLE_VSYNC
+endif
 
 SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv triangle.vert.spv triangle.frag.spv
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_triangle.vert.h shader_triangle.frag.h
@@ -45,9 +47,11 @@ ifdef DEBUG
 	CFLAGS+=-DDEBUG -g
 	SHADERS=$(SPIRV_SHADERS)
 else
-	CFLAGS+=-DEMBED_SHADERS -O3
-	LDFLAGS+=-static
+	CFLAGS+=-DEMBED_SHADERS
 	SHADERS=$(HEADER_SHADERS)
+	ifeq ($(OS),Windows_NT)
+		LDFLAGS+=-static
+	endif
 endif
 
 ifdef ENABLE_IMGUI
