@@ -292,10 +292,10 @@ static void setCursor(struct display *display, char *name)
 	struct wl_buffer *cursorBuffer = wl_cursor_image_get_buffer(cursorImage);
 
 	wl_surface_attach(display->cursorSurface, cursorBuffer, 0, 0);
-	wl_surface_set_buffer_scale(display->cursorSurface, display->windowDimenions.scale);
+	wl_surface_set_buffer_scale(display->cursorSurface, display->windowDimensions.scale);
 	wl_surface_damage(display->cursorSurface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_commit(display->cursorSurface);
-	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x / display->windowDimenions.scale, cursorImage->hotspot_y / display->windowDimenions.scale);
+	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x / display->windowDimensions.scale, cursorImage->hotspot_y / display->windowDimensions.scale);
 }
 
 static void createWindow(struct display *display)
@@ -473,19 +473,19 @@ static void registryGlobalRemoveHandler(void *data, struct wl_registry *registry
 
 void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale)
 {
-	*windowDimensions = (WindowDimensions) {
-		.surfaceArea = {
-			.width = windowDimensions->surfaceArea.width * scale,
-			.height = windowDimensions->surfaceArea.height * scale
-		},
-		.activeArea = {
-			.offset.x = windowDimensions->activeArea.offset.x * scale,
-			.offset.y = windowDimensions->activeArea.offset.y * scale,
-			.extent.width = windowDimensions->activeArea.extent.width * scale,
-			.extent.height = windowDimensions->activeArea.extent.height * scale
-		},
-		.cornerRadius = windowDimensions->cornerRadius * scale
+	windowDimensions->surfaceArea = (VkExtent2D) {
+		.width = windowDimensions->surfaceArea.width * scale,
+		.height = windowDimensions->surfaceArea.height * scale
 	};
+
+	windowDimensions->activeArea = (VkRect2D) {
+		.offset.x = windowDimensions->activeArea.offset.x * scale,
+		.offset.y = windowDimensions->activeArea.offset.y * scale,
+		.extent.width = windowDimensions->activeArea.extent.width * scale,
+		.extent.height = windowDimensions->activeArea.extent.height * scale
+	};
+
+	windowDimensions->cornerRadius = windowDimensions->cornerRadius * scale;
 }
 
 void setSurfaceScale(struct display *display)
