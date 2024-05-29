@@ -10,5 +10,6 @@ int asprintf(char **strp, const char *fmt, ...);
 int vasprintf(char **strp, const char *fmt, va_list ap);
 long readFileToString(char *path, char **bytes);
 VkExtent2D getWindowExtent(void *platformWindow);
+float getWindowScale(void *platformWindow);
 
 #endif /* MODELER_UTILS_H */

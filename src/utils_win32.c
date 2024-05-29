@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <windowsx.h>
 
 #include "modeler_win32.h"
 #include "utils.h"
@@ -17,3 +18,12 @@ VkExtent2D getWindowExtent(void *platformWindow)
 
 	return windowExtent;
 };
+
+float getWindowScale(void *platformWindow)
+{
+	typedef UINT (WINAPI *PFN_GetDpiForWindow)(HWND hwnd);
+	PFN_GetDpiForWindow _GetDpiForWindow = (PFN_GetDpiForWindow) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetDpiForWindow");
+	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
+	unsigned int dpi = _GetDpiForWindow(hWnd);
+	return dpi / 96.0f;
+}

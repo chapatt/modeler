@@ -10,6 +10,7 @@
 #include "modeler.h"
 #include "queue.h"
 #include "input_event.h"
+#include "utils.h"
 
 #include "modeler_win32.h"
 
@@ -23,7 +24,7 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT hitTest(HWND hWnd, int x, int y);
 static bool isMaximized(HWND hWnd);
-static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, int scale, HINSTANCE hInstance, HWND hWnd);
+static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, HINSTANCE hInstance, HWND hWnd);
 
 static char *error = NULL;
 static pthread_t thread = 0;
@@ -101,9 +102,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 
 static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	typedef UINT (WINAPI *PFN_GetDpiForWindow)(HWND hwnd);
-	PFN_GetDpiForWindow _GetDpiForWindow = (PFN_GetDpiForWindow) GetProcAddress(GetModuleHandle(L"User32.dll"), "GetDpiForWindow");
-
 	Queue *inputQueue = (Queue *) GetWindowLongPtr(hWnd, GWLP_USERDATA);
 	switch (uMsg) {
 	case THREAD_FAILURE_NOTIFICATION_MESSAGE:
@@ -132,6 +130,12 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return 0;
 	case WM_SIZE:
 		if (inputQueue) {
+			HINSTANCE hInstance = GetModuleHandle(NULL);
+			Win32Window window = {
+				.hInstance = hInstance,
+				.hWnd = hWnd
+			};
+			float scale = getWindowScale(&window);
 			uint32_t width = LOWORD(lParam);
 			uint32_t height = HIWORD(lParam);
 			WindowDimensions windowDimensions = {
@@ -146,11 +150,10 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 					},
 					.offset = {0, 0}
 				},
-				.cornerRadius = 0
+				.cornerRadius = 0,
+				.scale = scale
 			};
-			int dpi = _GetDpiForWindow(hWnd);
-			HINSTANCE hInstance = GetModuleHandle(NULL);
-			enqueueResizeEvent(inputQueue, windowDimensions, dpi / 96, hInstance, hWnd);
+			enqueueResizeEvent(inputQueue, windowDimensions, hInstance, hWnd);
 		}
 		return 0;
 	case WM_LBUTTONDOWN:
@@ -348,7 +351,7 @@ static char *getLastErrorString(void) {
 	//LocalFree(messageBuffer);
 }
 
-static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, int scale, HINSTANCE hInstance, HWND hWnd)
+static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, HINSTANCE hInstance, HWND hWnd)
 {
 	Win32Window *window = malloc(sizeof(*window));
 	*window = (Win32Window) {
@@ -358,7 +361,6 @@ static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, 
 	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
 	*resizeInfo = (ResizeInfo) {
 		.windowDimensions = windowDimensions,
-		.scale = scale,
 		.platformWindow = window
 	};
 	enqueueInputEvent(queue, RESIZE, resizeInfo);

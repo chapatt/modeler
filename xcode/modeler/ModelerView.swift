@@ -118,15 +118,16 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             let bounds: CGRect = convertToBacking(layer.bounds)
             let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
             let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
+            let scale = Int32(window?.backingScaleFactor ?? 1);
             let windowDimensions = WindowDimensions(
                 surfaceArea: extent,
                 activeArea: rect,
-                cornerRadius: 0
+                cornerRadius: 0,
+                scale: scale
             )
             let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
-            let scale = Int32(window?.backingScaleFactor ?? 1);
             
-            enqueueResizeEvent(inputQueue, windowDimensions, scale, layerPointer)
+            enqueueResizeEvent(inputQueue, windowDimensions, layerPointer)
         }
     }
     

@@ -47,7 +47,8 @@ pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char 
 			},
 			.offset = {0, 0}
 		},
-		.cornerRadius = 0
+		.cornerRadius = 0,
+		.scale = 1.0f
 	};
 	threadArgs->error = error;
 
@@ -67,7 +68,7 @@ void sendThreadFailureSignal(void *platformWindow)
 	pthread_exit(NULL);
 }
 
-void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, int scale, void *surfaceLayer)
+void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, void *surfaceLayer)
 {
 	MetalWindow *window = malloc(sizeof(*window));
 	*window = (MetalWindow) {
@@ -76,7 +77,6 @@ void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, int sca
 	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
 	*resizeInfo = (ResizeInfo) {
 		.windowDimensions = windowDimensions,
-		.scale = scale,
 		.platformWindow = window
 	};
 	enqueueInputEvent(queue, RESIZE, resizeInfo);

@@ -74,7 +74,6 @@ struct display {
 	struct xdg_toplevel_listener xdgToplevelListener;
 	struct wl_pointer_listener pointerListener;
 	uint32_t pointerSerial;
-	uint32_t scale;
 	WindowDimensions windowDimensions;
 	WindowRegion pointerRegion;
 	VkOffset2D pointerPosition;
@@ -134,7 +133,7 @@ struct wl_output_listener outputListener = {
 
 int main(int argc, char **argv)
 {
-	struct display display = {.scale = 1};
+	struct display display = {};
 	int epollFd;
 	if (pipe(display.threadPipe)) {
 		handleFatalError("Failed to create pipe");
@@ -150,7 +149,8 @@ int main(int argc, char **argv)
 			.extent.width = DEFAULT_ACTIVE_WIDTH,
 			.extent.height = DEFAULT_ACTIVE_HEIGHT
 		},
-		.cornerRadius = CORNER_RADIUS
+		.cornerRadius = CORNER_RADIUS,
+		.scale = 1.0f
 	};
 
 	initializeQueue(&display.inputQueue);
@@ -282,7 +282,7 @@ static void loadCursorTheme(struct display *display)
 	if (display->cursorTheme) {
 		wl_cursor_theme_destroy(display->cursorTheme);
 	}
-	display->cursorTheme = wl_cursor_theme_load(NULL, 24 * display->scale, display->shm);
+	display->cursorTheme = wl_cursor_theme_load(NULL, 24 * display->windowDimensions.scale, display->shm);
 }
 
 static void setCursor(struct display *display, char *name)
@@ -292,10 +292,10 @@ static void setCursor(struct display *display, char *name)
 	struct wl_buffer *cursorBuffer = wl_cursor_image_get_buffer(cursorImage);
 
 	wl_surface_attach(display->cursorSurface, cursorBuffer, 0, 0);
-	wl_surface_set_buffer_scale(display->cursorSurface, display->scale);
+	wl_surface_set_buffer_scale(display->cursorSurface, display->windowDimenions.scale);
 	wl_surface_damage(display->cursorSurface, 0, 0, INT32_MAX, INT32_MAX);
 	wl_surface_commit(display->cursorSurface);
-	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x / display->scale, cursorImage->hotspot_y / display->scale);
+	wl_pointer_set_cursor(display->pointer, display->pointerSerial, display->cursorSurface, cursorImage->hotspot_x / display->windowDimenions.scale, cursorImage->hotspot_y / display->windowDimenions.scale);
 }
 
 static void createWindow(struct display *display)
@@ -491,20 +491,20 @@ void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale)
 void setSurfaceScale(struct display *display)
 {
 	printf("setSurfaceScale\n");
-	uint32_t scale = 1;
+	unsigned int scale = 1;
 	for (size_t i = 0; i < display->activeOutputInfoCount; ++i) {
 		if (display->activeOutputInfos[i]->scale > scale) {
 			scale = display->activeOutputInfos[i]->scale;
 		}
 	}
 
-	if (display->scale == scale) {
+	if (display->windowDimensions.scale == scale) {
 		return;
 	}
 
 	display->pointerRegion = UNKNOWN_REGION;
 
-	display->scale = scale;
+	display->windowDimensions.scale = scale;
 
 	loadCursorTheme(display);
 
@@ -514,7 +514,7 @@ void setSurfaceScale(struct display *display)
 static void enqueueResizeEvent(struct display *display)
 {
 	WindowDimensions windowDimensions = display->windowDimensions;
-	scaleWindowDimensions(&windowDimensions, display->scale);
+	scaleWindowDimensions(&windowDimensions, display->windowDimensions.scale);
 	WaylandWindow *window = malloc(sizeof(*window));
 	*window = (WaylandWindow) {
 		.display = display->display,
@@ -525,7 +525,6 @@ static void enqueueResizeEvent(struct display *display)
 	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
 	*resizeInfo = (ResizeInfo) {
 		.windowDimensions = windowDimensions,
-		.scale = display->scale,
 		.platformWindow = window
 	};
 	enqueueInputEvent(&display->inputQueue, RESIZE, resizeInfo);
