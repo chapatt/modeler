@@ -14,11 +14,11 @@ typedef struct window_dimensions_t {
 	VkExtent2D surfaceArea;
 	VkRect2D activeArea;
 	int cornerRadius;
+	float scale;
 } WindowDimensions;
 
 typedef struct resize_info_t {
 	WindowDimensions windowDimensions;
-	int scale;
 	void *platformWindow;
 } ResizeInfo;
 

@@ -39,6 +39,7 @@ pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, cha
 	}
 
 	VkExtent2D extent = getWindowExtent(window);
+	float scale = getWindowScale(window);
 	if (extent.width == 0 || extent.height == 0) {
 		asprintf(error, "Failed to get window extent");
 		return 0;
@@ -55,7 +56,8 @@ pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, cha
 			},
 			.offset = {0, 0}
 		},
-		.cornerRadius = 0
+		.cornerRadius = 0,
+		.scale = scale
 	};
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {

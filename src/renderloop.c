@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include "imgui/cimgui.h"
 #include "imgui/cimgui_impl_vulkan.h"
@@ -15,19 +16,18 @@
 
 typedef struct font_t {
 	ImFont *font;
-	int scale;
+	float scale;
 } Font;
 
-static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, int scale);
-static ImFont *findFontWithScale(Font *fonts, size_t fontCount, int scale);
-static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, int scale, const char *resourcePath);
+static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale);
+static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
+static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 
 bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	Font *fonts = NULL;
 	size_t fontCount = 0;
 	ImFont *currentFont = NULL;
-	int scale = 1;
 	WindowDimensions windowDimensions = initialWindowDimensions;
 	VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
 	VkRenderPassBeginInfo renderPassBeginInfos[swapchainInfo->imageCount];
@@ -47,7 +47,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 	size_t head = 0;
 	long elapsed = 1;
 
-	rescaleImGui(&fonts, &fontCount, &currentFont, scale, resourcePath);
+	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions.scale, resourcePath);
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
@@ -75,13 +75,12 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				break;
 			case RESIZE:
 				resizeInfo = (ResizeInfo *) data;
+				if (resizeInfo->windowDimensions.scale != windowDimensions.scale) {
+					rescaleImGui(&fonts, &fontCount, &currentFont, resizeInfo->windowDimensions.scale, resourcePath);
+				}
 				windowDimensions = resizeInfo->windowDimensions;
 				if (swapchainInfo->extent.width != windowDimensions.surfaceArea.width || swapchainInfo->extent.height != windowDimensions.surfaceArea.height) {
 					windowResized = true;
-				}
-				if (resizeInfo->scale != scale) {
-					scale = resizeInfo->scale;
-					rescaleImGui(&fonts, &fontCount, &currentFont, scale, resourcePath);
 				}
 				ackResize(resizeInfo);
 				free(resizeInfo->platformWindow);
@@ -188,6 +187,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 		ImGui_Begin("A Window", NULL, 0);
 		ImGui_Text("fps: %ld", 1000000000 / elapsed);
 		ImGui_End();
+		ImGui_ShowDemoWindow(NULL);
 		ImGui_PopFont();
 		ImGui_Render();
 		ImDrawData *drawData = ImGui_GetDrawData();
@@ -275,7 +275,7 @@ cancelMainLoop:
 	return true;
 }
 
-static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, int scale)
+static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale)
 {
 	*fonts = realloc(*fonts, sizeof(**fonts) * ++*fontCount);
 	(*fonts)[*fontCount - 1] = (Font) {
@@ -284,7 +284,7 @@ static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, int scale)
 	};
 }
 
-static ImFont *findFontWithScale(Font *fonts, size_t fontCount, int scale)
+static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale)
 {
 	for (size_t i = 0; i < fontCount; ++i) {
 		if (fonts[i].scale == scale) {
@@ -295,7 +295,7 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, int scale)
 	return NULL;
 }
 
-static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, int scale, const char *resourcePath)
+static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath)
 {
 	if (!(*currentFont = findFontWithScale(*fonts, *fontCount, scale))) {
 		ImGuiIO *io = ImGui_GetIO();
