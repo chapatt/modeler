@@ -115,7 +115,7 @@ static void pointerAxisHandler(void *data, struct wl_pointer *pointer, uint32_t 
 static void scaleWindowDimensions(WindowDimensions *windowDimensions, uint scale);
 static void setSurfaceScale(struct display *display);
 static WindowRegion hitTest(struct display *display, int x, int y);
-static void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce);
+static void hitTestAndSetCursor(struct display *display, int x, int y, bool debounce);
 static int findIndexOfOutputInfoWithGlobalId(struct display *display, uint32_t id);
 static size_t findIndexOfOutputInfoWithOutput(struct display *display, struct wl_output *output);
 static size_t findIndexOfActiveOutputInfoWithOutput(struct display *display, struct wl_output *output);
@@ -678,28 +678,35 @@ static void outputDescriptionHandler(void *data, struct wl_output *output, const
 static void pointerEnterHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y)
 {
 	struct display *display = data;
+	int cursorX = wl_fixed_to_double(x);
+	int cursorY = wl_fixed_to_double(y);
 
 	display->pointerSerial = serial;
-	hitTestAndSetCursor(display, x, y, false);
+	hitTestAndSetCursor(display, cursorX, cursorY, false);
 }
 
 static void pointerLeaveHandler(void *data, struct wl_pointer *pointer, uint32_t serial, struct wl_surface *surface)
 {
+	struct display *display = data;
 
+	enqueueInputEvent(&display->inputQueue, POINTER_LEAVE, NULL);
 }
 
 static void pointerMotionHandler(void *data, struct wl_pointer *pointer, uint32_t time, wl_fixed_t x, wl_fixed_t y)
 {
 	struct display *display = data;
-	hitTestAndSetCursor(display, x, y, true);
-}
-
-static void hitTestAndSetCursor(struct display *display, wl_fixed_t x, wl_fixed_t y, bool debounce)
-{
 	int cursorX = wl_fixed_to_double(x);
 	int cursorY = wl_fixed_to_double(y);
-	display->pointerPosition = (VkOffset2D) {x: cursorX - RESIZE_BORDER, y: cursorY - RESIZE_BORDER};
-	WindowRegion region = hitTest(display, cursorX, cursorY);
+
+	hitTestAndSetCursor(display, cursorX, cursorY, true);
+
+	enqueueInputEventWithPosition(&display->inputQueue, POINTER_MOVE, cursorX, cursorY);
+}
+
+static void hitTestAndSetCursor(struct display *display, int x, int y, bool debounce)
+{
+	display->pointerPosition = (VkOffset2D) {x: x - RESIZE_BORDER, y: y - RESIZE_BORDER};
+	WindowRegion region = hitTest(display, x, y);
 
 	if (debounce && display->pointerRegion == region) {
 		return;
@@ -751,6 +758,13 @@ static void pointerButtonHandler(void *data, struct wl_pointer *pointer, uint32_
 
 	switch (display->pointerRegion) {
 	case CLIENT:
+		if (button == BTN_LEFT) {
+			if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
+				enqueueInputEvent(&display->inputQueue, BUTTON_DOWN, NULL);
+			} else {
+				enqueueInputEvent(&display->inputQueue, BUTTON_UP, NULL);
+			}
+		}
 		break;
 	case CHROME:
 		if (button == BTN_LEFT && state == WL_POINTER_BUTTON_STATE_PRESSED) {
