@@ -15,7 +15,7 @@
 
 static void sendNSNotification(char *message);
 
-pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char *resourcePath, Queue *inputQueue, char **error)
+pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, float scale, const char *resourcePath, Queue *inputQueue, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
@@ -48,7 +48,7 @@ pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, const char 
 			.offset = {0, 0}
 		},
 		.cornerRadius = 0,
-		.scale = 1.0f
+		.scale = scale
 	};
 	threadArgs->error = error;
 

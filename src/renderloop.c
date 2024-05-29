@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -75,6 +76,7 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 				break;
 			case RESIZE:
 				resizeInfo = (ResizeInfo *) data;
+				printf("resize scale: %f\n", resizeInfo->windowDimensions.scale);
 				if (resizeInfo->windowDimensions.scale != windowDimensions.scale) {
 					rescaleImGui(&fonts, &fontCount, &currentFont, resizeInfo->windowDimensions.scale, resourcePath);
 				}

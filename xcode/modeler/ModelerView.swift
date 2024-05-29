@@ -42,11 +42,12 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         let bounds: CGRect = convertToBacking(layer.bounds)
         let width = Int32(bounds.size.width)
         let height = Int32(bounds.size.height)
+        let scale = Float(window?.backingScaleFactor ?? 1);
         
         let resourcePath = Bundle.main.resourcePath!
 
         resourcePath.withCString { resourcePathCString in
-            thread = initVulkanMetal(layerPointer, width, height, resourcePathCString, inputQueue, errorPointerPointer)
+            thread = initVulkanMetal(layerPointer, width, height, scale, resourcePathCString, inputQueue, errorPointerPointer)
             
             if (thread == nil) {
                 if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
@@ -118,7 +119,7 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
             let bounds: CGRect = convertToBacking(layer.bounds)
             let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
             let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
-            let scale = Int32(window?.backingScaleFactor ?? 1);
+            let scale = Float(window?.backingScaleFactor ?? 1);
             let windowDimensions = WindowDimensions(
                 surfaceArea: extent,
                 activeArea: rect,
