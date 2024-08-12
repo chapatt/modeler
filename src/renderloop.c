@@ -297,6 +297,7 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale)
 
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath)
 {
+#ifdef ENABLE_IMGUI
 	if (!(*currentFont = findFontWithScale(*fonts, *fontCount, scale))) {
 		ImGuiIO *io = ImGui_GetIO();
 		char *fontPath;
@@ -307,4 +308,5 @@ static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, 
 		cImGui_ImplVulkan_CreateFontsTexture();
 		*currentFont = font;
 	}
+#endif /* ENABLE_IMGUI */
 }
