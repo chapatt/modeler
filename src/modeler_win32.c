@@ -10,8 +10,6 @@
 
 #include "modeler_win32.h"
 
-static void imVkCheck(VkResult result);
-
 pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, char **error)
 {
 	pthread_t thread;

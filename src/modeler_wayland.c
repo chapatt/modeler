@@ -12,8 +12,6 @@
 
 #include "modeler_wayland.h"
 
-static void imVkCheck(VkResult result);
-
 pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface *waylandSurface, struct xdg_surface *xdgSurface, WindowDimensions windowDimensions, Queue *inputQueue, int fd, char **error)
 {
 	pthread_t thread;
