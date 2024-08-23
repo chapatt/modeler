@@ -23,7 +23,7 @@ static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale)
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 
-bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, ImGui_ImplVulkan_InitInfo imVulkanInitInfo, SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	Font *fonts = NULL;
 	size_t fontCount = 0;
