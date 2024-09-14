@@ -68,6 +68,16 @@ void sendThreadFailureSignal(void *platformWindow)
 	pthread_exit(NULL);
 }
 
+void sendFullscreenSignal(void *platformWindow)
+{
+	sendNSNotification(FULLSCREEN_NOTIFICATION_NAME);
+}
+
+void sendExitFullscreenSignal(void *platformWindow)
+{
+	sendNSNotification(EXIT_FULLSCREEN_NOTIFICATION_NAME);
+}
+
 void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, void *surfaceLayer)
 {
 	MetalWindow *window = malloc(sizeof(*window));

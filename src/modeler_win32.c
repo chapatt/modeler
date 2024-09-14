@@ -55,7 +55,8 @@ pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, cha
 			.offset = {0, 0}
 		},
 		.cornerRadius = 0,
-		.scale = scale
+		.scale = scale,
+		.fullscreen = false
 	};
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
@@ -75,6 +76,18 @@ void sendThreadFailureSignal(void *platformWindow)
 	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
 	PostMessageW(hWnd, THREAD_FAILURE_NOTIFICATION_MESSAGE, 0, 0);
 	pthread_exit(NULL);
+}
+
+void sendFullscreenSignal(void *platformWindow)
+{
+	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
+	PostMessageW(hWnd, FULLSCREEN_NOTIFICATION_MESSAGE, 0, 0);
+}
+
+void sendExitFullscreenSignal(void *platformWindow)
+{
+	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
+	PostMessageW(hWnd, EXIT_FULLSCREEN_NOTIFICATION_MESSAGE, 0, 0);
 }
 
 void ackResize(ResizeInfo *resizeInfo)

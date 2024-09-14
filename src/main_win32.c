@@ -25,9 +25,13 @@ static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT hitTest(HWND hWnd, int x, int y);
 static bool isMaximized(HWND hWnd);
 static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, HINSTANCE hInstance, HWND hWnd);
+static void setFullscreen(HWND hWnd);
+static void exitFullscreen(HWND hWnd);
 
 static char *error = NULL;
 static pthread_t thread = 0;
+static DWORD initialDwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
+static WINDOWPLACEMENT lastWindowPlacement = {sizeof(lastWindowPlacement)};
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -67,7 +71,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		WS_EX_APPWINDOW,
 		CLASS_NAME,
 		L"Modeler",
-		WS_OVERLAPPEDWINDOW,
+		initialDwStyle,
 		CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		NULL,
 		NULL,
@@ -75,12 +79,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine
 		NULL
 	);
 
+	initialDwStyle = GetWindowLong(hWnd, GWL_STYLE);
+
 	if (!hWnd) {
 		handleFatalError(NULL, "Can't create window.");
-	}
-
-	if (ShowWindow(hWnd, nCmdShow) != 0) {
-		handleFatalError(NULL, "Can't show window.");
 	}
 
 	Queue inputQueue;
@@ -106,6 +108,12 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 	switch (uMsg) {
 	case THREAD_FAILURE_NOTIFICATION_MESSAGE:
 		handleFatalError(hWnd, error);
+	case FULLSCREEN_NOTIFICATION_MESSAGE:
+		setFullscreen(hWnd);
+		return 0;
+	case EXIT_FULLSCREEN_NOTIFICATION_MESSAGE:
+		exitFullscreen(hWnd);
+		return 0;
 	case WM_CLOSE:
 		terminateVulkan(inputQueue, thread);
 		DestroyWindow(hWnd);
@@ -364,4 +372,20 @@ static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, 
 		.platformWindow = window
 	};
 	enqueueInputEvent(queue, RESIZE, resizeInfo);
+}
+
+static void setFullscreen(HWND hWnd)
+{
+	MONITORINFO mi = {sizeof(mi)};
+	if (GetWindowPlacement(hWnd, &lastWindowPlacement) && GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY), &mi)) {
+		SetWindowLong(hWnd, GWL_STYLE, initialDwStyle & ~WS_OVERLAPPEDWINDOW);
+		SetWindowPos(hWnd, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top, SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+	}
+}
+
+static void exitFullscreen(HWND hWnd)
+{
+	SetWindowLong(hWnd, GWL_STYLE, initialDwStyle);
+	SetWindowPlacement(hWnd, &lastWindowPlacement);
+	SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
 }

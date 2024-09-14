@@ -15,6 +15,7 @@ typedef struct window_dimensions_t {
 	VkRect2D activeArea;
 	int cornerRadius;
 	float scale;
+	bool fullscreen;
 } WindowDimensions;
 
 typedef struct resize_info_t {
@@ -56,6 +57,8 @@ typedef struct swapchain_create_info_t {
 
 void *threadProc(void *arg);
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error);
+void sendFullscreenSignal(void *platformWindow);
+void sendExitFullscreenSignal(void *platformWindow);
 void sendThreadFailureSignal(void *platformWindow);
 void terminateVulkan(Queue *inputQueue, pthread_t thread);
 void ackResize(ResizeInfo *resizeInfo);

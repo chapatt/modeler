@@ -8,6 +8,8 @@
 #include "input_event.h"
 
 #define THREAD_FAILURE_NOTIFICATION_NAME "THREAD_FAILURE"
+#define FULLSCREEN_NOTIFICATION_NAME "FULLSCREEN"
+#define EXIT_FULLSCREEN_NOTIFICATION_NAME "EXIT_FULLSCREEN"
 
 typedef struct metal_window_t {
 	void *surfaceLayer;

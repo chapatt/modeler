@@ -8,6 +8,8 @@
 #include "queue.h"
 
 #define THREAD_FAILURE_NOTIFICATION_MESSAGE (WM_USER + 0)
+#define FULLSCREEN_NOTIFICATION_MESSAGE (WM_USER + 1)
+#define EXIT_FULLSCREEN_NOTIFICATION_MESSAGE (WM_USER + 2)
 
 typedef struct win32_window_t {
 	HINSTANCE hInstance;

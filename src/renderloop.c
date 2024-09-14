@@ -23,7 +23,7 @@ static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale)
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 
-bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	Font *fonts = NULL;
 	size_t fontCount = 0;
@@ -186,6 +186,12 @@ bool draw(VkDevice device, WindowDimensions initialWindowDimensions, VkDescripto
 		ImGui_PushFont(currentFont);
 		ImGui_Begin("A Window", NULL, 0);
 		ImGui_Text("fps: %ld", 1000000000 / elapsed);
+		if (ImGui_Button("Fullscreen")) {
+			sendFullscreenSignal(platformWindow);
+		}
+		if (ImGui_Button("Exit Fullscreen")) {
+			sendExitFullscreenSignal(platformWindow);
+		}
 		ImGui_End();
 		ImGui_ShowDemoWindow(NULL);
 		ImGui_PopFont();

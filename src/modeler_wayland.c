@@ -54,13 +54,27 @@ pthread_t initVulkanWayland(struct wl_display *waylandDisplay, struct wl_surface
 	return thread;
 }
 
-void sendThreadFailureSignal(void *platformWindow)
+static void sendSignal(void *platformWindow, char signal)
 {
 	int fd = ((WaylandWindow *) platformWindow)->fd;
-	char c = 'f';
-	write(fd, &c, 1);
+	write(fd, &signal, 1);
 	close(fd);
 	pthread_exit(NULL);
+}
+
+void sendThreadFailureSignal(void *platformWindow)
+{
+	sendSignal(platformWindow, 'f');
+}
+
+void sendFullscreenSignal(void *platformWindow)
+{
+	sendSignal(platformWindow, 'g');
+}
+
+void sendExitFullscreenSignal(void *platformWindow)
+{
+	sendSignal(platformWindow, 'h');
 }
 
 void ackResize(ResizeInfo *resizeInfo)

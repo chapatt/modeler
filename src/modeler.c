@@ -269,7 +269,7 @@ void *threadProc(void *arg)
 	size_t pipelineCount = 1;
 	VkDescriptorSet **drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
-	if (!draw(device, windowDimensions, drawDescriptorSets, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, error)) {
+	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
