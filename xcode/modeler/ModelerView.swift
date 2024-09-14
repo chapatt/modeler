@@ -20,6 +20,10 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleErrorNotification), name: Notification.Name("THREAD_FAILURE"), object: nil)
         
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleFullscreenNotification), name: Notification.Name("FULLSCREEN"), object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleExitFullscreenNotification), name: Notification.Name("EXIT_FULLSCREEN"), object: nil)
+        
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleFrameDidChange), name: NSView.frameDidChangeNotification, object: nil)
     }
     
@@ -113,6 +117,22 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         }
     }
     
+    @objc func handleFullscreenNotification(notification: NSNotification) {
+        if !(self.window?.styleMask.contains(.fullScreen) ?? false) {
+            DispatchQueue.main.async {
+                self.window?.toggleFullScreen(self)
+            }
+        }
+    }
+    
+    @objc func handleExitFullscreenNotification(notification: NSNotification) {
+        if (self.window?.styleMask.contains(.fullScreen) ?? false) {
+            DispatchQueue.main.async {
+                self.window?.toggleFullScreen(self)
+            }
+        }
+    }
+    
     @objc func handleFrameDidChange(object: NSView) {
         print("extentChange")
         if let layer = self.layer {
@@ -124,7 +144,8 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
                 surfaceArea: extent,
                 activeArea: rect,
                 cornerRadius: 0,
-                scale: scale
+                scale: scale,
+                fullscreen: false
             )
             let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
             
