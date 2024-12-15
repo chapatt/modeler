@@ -102,7 +102,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 #endif /* ENABLE_IMGUI */
 
 #if DRAW_WINDOW_DECORATION
-	VkAttachmentDescription secondAttachmentDescription = {
+	VkAttachmentDescription windowDecorationAttachmentDescription = {
 		.flags = 0,
 		.format = swapchainInfo.surfaceFormat.format,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
@@ -114,30 +114,30 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 	};
 
-	VkAttachmentReference secondAttachmentInputReference = {
+	VkAttachmentReference windowDecorationAttachmentInputReference = {
 		.attachment = 0,
 		.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
-	VkAttachmentReference secondAttachmentReference = {
+	VkAttachmentReference windowDecorationAttachmentReference = {
 		.attachment = 1,
 		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 	};
 
-	VkSubpassDescription secondSubpassDescription = {
+	VkSubpassDescription windowDecorationSubpassDescription = {
 		.flags = 0,
 		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
 		.inputAttachmentCount = 1,
-		.pInputAttachments = &secondAttachmentInputReference,
+		.pInputAttachments = &windowDecorationAttachmentInputReference,
 		.colorAttachmentCount = 1,
-		.pColorAttachments = &secondAttachmentReference,
+		.pColorAttachments = &windowDecorationAttachmentReference,
 		.pResolveAttachments = NULL,
 		.pDepthStencilAttachment = NULL,
 		.preserveAttachmentCount = 0,
 		.pPreserveAttachments = NULL
 	};
 
-	VkSubpassDependency secondSubpassDependency = {
+	VkSubpassDependency windowDecorationSubpassDependency = {
 #if ENABLE_IMGUI
 		.srcSubpass = 1,
 		.dstSubpass = 2,
@@ -153,13 +153,13 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 	};
 
 #if ENABLE_IMGUI
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, imAttachmentDescription, secondAttachmentDescription};
-	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, secondSubpassDescription};
-	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, secondSubpassDependency};
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, imAttachmentDescription, windowDecorationAttachmentDescription};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, windowDecorationSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, windowDecorationSubpassDependency};
 #else /* ENABLE_IMGUI */
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, secondAttachmentDescription};
-	VkSubpassDescription subpassDescriptions[] = {subpassDescription, secondSubpassDescription};
-	VkSubpassDependency subpassDependencies[] = {subpassDependency, secondSubpassDependency};
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, windowDecorationAttachmentDescription};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, windowDecorationSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, windowDecorationSubpassDependency};
 #endif /* ENABLE_IMGUI */
 #else /* DRAW_WINDOW_DECORATION */
 #if ENABLE_IMGUI
