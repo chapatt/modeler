@@ -232,7 +232,7 @@ void *threadProc(void *arg)
 		.surface = surface,
 		.surfaceCharacteristics = &surfaceCharacteristics,
 		.queueInfo = queueInfo,
-		.renderPass = renderPass,
+		.renderPass = &renderPass,
 		.swapchainInfo = &swapchainInfo,
 		.imageViews = &imageViews,
 		.framebuffers = &framebuffers,
@@ -269,7 +269,7 @@ void *threadProc(void *arg)
 	size_t pipelineCount = 1;
 	VkDescriptorSet **drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
-	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, error)) {
+	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -345,6 +345,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
+	destroyRenderPass(swapchainCreateInfo.device, *swapchainCreateInfo.renderPass);
 #ifdef DRAW_WINDOW_DECORATION
 	for (size_t i = 0; i < swapchainCreateInfo.offscreenImageCount; ++i) {
 		destroyDescriptorSetLayout(swapchainCreateInfo.device, (*swapchainCreateInfo.imageDescriptorSetLayouts)[i]);
@@ -396,6 +397,10 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 	createDescriptorSets(swapchainCreateInfo.device, createDescriptorSetInfo, swapchainCreateInfo.descriptorPool, swapchainCreateInfo.imageDescriptorSets, swapchainCreateInfo.imageDescriptorSetLayouts, swapchainCreateInfo.bufferDescriptorSets, swapchainCreateInfo.bufferDescriptorSetLayouts, error);
 #endif /* DRAW_WINDOW_DECORATION */
 
+	if (!createRenderPass(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, swapchainCreateInfo.renderPass, error)) {
+		return false;
+	}
+
 	*swapchainCreateInfo.framebuffers = malloc(sizeof(**swapchainCreateInfo.framebuffers) * swapchainCreateInfo.swapchainInfo->imageCount);
 	for (uint32_t i = 0; i < swapchainCreateInfo.swapchainInfo->imageCount; ++i) {
 #ifdef DRAW_WINDOW_DECORATION
@@ -406,7 +411,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		uint32_t attachmentCount = 1;
 #endif /* DRAW_WINDOW_DECORATION */
 
-		if (!createFramebuffer(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, attachments, attachmentCount, swapchainCreateInfo.renderPass, *swapchainCreateInfo.framebuffers + i, error)) {
+		if (!createFramebuffer(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, attachments, attachmentCount, *swapchainCreateInfo.renderPass, *swapchainCreateInfo.framebuffers + i, error)) {
 			return false;
 		}
 	}

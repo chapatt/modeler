@@ -23,7 +23,7 @@ static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale)
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	Font *fonts = NULL;
 	size_t fontCount = 0;
@@ -128,7 +128,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		};
 		renderPassBeginInfos[imageIndex].sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		renderPassBeginInfos[imageIndex].pNext = NULL;
-		renderPassBeginInfos[imageIndex].renderPass = renderPass;
+		renderPassBeginInfos[imageIndex].renderPass = *renderPass;
 		renderPassBeginInfos[imageIndex].framebuffer = (*framebuffers)[imageIndex];
 		renderPassBeginInfos[imageIndex].renderArea = renderArea;
 		renderPassBeginInfos[imageIndex].clearValueCount = 2;
@@ -230,7 +230,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[1], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(secondPushConstants), &secondPushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
-#endif
+#endif /* DRAW_WINDOW_DECORATION */
 
 		vkCmdEndRenderPass((*commandBuffers)[imageIndex]);
 		vkEndCommandBuffer((*commandBuffers)[imageIndex]);

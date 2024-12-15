@@ -40,7 +40,7 @@ typedef struct swapchain_create_info_t {
 	VkSurfaceKHR surface;
 	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics;
 	QueueInfo queueInfo;
-	VkRenderPass renderPass;
+	VkRenderPass *renderPass;
 	SwapchainInfo *swapchainInfo;
 	VkImage *offscreenImage;
 	uint32_t offscreenImageCount;
