@@ -10,7 +10,9 @@ Functionality is nearly feature-complete. The following major tasks remain:
 - [x] Handle wayland tiling/maximize hints (`stages` argument from `xdg_toplevel::configure` event)
 - [ ] Fullscreen mode
 	- [ ] Attempt to acquire exclusive fullscreen access if possible (`VK_EXT_full_screen_exclusive` extension)
-	- [ ] Disable window border/shadow renderpass on wayland when transitioning to fullscreen (`DRAW_WINDOW_DECORATION` conditionals)
+	- [ ] Disable window border/shadow renderpass on wayland when transitioning to fullscreen
+		- `DRAW_WINDOW_DECORATION` conditionals
+		- move from subpass to genuine renderpass)
 
 Nice-to-haves:
 - [ ] Get system cursor theme on wayland
