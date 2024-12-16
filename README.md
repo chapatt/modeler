@@ -12,7 +12,7 @@ Functionality is nearly feature-complete. The following major tasks remain:
 	- [ ] Attempt to acquire exclusive fullscreen access if possible (`VK_EXT_full_screen_exclusive` extension)
 	- [ ] Disable window border/shadow renderpass on wayland when transitioning to fullscreen
 		- `DRAW_WINDOW_DECORATION` conditionals
-		- move from subpass to genuine renderpass)
+		- Move from subpass to genuine renderpass
 
 Nice-to-haves:
 - [ ] Get system cursor theme on wayland
@@ -38,6 +38,11 @@ builds the binary on Linux (`modeler`) and Windows (`modeler.exe`), and a static
 To enable debugging symbols, external SPIR-V files, and dynamic libraries, set the `DEBUG` environment variable
 ```shell
 make DEBUG=true
+```
+
+To enable imgui, set the `ENABLE_IMGUI` environment variable
+```shell
+make ENABLE_IMGUI=true
 ```
 
 ## Linux
