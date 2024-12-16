@@ -6,7 +6,7 @@
 
 #include "pipeline.h"
 
-bool createPipeline(CreatePipelineInfo createPipelineInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
+bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
 {
 	VkResult result;
 
@@ -14,22 +14,22 @@ bool createPipeline(CreatePipelineInfo createPipelineInfo, VkPipelineLayout *pip
 		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.codeSize = createPipelineInfo.vertexShaderSize,
-		.pCode = (const uint32_t *) createPipelineInfo.vertexShaderBytes
+		.codeSize = pipelineCreateInfo.vertexShaderSize,
+		.pCode = (const uint32_t *) pipelineCreateInfo.vertexShaderBytes
 	};
 
 	VkShaderModuleCreateInfo fragmentShaderModuleCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.codeSize = createPipelineInfo.fragmentShaderSize,
-		.pCode = (const uint32_t *) createPipelineInfo.fragmentShaderBytes
+		.codeSize = pipelineCreateInfo.fragmentShaderSize,
+		.pCode = (const uint32_t *) pipelineCreateInfo.fragmentShaderBytes
 	};
 
 	VkShaderModule vertexShaderModule;
 	VkShaderModule fragmentShaderModule;
-	vkCreateShaderModule(createPipelineInfo.device, &vertexShaderModuleCreateInfo, NULL, &vertexShaderModule);
-	vkCreateShaderModule(createPipelineInfo.device, &fragmentShaderModuleCreateInfo, NULL, &fragmentShaderModule);
+	vkCreateShaderModule(pipelineCreateInfo.device, &vertexShaderModuleCreateInfo, NULL, &vertexShaderModule);
+	vkCreateShaderModule(pipelineCreateInfo.device, &fragmentShaderModuleCreateInfo, NULL, &fragmentShaderModule);
 
 	VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -77,8 +77,8 @@ bool createPipeline(CreatePipelineInfo createPipelineInfo, VkPipelineLayout *pip
 	VkViewport viewport = {
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = createPipelineInfo.extent.width,
-		.height = createPipelineInfo.extent.height,
+		.width = pipelineCreateInfo.extent.width,
+		.height = pipelineCreateInfo.extent.height,
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f
 	};
@@ -90,7 +90,7 @@ bool createPipeline(CreatePipelineInfo createPipelineInfo, VkPipelineLayout *pip
 
 	VkRect2D scissor = {
 		.offset = scissorOffset,
-		.extent = createPipelineInfo.extent
+		.extent = pipelineCreateInfo.extent
 	};
 
 	VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {
@@ -165,13 +165,13 @@ bool createPipeline(CreatePipelineInfo createPipelineInfo, VkPipelineLayout *pip
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.setLayoutCount = createPipelineInfo.descriptorSetLayoutCount,
-		.pSetLayouts = createPipelineInfo.descriptorSetLayouts,
+		.setLayoutCount = pipelineCreateInfo.descriptorSetLayoutCount,
+		.pSetLayouts = pipelineCreateInfo.descriptorSetLayouts,
 		.pushConstantRangeCount = 1,
 		.pPushConstantRanges = &pushConstantRange
 	};
 
-	if ((result = vkCreatePipelineLayout(createPipelineInfo.device, &pipelineLayoutCreateInfo, NULL, pipelineLayout)) != VK_SUCCESS) {
+	if ((result = vkCreatePipelineLayout(pipelineCreateInfo.device, &pipelineLayoutCreateInfo, NULL, pipelineLayout)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create pipeline layout: %s", string_VkResult(result));
 		return false;
 	}
@@ -204,19 +204,19 @@ bool createPipeline(CreatePipelineInfo createPipelineInfo, VkPipelineLayout *pip
 		.pColorBlendState = &colorBlendStateCreateInfo,
 		.pDynamicState = &pipelineDynamicStateCreateInfo,
 		.layout = *pipelineLayout,
-		.renderPass = createPipelineInfo.renderPass,
-		.subpass = createPipelineInfo.subpassIndex,
+		.renderPass = pipelineCreateInfo.renderPass,
+		.subpass = pipelineCreateInfo.subpassIndex,
 		.basePipelineHandle = VK_NULL_HANDLE,
 		.basePipelineIndex = -1
 	};
 
-	if ((result = vkCreateGraphicsPipelines(createPipelineInfo.device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, NULL, pipeline)) != VK_SUCCESS) {
+	if ((result = vkCreateGraphicsPipelines(pipelineCreateInfo.device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, NULL, pipeline)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create pipeline: %s", string_VkResult(result));
 		return false;
 	}
 
-	vkDestroyShaderModule(createPipelineInfo.device, fragmentShaderModule, NULL);
-	vkDestroyShaderModule(createPipelineInfo.device, vertexShaderModule, NULL);
+	vkDestroyShaderModule(pipelineCreateInfo.device, fragmentShaderModule, NULL);
+	vkDestroyShaderModule(pipelineCreateInfo.device, vertexShaderModule, NULL);
 
 	return true;
 }

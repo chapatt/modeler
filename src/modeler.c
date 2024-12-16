@@ -188,7 +188,7 @@ void *threadProc(void *arg)
 
 	VkPipelineLayout pipelineLayoutTriangle;
 	VkPipeline pipelineTriangle;
-	CreatePipelineInfo createPipelineInfoTriangle = {
+	PipelineCreateInfo pipelineCreateInfoTriangle = {
 		.device = device,
 		.renderPass = renderPass,
 		.subpassIndex = 0,
@@ -200,7 +200,7 @@ void *threadProc(void *arg)
 		.descriptorSetLayouts = NULL,
 		.descriptorSetLayoutCount = 0,
 	};
-	bool pipelineCreateSuccessTriangle = createPipeline(createPipelineInfoTriangle, &pipelineLayoutTriangle, &pipelineTriangle, error);
+	bool pipelineCreateSuccessTriangle = createPipeline(pipelineCreateInfoTriangle, &pipelineLayoutTriangle, &pipelineTriangle, error);
 #ifndef EMBED_SHADERS
 	free(triangleFragShaderBytes);
 	free(triangleVertShaderBytes);
@@ -212,7 +212,7 @@ void *threadProc(void *arg)
 #ifdef DRAW_WINDOW_DECORATION
 	VkPipelineLayout pipelineLayoutWindowDecoration;
 	VkPipeline pipelineWindowDecoration;
-	CreatePipelineInfo createPipelineInfoWindowDecoration = {
+	PipelineCreateInfo pipelineCreateInfoWindowDecoration = {
 		.device = device,
 		.renderPass = renderPass,
 		.subpassIndex = 2,
@@ -224,7 +224,7 @@ void *threadProc(void *arg)
 		.descriptorSetLayouts = imageDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
 	};
-	bool pipelineCreateSuccessWindowDecoration = createPipeline(createPipelineInfoWindowDecoration, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
+	bool pipelineCreateSuccessWindowDecoration = createPipeline(pipelineCreateInfoWindowDecoration, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
 #ifndef EMBED_SHADERS
 	free(windowBorderFragShaderBytes);
 	free(windowBorderVertShaderBytes);
