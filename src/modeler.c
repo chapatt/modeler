@@ -182,17 +182,36 @@ void *threadProc(void *arg)
 		}
 	};
 
-	const Vertex triangleVertices[] = {
-		{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
-	};
+	float black[3] = {0.0f, 0.0f, 0.0f};
+	float white[3] = {1.0f, 1.0f, 1.0f};
+	Vertex triangleVertices[256];
+	uint16_t triangleIndices[384];
+	for (size_t i = 0; i < 64; ++i) {
+		size_t verticesOffset = i * 4;
+		size_t indicesOffset = i * 6;
+		size_t offsetX = i % 8;
+		size_t offsetY = i / 8;
+		float width = 1.0f / 8.0f;
+		float height = 1.0f / 8.0f;
+		float originX = offsetX * width;
+		float originY = offsetY * height;
+		float *color;
+		color = (offsetY % 2) ?
+			((offsetX % 2) ? black : white) :
+			(offsetX % 2) ? white : black;
 
-	const uint16_t triangleIndices[] = {
-		0, 1,
-		2, 2,
-		3, 0,
-	};
+		triangleVertices[verticesOffset] = (Vertex) {{originX, originY}, {color[0], color[1], color[2]}};
+		triangleVertices[verticesOffset + 1] = (Vertex) {{originX + width, originY}, {color[0], color[1], color[2]}};
+		triangleVertices[verticesOffset + 2] = (Vertex) {{originX + width, originY + height}, {color[0], color[1], color[2]}};
+		triangleVertices[verticesOffset + 3] = (Vertex) {{originX, originY + height}, {color[0], color[1], color[2]}};
+	
+		triangleIndices[indicesOffset] = verticesOffset + 0;
+		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
+		triangleIndices[indicesOffset + 2] = verticesOffset + 2;
+		triangleIndices[indicesOffset + 3] = verticesOffset + 2;
+		triangleIndices[indicesOffset + 4] = verticesOffset + 3;
+		triangleIndices[indicesOffset + 5] = verticesOffset + 0;
+	}
 
 	VkBuffer vertexBuffer;
 	VmaAllocation vertexBufferAllocation;
