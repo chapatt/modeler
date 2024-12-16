@@ -23,7 +23,7 @@ static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale)
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, VkBuffer vertexBuffer, VkBuffer indexBuffer, size_t indexCount, char **error)
 {
 	Font *fonts = NULL;
 	size_t fontCount = 0;
@@ -138,6 +138,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		vkBeginCommandBuffer((*commandBuffers)[imageIndex], &commandBufferBeginInfos[imageIndex]);
 		vkCmdBeginRenderPass((*commandBuffers)[imageIndex], &(renderPassBeginInfos[imageIndex]), VK_SUBPASS_CONTENTS_INLINE);
 
+		VkDeviceSize offsets[] = {0};
+		vkCmdBindVertexBuffers((*commandBuffers)[imageIndex], 0, 1, &vertexBuffer, offsets);
+		vkCmdBindIndexBuffer((*commandBuffers)[imageIndex], indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0]);
 		VkViewport viewport = {
 			.x = windowDimensions.activeArea.offset.x,
@@ -164,6 +167,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[0], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
+		//vkCmdDrawIndexed((*commandBuffers)[imageIndex], (uint32_t) indexCount, 1, 0, 0, 0);
 
 #ifdef ENABLE_IMGUI
 		vkCmdNextSubpass((*commandBuffers)[imageIndex], VK_SUBPASS_CONTENTS_INLINE);
