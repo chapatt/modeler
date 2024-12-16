@@ -25,7 +25,7 @@ bool createImage(VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkF
 	};
 
 	VmaAllocationCreateInfo allocationCreateInfo = {
-		.usage = VMA_MEMORY_USAGE_GPU_ONLY
+		.usage = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
 	};
 
 	VkResult result;
