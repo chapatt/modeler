@@ -182,8 +182,8 @@ void *threadProc(void *arg)
 		}
 	};
 
-	float black[3] = {0.0f, 0.0f, 0.0f};
-	float white[3] = {1.0f, 1.0f, 1.0f};
+	const float black[3] = {0.0f, 0.0f, 0.0f};
+	const float white[3] = {1.0f, 1.0f, 1.0f};
 	Vertex triangleVertices[256];
 	uint16_t triangleIndices[384];
 	for (size_t i = 0; i < 64; ++i) {
@@ -195,8 +195,7 @@ void *threadProc(void *arg)
 		float height = 1.0f / 8.0f;
 		float originX = offsetX * width;
 		float originY = offsetY * height;
-		float *color;
-		color = (offsetY % 2) ?
+		const float *color = (offsetY % 2) ?
 			((offsetX % 2) ? black : white) :
 			(offsetX % 2) ? white : black;
 
