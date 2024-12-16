@@ -10,7 +10,20 @@ typedef struct push_constants_t {
 	float cornerRadius;
 } PushConstants;
 
-bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIndex, const char *vertexShaderBytes, long vertexShaderSize, const char *fragmentShaderBytes, long fragmentShaderSize, VkExtent2D extent, VkDescriptorSetLayout *descriptorSetLayouts, uint32_t descriptorSetLayoutCount, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error);
+typedef struct create_pipeline_info_t {
+	VkDevice device;
+	VkRenderPass renderPass;
+	uint32_t subpassIndex;
+	const char *vertexShaderBytes;
+	long vertexShaderSize;
+	const char *fragmentShaderBytes;
+	long fragmentShaderSize;
+	VkExtent2D extent;
+	VkDescriptorSetLayout *descriptorSetLayouts;
+	uint32_t descriptorSetLayoutCount;
+} CreatePipelineInfo;
+
+bool createPipeline(CreatePipelineInfo createPipelineInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error);
 
 void destroyPipelineLayout(VkDevice device, VkPipelineLayout pipelineLayout);
 

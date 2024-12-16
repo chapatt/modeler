@@ -188,7 +188,19 @@ void *threadProc(void *arg)
 
 	VkPipelineLayout pipelineLayoutTriangle;
 	VkPipeline pipelineTriangle;
-	bool pipelineCreateSuccessTriangle = createPipeline(device, renderPass, 0, triangleVertShaderBytes, triangleVertShaderSize, triangleFragShaderBytes, triangleFragShaderSize, swapchainInfo.extent, NULL, 0, &pipelineLayoutTriangle, &pipelineTriangle, error);
+	CreatePipelineInfo createPipelineInfoTriangle = {
+		.device = device,
+		.renderPass = renderPass,
+		.subpassIndex = 0,
+		.vertexShaderBytes = triangleVertShaderBytes,
+		.vertexShaderSize = triangleVertShaderSize,
+		.fragmentShaderBytes = triangleFragShaderBytes,
+		.fragmentShaderSize = triangleFragShaderSize,
+		.extent = swapchainInfo.extent,
+		.descriptorSetLayouts = NULL,
+		.descriptorSetLayoutCount = 0,
+	};
+	bool pipelineCreateSuccessTriangle = createPipeline(createPipelineInfoTriangle, &pipelineLayoutTriangle, &pipelineTriangle, error);
 #ifndef EMBED_SHADERS
 	free(triangleFragShaderBytes);
 	free(triangleVertShaderBytes);
@@ -200,7 +212,19 @@ void *threadProc(void *arg)
 #ifdef DRAW_WINDOW_DECORATION
 	VkPipelineLayout pipelineLayoutWindowDecoration;
 	VkPipeline pipelineWindowDecoration;
-	bool pipelineCreateSuccessWindowDecoration = createPipeline(device, renderPass, 2, windowBorderVertShaderBytes, windowBorderVertShaderSize, windowBorderFragShaderBytes, windowBorderFragShaderSize, swapchainInfo.extent, imageDescriptorSetLayouts, 1, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
+	CreatePipelineInfo createPipelineInfoWindowDecoration = {
+		.device = device,
+		.renderPass = renderPass,
+		.subpassIndex = 2,
+		.vertexShaderBytes = windowBorderVertShaderBytes,
+		.vertexShaderSize = windowBorderVertShaderSize,
+		.fragmentShaderBytes = windowBorderFragShaderBytes,
+		.fragmentShaderSize = windowBorderFragShaderSize,
+		.extent = swapchainInfo.extent,
+		.descriptorSetLayouts = imageDescriptorSetLayouts,
+		.descriptorSetLayoutCount = 1,
+	};
+	bool pipelineCreateSuccessWindowDecoration = createPipeline(createPipelineInfoWindowDecoration, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
 #ifndef EMBED_SHADERS
 	free(windowBorderFragShaderBytes);
 	free(windowBorderVertShaderBytes);

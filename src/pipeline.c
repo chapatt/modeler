@@ -6,7 +6,7 @@
 
 #include "pipeline.h"
 
-bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIndex, const char *vertexShaderBytes, long vertexShaderSize, const char *fragmentShaderBytes, long fragmentShaderSize, VkExtent2D extent, VkDescriptorSetLayout *descriptorSetLayouts, uint32_t descriptorSetLayoutCount, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
+bool createPipeline(CreatePipelineInfo createPipelineInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
 {
 	VkResult result;
 
@@ -14,28 +14,28 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIn
 		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.codeSize = vertexShaderSize,
-		.pCode = (const uint32_t *) vertexShaderBytes
+		.codeSize = createPipelineInfo.vertexShaderSize,
+		.pCode = (const uint32_t *) createPipelineInfo.vertexShaderBytes
 	};
 
 	VkShaderModuleCreateInfo fragmentShaderModuleCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.codeSize = fragmentShaderSize,
-		.pCode = (const uint32_t *) fragmentShaderBytes
+		.codeSize = createPipelineInfo.fragmentShaderSize,
+		.pCode = (const uint32_t *) createPipelineInfo.fragmentShaderBytes
 	};
 
 	VkShaderModule vertexShaderModule;
 	VkShaderModule fragmentShaderModule;
-	vkCreateShaderModule(device, &vertexShaderModuleCreateInfo, NULL, &vertexShaderModule);
-	vkCreateShaderModule(device, &fragmentShaderModuleCreateInfo, NULL, &fragmentShaderModule);
+	vkCreateShaderModule(createPipelineInfo.device, &vertexShaderModuleCreateInfo, NULL, &vertexShaderModule);
+	vkCreateShaderModule(createPipelineInfo.device, &fragmentShaderModuleCreateInfo, NULL, &fragmentShaderModule);
 
 	VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.stage = VK_SHADER_STAGE_VERTEX_BIT,	
+		.stage = VK_SHADER_STAGE_VERTEX_BIT,
 		.module = vertexShaderModule,
 		.pName = "main",
 		.pSpecializationInfo = NULL
@@ -77,8 +77,8 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIn
 	VkViewport viewport = {
 		.x = 0.0f,
 		.y = 0.0f,
-		.width = extent.width,
-		.height = extent.height,
+		.width = createPipelineInfo.extent.width,
+		.height = createPipelineInfo.extent.height,
 		.minDepth = 0.0f,
 		.maxDepth = 1.0f
 	};
@@ -90,7 +90,7 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIn
 
 	VkRect2D scissor = {
 		.offset = scissorOffset,
-		.extent = extent
+		.extent = createPipelineInfo.extent
 	};
 
 	VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {
@@ -165,13 +165,13 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIn
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.setLayoutCount = descriptorSetLayoutCount,
-		.pSetLayouts = descriptorSetLayouts,
+		.setLayoutCount = createPipelineInfo.descriptorSetLayoutCount,
+		.pSetLayouts = createPipelineInfo.descriptorSetLayouts,
 		.pushConstantRangeCount = 1,
 		.pPushConstantRanges = &pushConstantRange
 	};
 
-	if ((result = vkCreatePipelineLayout(device, &pipelineLayoutCreateInfo, NULL, pipelineLayout)) != VK_SUCCESS) {
+	if ((result = vkCreatePipelineLayout(createPipelineInfo.device, &pipelineLayoutCreateInfo, NULL, pipelineLayout)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create pipeline layout: %s", string_VkResult(result));
 		return false;
 	}
@@ -204,19 +204,19 @@ bool createPipeline(VkDevice device, VkRenderPass renderPass, uint32_t subpassIn
 		.pColorBlendState = &colorBlendStateCreateInfo,
 		.pDynamicState = &pipelineDynamicStateCreateInfo,
 		.layout = *pipelineLayout,
-		.renderPass = renderPass,
-		.subpass = subpassIndex,
+		.renderPass = createPipelineInfo.renderPass,
+		.subpass = createPipelineInfo.subpassIndex,
 		.basePipelineHandle = VK_NULL_HANDLE,
 		.basePipelineIndex = -1
 	};
 
-	if ((result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, NULL, pipeline)) != VK_SUCCESS) {
+	if ((result = vkCreateGraphicsPipelines(createPipelineInfo.device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, NULL, pipeline)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create pipeline: %s", string_VkResult(result));
 		return false;
 	}
 
-	vkDestroyShaderModule(device, fragmentShaderModule, NULL);
-	vkDestroyShaderModule(device, vertexShaderModule, NULL);
+	vkDestroyShaderModule(createPipelineInfo.device, fragmentShaderModule, NULL);
+	vkDestroyShaderModule(createPipelineInfo.device, vertexShaderModule, NULL);
 
 	return true;
 }
