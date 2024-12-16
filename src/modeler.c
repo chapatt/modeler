@@ -22,6 +22,7 @@
 #include "command_buffer.h"
 #include "synchronization.h"
 #include "allocator.h"
+#include "buffer.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
@@ -146,6 +147,61 @@ void *threadProc(void *arg)
 		}
 	}
 
+	VkCommandPool commandPool;
+	if (!createCommandPool(device, queueInfo, &commandPool, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
+	VkCommandBuffer *commandBuffers;
+	if (!createCommandBuffers(device, swapchainInfo, commandPool, &commandBuffers, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
+	SynchronizationInfo synchronizationInfo;
+	if (!createSynchronization(device, swapchainInfo, &synchronizationInfo, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
+	VkVertexInputBindingDescription bindingDescription = {
+		.binding = 0,
+		.stride = sizeof(Vertex),
+		.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+	};
+
+	VkVertexInputAttributeDescription attributeDescriptions[] = {
+		{
+			.binding = 0,
+			.location = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(Vertex, pos),
+		}, {
+			.binding = 0,
+			.location = 1,
+			.format = VK_FORMAT_R32G32B32_SFLOAT,
+			.offset = offsetof(Vertex, color),
+		}
+	};
+
+	const Vertex triangleVertices[] = {
+		{{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+		{{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+	};
+
+	const uint16_t triangleIndices[] = {
+		0, 1,
+		2, 2,
+		3, 0,
+	};
+
+	VkBuffer vertexBuffer;
+	VmaAllocation vertexBufferAllocation;
+	VkBuffer indexBuffer;
+	VmaAllocation indexBufferAllocation;
+
+	createVertexBuffer(device, allocator, commandPool, queueInfo.graphicsQueue, &vertexBuffer, &vertexBufferAllocation, triangleVertices, sizeof(triangleVertices) / sizeof(*triangleVertices), error);
+	createIndexBuffer(device, allocator, commandPool, queueInfo.graphicsQueue, &indexBuffer, &indexBufferAllocation, triangleIndices, sizeof(triangleIndices) / sizeof(*triangleIndices), error);
+
 #ifndef EMBED_SHADERS
 	char *triangleVertShaderPath;
 	char *triangleFragShaderPath;
@@ -197,6 +253,10 @@ void *threadProc(void *arg)
 		.fragmentShaderBytes = triangleFragShaderBytes,
 		.fragmentShaderSize = triangleFragShaderSize,
 		.extent = swapchainInfo.extent,
+		.vertexBindingDescriptionCount = 1,
+		.vertexBindingDescriptions = &bindingDescription,
+		.vertexAttributeDescriptionCount = 2,
+		.VertexAttributeDescriptions = attributeDescriptions,
 		.descriptorSetLayouts = NULL,
 		.descriptorSetLayoutCount = 0,
 	};
@@ -221,6 +281,10 @@ void *threadProc(void *arg)
 		.fragmentShaderBytes = windowBorderFragShaderBytes,
 		.fragmentShaderSize = windowBorderFragShaderSize,
 		.extent = swapchainInfo.extent,
+		.vertexBindingDescriptionCount = 0,
+		.vertexBindingDescriptions = NULL,
+		.vertexAttributeDescriptionCount = 0,
+		.VertexAttributeDescriptions = NULL,
 		.descriptorSetLayouts = imageDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
 	};
@@ -233,21 +297,6 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 #endif /* DRAW_WINDOW_DECORATION */
-
-	VkCommandPool commandPool;
-	if (!createCommandPool(device, queueInfo, &commandPool, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
-
-	VkCommandBuffer *commandBuffers;
-	if (!createCommandBuffers(device, swapchainInfo, commandPool, &commandBuffers, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
-
-	SynchronizationInfo synchronizationInfo;
-	if (!createSynchronization(device, swapchainInfo, &synchronizationInfo, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
 
 	SwapchainCreateInfo swapchainCreateInfo = {
 		.device = device,
@@ -293,7 +342,7 @@ void *threadProc(void *arg)
 	size_t pipelineCount = 1;
 	VkDescriptorSet **drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
-	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, error)) {
+	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, vertexBuffer, indexBuffer, sizeof(triangleIndices) / sizeof(*triangleIndices), error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
