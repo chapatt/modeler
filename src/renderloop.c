@@ -166,8 +166,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 			.cornerRadius = windowDimensions.cornerRadius
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[0], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
-		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
-		//vkCmdDrawIndexed((*commandBuffers)[imageIndex], (uint32_t) indexCount, 1, 0, 0, 0);
+		vkCmdDrawIndexed((*commandBuffers)[imageIndex], (uint32_t) indexCount, 1, 0, 0, 0);
 
 #ifdef ENABLE_IMGUI
 		vkCmdNextSubpass((*commandBuffers)[imageIndex], VK_SUBPASS_CONTENTS_INLINE);
