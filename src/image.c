@@ -1,5 +1,3 @@
-#include "vk_mem_alloc.h"
-
 #include "image.h"
 #include "utils.h"
 #include "vulkan_utils.h"
