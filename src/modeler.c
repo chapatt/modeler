@@ -35,8 +35,9 @@
 
 #include "renderloop.h"
 
-bool createChessBoardVertexBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, float aspectRatio, float width, float originX, float originY, VkBuffer *vertexBuffer, VmaAllocation *vertexBufferAllocation, VkBuffer *indexBuffer, VmaAllocation *indexBufferAllocation, char **error)
+bool createChessBoardVertexBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, float aspectRatio, float width, float originX, float originY, VkBuffer *vertexBuffer, VmaAllocation *vertexBufferAllocation, VkBuffer *indexBuffer, VmaAllocation *indexBufferAllocation, size_t *indexCount, char **error)
 {
+	*indexCount = 384;
 	const float black[3] = {0.0f, 0.0f, 0.0f};
 	const float white[3] = {1.0f, 1.0f, 1.0f};
 	Vertex triangleVertices[256];
@@ -229,8 +230,9 @@ void *threadProc(void *arg)
 	VmaAllocation vertexBufferAllocation;
 	VkBuffer indexBuffer;
 	VmaAllocation indexBufferAllocation;
+	size_t indexCount;
 	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
-	if (!createChessBoardVertexBuffer(device, allocator, commandPool, queueInfo.graphicsQueue, aspectRatio, 1.0f, -0.5f, -0.5f, &vertexBuffer, &vertexBufferAllocation, &indexBuffer, &indexBufferAllocation, error)) {
+	if (!createChessBoardVertexBuffer(device, allocator, commandPool, queueInfo.graphicsQueue, aspectRatio, 1.0f, -0.5f, -0.5f, &vertexBuffer, &vertexBufferAllocation, &indexBuffer, &indexBufferAllocation, &indexCount, error)) {
 		asprintf(error, "Failed to create chess board vertex buffer.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
@@ -350,6 +352,7 @@ void *threadProc(void *arg)
 		.surface = surface,
 		.surfaceCharacteristics = &surfaceCharacteristics,
 		.queueInfo = queueInfo,
+		.commandPool = commandPool,
 		.renderPass = &renderPass,
 		.swapchainInfo = &swapchainInfo,
 		.imageViews = &imageViews,
@@ -368,7 +371,12 @@ void *threadProc(void *arg)
 		.offscreenImage = NULL,
 		.offscreenImageCount = 0,
 		.offscreenImageView = NULL,
-		.offscreenImageAllocation = NULL
+		.offscreenImageAllocation = NULL,
+		.vertexBuffer = &vertexBuffer,
+		.vertexBufferAllocation = &vertexBufferAllocation,
+		.indexBuffer = &indexBuffer,
+		.indexBufferAllocation = &indexBufferAllocation,
+		.indexCount = &indexCount,
 #endif /* DRAW_WINDOW_DECORATION */
 	};
 
@@ -376,7 +384,7 @@ void *threadProc(void *arg)
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
 	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
-	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, vertexBuffer, indexBuffer, 384, error)) {
+	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, &vertexBuffer, &indexBuffer, &indexCount, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -447,10 +455,12 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 #endif /* ENABLE_IMGUI */
 }
 
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error)
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error)
 {
 	vkDeviceWaitIdle(swapchainCreateInfo.device);
 
+	destroyBuffer(swapchainCreateInfo.allocator, *swapchainCreateInfo.vertexBuffer, *swapchainCreateInfo.vertexBufferAllocation);
+	destroyBuffer(swapchainCreateInfo.allocator, *swapchainCreateInfo.indexBuffer, *swapchainCreateInfo.indexBufferAllocation);
 	destroyFramebuffers(swapchainCreateInfo.device, *swapchainCreateInfo.framebuffers, swapchainCreateInfo.swapchainInfo->imageCount);
 	destroyRenderPass(swapchainCreateInfo.device, *swapchainCreateInfo.renderPass);
 #ifdef DRAW_WINDOW_DECORATION
@@ -471,7 +481,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		return false;
 	}
 
-	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, *swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, windowExtent, swapchainCreateInfo.swapchainInfo->swapchain, swapchainCreateInfo.swapchainInfo, error)) {
+	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, *swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, windowDimensions.surfaceArea, swapchainCreateInfo.swapchainInfo->swapchain, swapchainCreateInfo.swapchainInfo, error)) {
 		return false;
 	}
 
@@ -521,6 +531,11 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windo
 		if (!createFramebuffer(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, attachments, attachmentCount, *swapchainCreateInfo.renderPass, *swapchainCreateInfo.framebuffers + i, error)) {
 			return false;
 		}
+	}
+
+	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
+	if (!createChessBoardVertexBuffer(swapchainCreateInfo.device, swapchainCreateInfo.allocator, swapchainCreateInfo.commandPool, swapchainCreateInfo.queueInfo.graphicsQueue, aspectRatio, 1.0f, -0.5f, -0.5f, swapchainCreateInfo.vertexBuffer, swapchainCreateInfo.vertexBufferAllocation, swapchainCreateInfo.indexBuffer, swapchainCreateInfo.indexBufferAllocation, swapchainCreateInfo.indexCount, error)) {
+		return false;
 	}
 
 	return true;
