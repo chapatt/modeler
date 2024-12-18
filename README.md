@@ -45,6 +45,11 @@ To enable imgui, set the `ENABLE_IMGUI` environment variable
 make ENABLE_IMGUI=true
 ```
 
+To enable FIFO frame presentation, set the `ENABLE_VSYNC` environment variable. Otherwise mailbox is used. (This variable is misnamed and should be changed.)
+```shell
+make ENABLE_VSYNC=true
+```
+
 ## Linux
 
 ### Build Dependencies

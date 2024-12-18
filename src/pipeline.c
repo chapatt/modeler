@@ -60,10 +60,10 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.vertexBindingDescriptionCount = 0,
-		.pVertexBindingDescriptions = NULL,
-		.vertexAttributeDescriptionCount = 0,
-		.pVertexAttributeDescriptions = NULL
+		.vertexBindingDescriptionCount = pipelineCreateInfo.vertexBindingDescriptionCount,
+		.pVertexBindingDescriptions = pipelineCreateInfo.vertexBindingDescriptions,
+		.vertexAttributeDescriptionCount = pipelineCreateInfo.vertexAttributeDescriptionCount,
+		.pVertexAttributeDescriptions = pipelineCreateInfo.VertexAttributeDescriptions
 	};
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {

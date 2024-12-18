@@ -40,6 +40,7 @@ typedef struct swapchain_create_info_t {
 	VkSurfaceKHR surface;
 	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics;
 	QueueInfo queueInfo;
+	VkCommandPool commandPool;
 	VkRenderPass *renderPass;
 	SwapchainInfo *swapchainInfo;
 	VkImage *offscreenImage;
@@ -53,10 +54,15 @@ typedef struct swapchain_create_info_t {
 	VkDescriptorSetLayout **imageDescriptorSetLayouts;
 	VkDescriptorSet **bufferDescriptorSets;
 	VkDescriptorSetLayout **bufferDescriptorSetLayouts;
+	VkBuffer *vertexBuffer;
+	VmaAllocation *vertexBufferAllocation;
+	VkBuffer *indexBuffer;
+	VmaAllocation *indexBufferAllocation;
+	size_t *indexCount;
 } SwapchainCreateInfo;
 
 void *threadProc(void *arg);
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error);
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error);
 void sendFullscreenSignal(void *platformWindow);
 void sendExitFullscreenSignal(void *platformWindow);
 void sendThreadFailureSignal(void *platformWindow);
