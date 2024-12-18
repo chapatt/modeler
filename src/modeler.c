@@ -35,6 +35,49 @@
 
 #include "renderloop.h"
 
+bool createChessBoardVertexBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, float aspectRatio, float width, float originX, float originY, VkBuffer *vertexBuffer, VmaAllocation *vertexBufferAllocation, VkBuffer *indexBuffer, VmaAllocation *indexBufferAllocation, char **error)
+{
+	const float black[3] = {0.0f, 0.0f, 0.0f};
+	const float white[3] = {1.0f, 1.0f, 1.0f};
+	Vertex triangleVertices[256];
+	uint16_t triangleIndices[384];
+	for (size_t i = 0; i < 64; ++i) {
+		size_t verticesOffset = i * 4;
+		size_t indicesOffset = i * 6;
+		size_t offsetX = i % 8;
+		size_t offsetY = i / 8;
+		float squareWidth = width / 8.0f;
+		float squareHeight = squareWidth * aspectRatio;
+		float squareOriginX = originX + offsetX * squareWidth;
+		float squareOriginY = originY + offsetY * squareHeight;
+		const float *color = (offsetY % 2) ?
+			((offsetX % 2) ? black : white) :
+			(offsetX % 2) ? white : black;
+
+		triangleVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}};
+		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}};
+		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}};
+		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}};
+	
+		triangleIndices[indicesOffset] = verticesOffset + 0;
+		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
+		triangleIndices[indicesOffset + 2] = verticesOffset + 2;
+		triangleIndices[indicesOffset + 3] = verticesOffset + 2;
+		triangleIndices[indicesOffset + 4] = verticesOffset + 3;
+		triangleIndices[indicesOffset + 5] = verticesOffset + 0;
+	}
+
+	if (!createVertexBuffer(device, allocator, commandPool, queue, vertexBuffer, vertexBufferAllocation, triangleVertices, sizeof(triangleVertices) / sizeof(triangleVertices[0]), error)) {
+		return false;
+	}
+
+	if (!createIndexBuffer(device, allocator, commandPool, queue, indexBuffer, indexBufferAllocation, triangleIndices, sizeof(triangleIndices) / sizeof(triangleIndices[0]), error)) {
+		return false;
+	}
+
+	return true;
+}
+
 void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, char **error);
 static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, VkBuffer vertexBuffer, VmaAllocation vertexBufferAllocation, VkBuffer indexBuffer, VmaAllocation indexBufferAllocation);
 static void imVkCheck(VkResult result);
@@ -182,45 +225,13 @@ void *threadProc(void *arg)
 		}
 	};
 
-	const float black[3] = {0.0f, 0.0f, 0.0f};
-	const float white[3] = {1.0f, 1.0f, 1.0f};
-	Vertex triangleVertices[256];
-	uint16_t triangleIndices[384];
-	for (size_t i = 0; i < 64; ++i) {
-		size_t verticesOffset = i * 4;
-		size_t indicesOffset = i * 6;
-		size_t offsetX = i % 8;
-		size_t offsetY = i / 8;
-		float width = 1.0f / 8.0f;
-		float height = 1.0f / 8.0f;
-		float originX = offsetX * width;
-		float originY = offsetY * height;
-		const float *color = (offsetY % 2) ?
-			((offsetX % 2) ? black : white) :
-			(offsetX % 2) ? white : black;
-
-		triangleVertices[verticesOffset] = (Vertex) {{originX, originY}, {color[0], color[1], color[2]}};
-		triangleVertices[verticesOffset + 1] = (Vertex) {{originX + width, originY}, {color[0], color[1], color[2]}};
-		triangleVertices[verticesOffset + 2] = (Vertex) {{originX + width, originY + height}, {color[0], color[1], color[2]}};
-		triangleVertices[verticesOffset + 3] = (Vertex) {{originX, originY + height}, {color[0], color[1], color[2]}};
-	
-		triangleIndices[indicesOffset] = verticesOffset + 0;
-		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
-		triangleIndices[indicesOffset + 2] = verticesOffset + 2;
-		triangleIndices[indicesOffset + 3] = verticesOffset + 2;
-		triangleIndices[indicesOffset + 4] = verticesOffset + 3;
-		triangleIndices[indicesOffset + 5] = verticesOffset + 0;
-	}
-
 	VkBuffer vertexBuffer;
 	VmaAllocation vertexBufferAllocation;
 	VkBuffer indexBuffer;
 	VmaAllocation indexBufferAllocation;
-
-	if (!createVertexBuffer(device, allocator, commandPool, queueInfo.graphicsQueue, &vertexBuffer, &vertexBufferAllocation, triangleVertices, sizeof(triangleVertices) / sizeof(triangleVertices[0]), error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
-	if (!createIndexBuffer(device, allocator, commandPool, queueInfo.graphicsQueue, &indexBuffer, &indexBufferAllocation, triangleIndices, sizeof(triangleIndices) / sizeof(triangleIndices[0]), error)) {
+	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
+	if (!createChessBoardVertexBuffer(device, allocator, commandPool, queueInfo.graphicsQueue, aspectRatio, 1.0f, -0.5f, -0.5f, &vertexBuffer, &vertexBufferAllocation, &indexBuffer, &indexBufferAllocation, error)) {
+		asprintf(error, "Failed to create chess board vertex buffer.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -365,7 +376,7 @@ void *threadProc(void *arg)
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
 	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
-	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, vertexBuffer, indexBuffer, sizeof(triangleIndices) / sizeof(*triangleIndices), error)) {
+	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, vertexBuffer, indexBuffer, 384, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
