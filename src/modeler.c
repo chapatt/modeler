@@ -165,7 +165,7 @@ void *threadProc(void *arg)
 
 	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
 	ChessBoard chessBoard;
-	createChessBoard(&chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, swapchainInfo.extent, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error);
+	createChessBoard(&chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error);
 
 #ifndef EMBED_SHADERS
 #ifdef DRAW_WINDOW_DECORATION

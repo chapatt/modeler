@@ -126,20 +126,20 @@ bool createChessBoardPipeline(ChessBoard self, char **error)
 	};
 
 #ifndef EMBED_SHADERS
-	char *triangleVertShaderPath;
-	char *triangleFragShaderPath;
-	asprintf(&triangleVertShaderPath, "%s/%s", self->resourcePath, "triangle.vert.spv");
-	asprintf(&triangleFragShaderPath, "%s/%s", self->resourcePath, "triangle.frag.spv");
-	char *triangleVertShaderBytes;
-	char *triangleFragShaderBytes;
-	uint32_t triangleVertShaderSize = 0;
-	uint32_t triangleFragShaderSize = 0;
+	char *vertexShaderPath;
+	char *fragmentShaderPath;
+	asprintf(&vertexShaderPath, "%s/%s", self->resourcePath, "triangle.vert.spv");
+	asprintf(&fragmentShaderPath, "%s/%s", self->resourcePath, "triangle.frag.spv");
+	char *vertexShaderBytes;
+	char *fragmentShaderBytes;
+	uint32_t vertexShaderSize = 0;
+	uint32_t fragmentShaderSize = 0;
 
-	if ((triangleVertShaderSize = readFileToString(triangleVertShaderPath, &triangleVertShaderBytes)) == -1) {
+	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
 		asprintf(error, "Failed to open triangle vertex shader for reading.\n");
 		return false;
 	}
-	if ((triangleFragShaderSize = readFileToString(triangleFragShaderPath, &triangleFragShaderBytes)) == -1) {
+	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
 		asprintf(error, "Failed to open triangle fragment shader for reading.\n");
 		return false;
 	}
@@ -149,10 +149,10 @@ bool createChessBoardPipeline(ChessBoard self, char **error)
 		.device = self->device,
 		.renderPass = self->renderPass,
 		.subpassIndex = self->subpass,
-		.vertexShaderBytes = triangleVertShaderBytes,
-		.vertexShaderSize = triangleVertShaderSize,
-		.fragmentShaderBytes = triangleFragShaderBytes,
-		.fragmentShaderSize = triangleFragShaderSize,
+		.vertexShaderBytes = vertexShaderBytes,
+		.vertexShaderSize = vertexShaderSize,
+		.fragmentShaderBytes = fragmentShaderBytes,
+		.fragmentShaderSize = fragmentShaderSize,
 		.vertexBindingDescriptionCount = 1,
 		.vertexBindingDescriptions = &vertexBindingDescription,
 		.vertexAttributeDescriptionCount = 2,
@@ -162,8 +162,8 @@ bool createChessBoardPipeline(ChessBoard self, char **error)
 	};
 	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->pipelineLayout, &self->pipeline, error);
 #ifndef EMBED_SHADERS
-	free(triangleFragShaderBytes);
-	free(triangleVertShaderBytes);
+	free(fragmentShaderBytes);
+	free(vertexShaderBytes);
 #endif /* EMBED_SHADERS */
 	if (!pipelineCreateSuccess) {
 		return false;
