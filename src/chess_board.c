@@ -15,7 +15,6 @@ struct chess_board_t {
 	VkQueue queue;
 	VkRenderPass renderPass;
 	uint32_t subpass;
-	VkExtent2D extent;
 	const char *resourcePath;
 	float aspectRatio;
 	float width;
@@ -32,7 +31,7 @@ struct chess_board_t {
 bool createChessBoardVertexBuffer(ChessBoard self, char **error);
 bool createChessBoardPipeline(ChessBoard self, char **error);
 
-bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkExtent2D extent, const char *resourcePath, float aspectRatio, float width, float originX, float originY, char **error)
+bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float aspectRatio, float width, float originX, float originY, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -44,7 +43,6 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 	self->queue = queue;
 	self->renderPass = renderPass;
 	self->subpass = subpass;
-	self->extent = extent;
 	self->resourcePath = resourcePath;
 	self->aspectRatio = aspectRatio;
 	self->width = width;
