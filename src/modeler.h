@@ -5,23 +5,12 @@
 
 #include "vk_mem_alloc.h"
 
+#include "window.h"
 #include "physical_device.h"
 #include "device.h"
 #include "swapchain.h"
 #include "queue.h"
-
-typedef struct window_dimensions_t {
-	VkExtent2D surfaceArea;
-	VkRect2D activeArea;
-	int cornerRadius;
-	float scale;
-	bool fullscreen;
-} WindowDimensions;
-
-typedef struct resize_info_t {
-	WindowDimensions windowDimensions;
-	void *platformWindow;
-} ResizeInfo;
+#include "chess_board.h"
 
 struct threadArguments {
 	void *platformWindow;
@@ -54,11 +43,7 @@ typedef struct swapchain_create_info_t {
 	VkDescriptorSetLayout **imageDescriptorSetLayouts;
 	VkDescriptorSet **bufferDescriptorSets;
 	VkDescriptorSetLayout **bufferDescriptorSetLayouts;
-	VkBuffer *vertexBuffer;
-	VmaAllocation *vertexBufferAllocation;
-	VkBuffer *indexBuffer;
-	VmaAllocation *indexBufferAllocation;
-	size_t *indexCount;
+	ChessBoard *chessBoard;
 } SwapchainCreateInfo;
 
 void *threadProc(void *arg);
