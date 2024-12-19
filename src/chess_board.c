@@ -8,7 +8,7 @@
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
 
-struct chess_board_component_t {
+struct chess_board_t {
 	VkDevice device;
 	VmaAllocator allocator;
 	VkCommandPool commandPool;
