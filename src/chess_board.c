@@ -85,7 +85,7 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}};
 		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}};
 		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}};
-	
+
 		triangleIndices[indicesOffset] = verticesOffset + 0;
 		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
 		triangleIndices[indicesOffset + 2] = verticesOffset + 2;
@@ -212,7 +212,7 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, WindowDimens
 	};
 	VkRect2D scissor = {
 		.offset = scissorOffset,
-		.extent = self->extent
+		.extent = windowDimensions.activeArea.extent
 	};
 	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);

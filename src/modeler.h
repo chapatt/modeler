@@ -43,7 +43,7 @@ typedef struct swapchain_create_info_t {
 	VkDescriptorSetLayout **imageDescriptorSetLayouts;
 	VkDescriptorSet **bufferDescriptorSets;
 	VkDescriptorSetLayout **bufferDescriptorSetLayouts;
-	ChessBoard *chessBoard;
+	ChessBoard chessBoard;
 } SwapchainCreateInfo;
 
 void *threadProc(void *arg);

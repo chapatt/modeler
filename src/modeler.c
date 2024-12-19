@@ -164,8 +164,8 @@ void *threadProc(void *arg)
 	}
 
 	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
-	ChessBoard *chessBoard;
-	createChessBoard(chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, swapchainInfo.extent, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error);
+	ChessBoard chessBoard;
+	createChessBoard(&chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, swapchainInfo.extent, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error);
 
 #ifndef EMBED_SHADERS
 #ifdef DRAW_WINDOW_DECORATION
@@ -265,7 +265,7 @@ void *threadProc(void *arg)
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
 	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
-	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, *chessBoard, error)) {
+	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, chessBoard, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -281,7 +281,7 @@ void *threadProc(void *arg)
 	VkImageView *offscreenImageViews = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
 
-	cleanupVulkan(instance, debugCallback, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayouts, pipelines, pipelineCount, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo, descriptorPool, imageDescriptorSets, imageDescriptorSetLayouts, *chessBoard);
+	cleanupVulkan(instance, debugCallback, surface, &characteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayouts, pipelines, pipelineCount, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, swapchainInfo.imageCount, synchronizationInfo, descriptorPool, imageDescriptorSets, imageDescriptorSetLayouts, chessBoard);
 
 	return NULL;
 }
@@ -412,7 +412,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions
 		}
 	}
 	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
-	if (!updateChessBoard(*swapchainCreateInfo.chessBoard, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
+	if (!updateChessBoard(swapchainCreateInfo.chessBoard, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
 		return false;
 	}
 
