@@ -200,7 +200,6 @@ void *threadProc(void *arg)
 		.vertexShaderSize = windowBorderVertShaderSize,
 		.fragmentShaderBytes = windowBorderFragShaderBytes,
 		.fragmentShaderSize = windowBorderFragShaderSize,
-		.extent = swapchainInfo.extent,
 		.vertexBindingDescriptionCount = 0,
 		.vertexBindingDescriptions = NULL,
 		.vertexAttributeDescriptionCount = 0,
