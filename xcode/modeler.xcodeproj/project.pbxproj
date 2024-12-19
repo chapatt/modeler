@@ -267,7 +267,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C ../ modeler.a ENABLE_IMGUI=true\nmake -C ../ imgui.a ENABLE_IMGUI=true\n";
+			shellScript = "make -C ../ modeler.a ENABLE_IMGUI=true DEBUG=true\nmake -C ../ imgui.a ENABLE_IMGUI=true DEBUG=true\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
