@@ -74,33 +74,14 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.primitiveRestartEnable = VK_FALSE
 	};
 
-	VkViewport viewport = {
-		.x = 0.0f,
-		.y = 0.0f,
-		.width = pipelineCreateInfo.extent.width,
-		.height = pipelineCreateInfo.extent.height,
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f
-	};
-
-	VkOffset2D scissorOffset = {
-		.x = 0,
-		.y = 0
-	};
-
-	VkRect2D scissor = {
-		.offset = scissorOffset,
-		.extent = pipelineCreateInfo.extent
-	};
-
 	VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.viewportCount = 1,
-		.pViewports = &viewport,
-		.scissorCount = 1,
-		.pScissors = &scissor
+		.viewportCount = 0,
+		.pViewports = NULL,
+		.scissorCount = 0,
+		.pScissors = NULL
 	};
 
 	VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = {

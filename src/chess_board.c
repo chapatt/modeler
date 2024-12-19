@@ -155,7 +155,6 @@ bool createChessBoardPipeline(ChessBoard self, char **error)
 		.vertexShaderSize = triangleVertShaderSize,
 		.fragmentShaderBytes = triangleFragShaderBytes,
 		.fragmentShaderSize = triangleFragShaderSize,
-		.extent = self->extent,
 		.vertexBindingDescriptionCount = 1,
 		.vertexBindingDescriptions = &vertexBindingDescription,
 		.vertexAttributeDescriptionCount = 2,

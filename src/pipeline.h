@@ -18,7 +18,6 @@ typedef struct pipeline_create_info_t {
 	long vertexShaderSize;
 	const char *fragmentShaderBytes;
 	long fragmentShaderSize;
-	VkExtent2D extent;
 	uint32_t vertexBindingDescriptionCount;
 	VkVertexInputBindingDescription *vertexBindingDescriptions;
 	uint32_t vertexAttributeDescriptionCount;
