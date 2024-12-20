@@ -62,8 +62,14 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 
 bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
-	const float black[3] = {0.0f, 0.0f, 0.0f};
-	const float white[3] = {1.0f, 1.0f, 1.0f};
+	float dark[3] = {0.71f, 0.533f, 0.388f};
+	srgbToLinear(dark);
+	float light[3] = {0.941f, 0.851f, 0.71f};
+	srgbToLinear(light);
+	float selectedDark[3] = {0.671f, 0.635f, 0.227f};
+	srgbToLinear(selectedDark);
+	float selectedLight[3] = {0.808f, 0.824f, 0.42f};
+	srgbToLinear(selectedLight);
 	Vertex triangleVertices[CHESS_VERTEX_COUNT];
 	uint16_t triangleIndices[CHESS_INDEX_COUNT];
 	for (size_t i = 0; i < 64; ++i) {
@@ -76,8 +82,16 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 		float squareOriginX = self->originX + offsetX * squareWidth;
 		float squareOriginY = self->originY + offsetY * squareHeight;
 		const float *color = (offsetY % 2) ?
-			((offsetX % 2) ? black : white) :
-			(offsetX % 2) ? white : black;
+			((offsetX % 2) ? dark : light) :
+			(offsetX % 2) ? light : dark;
+		
+		if (offsetX == 4) {
+			if (offsetY == 4) {
+				color = selectedDark;
+			} else if (offsetY == 5) {
+				color = selectedLight;
+			}
+		}
 
 		triangleVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}};
 		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}};

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "utils.h"
 
@@ -73,4 +74,11 @@ long readFileToString(char *path, char **bytes)
 	fclose(fp);
 
 	return size;
+}
+
+float *srgbToLinear(float vector[3])
+{
+	for (size_t i = 0; i < 3; ++i) {
+		vector[i] = pow(vector[i], 2.2);
+	}
 }
