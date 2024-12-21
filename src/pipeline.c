@@ -78,9 +78,9 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.viewportCount = 0,
+		.viewportCount = 1,
 		.pViewports = NULL,
-		.scissorCount = 0,
+		.scissorCount = 1,
 		.pScissors = NULL
 	};
 
