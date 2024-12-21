@@ -1,3 +1,5 @@
+#!/bin/sh
+
 DATA_VAR=$1
 SIZE_VAR=$2
 FILE=$3
