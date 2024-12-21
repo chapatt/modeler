@@ -1,6 +1,7 @@
 #ifndef VULKAN_UTILS_H
 #define VULKAN_UTILS_H
 
+#include <stdbool.h>
 #include <vulkan/vulkan.h>
 
 static inline const char* string_VkResult(VkResult input_value)
@@ -107,5 +108,7 @@ static inline const char* string_VkResult(VkResult input_value)
             return "Unhandled VkResult";
     }
 }
+
+bool compareExtensions(const char **extensions, size_t extensionCount, VkExtensionProperties *availableExtensions, uint32_t availableExtensionCount);
 
 #endif /* VULKAN_UTILS_H */

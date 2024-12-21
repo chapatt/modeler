@@ -5,23 +5,12 @@
 
 #include "vk_mem_alloc.h"
 
+#include "window.h"
 #include "physical_device.h"
 #include "device.h"
 #include "swapchain.h"
 #include "queue.h"
-
-typedef struct window_dimensions_t {
-	VkExtent2D surfaceArea;
-	VkRect2D activeArea;
-	int cornerRadius;
-	float scale;
-	bool fullscreen;
-} WindowDimensions;
-
-typedef struct resize_info_t {
-	WindowDimensions windowDimensions;
-	void *platformWindow;
-} ResizeInfo;
+#include "chess_board.h"
 
 struct threadArguments {
 	void *platformWindow;
@@ -40,6 +29,7 @@ typedef struct swapchain_create_info_t {
 	VkSurfaceKHR surface;
 	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics;
 	QueueInfo queueInfo;
+	VkCommandPool commandPool;
 	VkRenderPass *renderPass;
 	SwapchainInfo *swapchainInfo;
 	VkImage *offscreenImage;
@@ -53,10 +43,11 @@ typedef struct swapchain_create_info_t {
 	VkDescriptorSetLayout **imageDescriptorSetLayouts;
 	VkDescriptorSet **bufferDescriptorSets;
 	VkDescriptorSetLayout **bufferDescriptorSetLayouts;
+	ChessBoard chessBoard;
 } SwapchainCreateInfo;
 
 void *threadProc(void *arg);
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, VkExtent2D windowExtent, char **error);
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error);
 void sendFullscreenSignal(void *platformWindow);
 void sendExitFullscreenSignal(void *platformWindow);
 void sendThreadFailureSignal(void *platformWindow);

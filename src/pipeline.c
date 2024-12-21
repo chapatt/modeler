@@ -60,10 +60,10 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-		.vertexBindingDescriptionCount = 0,
-		.pVertexBindingDescriptions = NULL,
-		.vertexAttributeDescriptionCount = 0,
-		.pVertexAttributeDescriptions = NULL
+		.vertexBindingDescriptionCount = pipelineCreateInfo.vertexBindingDescriptionCount,
+		.pVertexBindingDescriptions = pipelineCreateInfo.vertexBindingDescriptions,
+		.vertexAttributeDescriptionCount = pipelineCreateInfo.vertexAttributeDescriptionCount,
+		.pVertexAttributeDescriptions = pipelineCreateInfo.VertexAttributeDescriptions
 	};
 
 	VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo = {
@@ -74,33 +74,14 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.primitiveRestartEnable = VK_FALSE
 	};
 
-	VkViewport viewport = {
-		.x = 0.0f,
-		.y = 0.0f,
-		.width = pipelineCreateInfo.extent.width,
-		.height = pipelineCreateInfo.extent.height,
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f
-	};
-
-	VkOffset2D scissorOffset = {
-		.x = 0,
-		.y = 0
-	};
-
-	VkRect2D scissor = {
-		.offset = scissorOffset,
-		.extent = pipelineCreateInfo.extent
-	};
-
 	VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
 		.viewportCount = 1,
-		.pViewports = &viewport,
+		.pViewports = NULL,
 		.scissorCount = 1,
-		.pScissors = &scissor
+		.pScissors = NULL
 	};
 
 	VkPipelineRasterizationStateCreateInfo rasterizationStateCreateInfo = {

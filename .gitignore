@@ -9,4 +9,5 @@ xdg-shell-protocol.c
 *.spv
 *.vert.h
 *.frag.h
+*.rgba
 /modeler
