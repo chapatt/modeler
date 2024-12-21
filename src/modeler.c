@@ -104,7 +104,7 @@ void *threadProc(void *arg)
 #ifdef DRAW_WINDOW_DECORATION
 	VkImage offscreenImage;
 	VmaAllocation offscreenImageAllocation;
-	if (!createImage(device, allocator, swapchainInfo.extent, swapchainInfo.surfaceFormat.format, &offscreenImage, &offscreenImageAllocation, error)) {
+	if (!createImage(device, allocator, swapchainInfo.extent, swapchainInfo.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, &offscreenImage, &offscreenImageAllocation, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -165,7 +165,9 @@ void *threadProc(void *arg)
 
 	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
 	ChessBoard chessBoard;
-	createChessBoard(&chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error);
+	if (!createChessBoard(&chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
 
 #ifndef EMBED_SHADERS
 #ifdef DRAW_WINDOW_DECORATION
@@ -369,7 +371,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions
 	}
 
 #ifdef DRAW_WINDOW_DECORATION
-	if (!createImage(swapchainCreateInfo.device, swapchainCreateInfo.allocator, swapchainCreateInfo.swapchainInfo->extent, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, swapchainCreateInfo.offscreenImage, swapchainCreateInfo.offscreenImageAllocation, error)) {
+	if (!createImage(swapchainCreateInfo.device, swapchainCreateInfo.allocator, swapchainCreateInfo.swapchainInfo->extent, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, swapchainCreateInfo.offscreenImage, swapchainCreateInfo.offscreenImageAllocation, error)) {
 		return false;
 	}
 

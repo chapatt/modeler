@@ -1,6 +1,9 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "chess_board.h"
+#include "image.h"
+#include "image_view.h"
 #include "pipeline.h"
 #include "utils.h"
 
@@ -28,6 +31,7 @@ struct chess_board_t {
 	VmaAllocation indexBufferAllocation;
 };
 
+bool createChessBoardTexture(ChessBoard self, char **error);
 bool createChessBoardVertexBuffer(ChessBoard self, char **error);
 bool createChessBoardPipeline(ChessBoard self, char **error);
 
@@ -58,6 +62,61 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 		asprintf(error, "Failed to create chess board pipeline.\n");
 		return false;
 	}
+
+	if (!createChessBoardTexture(self, error)) {
+		asprintf(error, "Failed to create chess board texture.\n");
+		return false;
+	}
+
+	return true;
+}
+
+bool createChessBoardTexture(ChessBoard self, char **error)
+{
+	const int TEXTURE_WIDTH = 512;
+	const int TEXTURE_HEIGHT = 512;
+	VkExtent2D textureExtent = {
+		.width = TEXTURE_WIDTH,
+		.height = TEXTURE_HEIGHT
+	};
+
+	char *texturePath;
+	asprintf(&texturePath, "%s/%s", self->resourcePath, "lenna.rgba");
+	char *textureBytes;
+	uint32_t textureSize = 0;
+
+	if ((textureSize = readFileToString(texturePath, &textureBytes)) == -1) {
+		asprintf(error, "Failed to open texture for reading.\n");
+		return false;
+	}
+
+	VkBuffer stagingBuffer;
+	VmaAllocation stagingBufferAllocation;
+	if (!createBuffer(self->device, self->allocator, textureSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, &stagingBuffer, &stagingBufferAllocation, error)) {
+		return false;
+	}
+
+	VkResult result;
+	void *data;
+	if ((result = vmaMapMemory(self->allocator, stagingBufferAllocation, &data)) != VK_SUCCESS) {
+		asprintf(error, "Failed to map memory: %s", string_VkResult(result));
+		return false;
+	}
+	memcpy(data, textureBytes, textureSize);
+	vmaUnmapMemory(self->allocator, stagingBufferAllocation);
+
+	VkImage textureImage;
+	VmaAllocation textureImageAllocation;
+	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, &textureImage, &textureImageAllocation, error)) {
+		return false;
+	}
+
+	VkImageView textureImageView;
+	if (!createImageViews(self->device, &textureImage, 1, VK_FORMAT_R8G8B8A8_SRGB, &textureImageView, error)) {
+		return false;
+	}
+
+	return true;
 }
 
 bool createChessBoardVertexBuffer(ChessBoard self, char **error)
@@ -84,7 +143,7 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 		const float *color = (offsetY % 2) ?
 			((offsetX % 2) ? dark : light) :
 			(offsetX % 2) ? light : dark;
-		
+
 		if (offsetX == 4) {
 			if (offsetY == 4) {
 				color = selectedDark;
