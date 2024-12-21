@@ -41,6 +41,7 @@ endif
 
 SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv triangle.vert.spv triangle.frag.spv
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_triangle.vert.h shader_triangle.frag.h
+TEXTURES=lenna.rgba
 MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o vma_implementation.o pipeline.o buffer.o chess_board.o
 
 ifdef DEBUG
@@ -64,13 +65,13 @@ all: $(ALL_TARGET)
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $<
 
-modeler: $(SHADERS) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(IMGUI_LIBS)
+modeler: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(IMGUI_LIBS)
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.exe: $(SHADERS) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS)
+modeler.exe: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS)
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.a: $(SHADERS) $(MODELER_OBJS) modeler_metal.o surface_metal.o
+modeler.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_metal.o surface_metal.o
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o
 
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
@@ -84,6 +85,9 @@ modeler.o: src/modeler.c
 
 %.frag.spv: src/shaders/%.frag.glsl
 	$(GLSLC) -fshader-stage=frag $< -o $@
+
+%.rgba: src/textures/%.png
+	./imgtorgba.sh $< $@
 
 $(HEADER_SHADERS): shader_%.h: %.spv
 	./hexdump_include.sh "`echo $(basename $<)ShaderBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)ShaderSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@

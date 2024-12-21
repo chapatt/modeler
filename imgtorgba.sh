@@ -1,1 +1,4 @@
-convert lenna.png -depth 8 -colorspace RGB -alpha on lenna.rgba
+INPUT=$1
+OUTPUT=$2
+
+magick $INPUT -depth 8 -colorspace RGB -alpha on $OUTPUT
