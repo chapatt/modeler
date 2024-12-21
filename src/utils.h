@@ -10,6 +10,6 @@ int vasprintf(char **strp, const char *fmt, va_list ap);
 long readFileToString(char *path, char **bytes);
 VkExtent2D getWindowExtent(void *platformWindow);
 float getWindowScale(void *platformWindow);
-float *srgbToLinear(float vector[3]);
+void srgbToLinear(float vector[3]);
 
 #endif /* MODELER_UTILS_H */

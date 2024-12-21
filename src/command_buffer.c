@@ -50,6 +50,8 @@ bool beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool, VkComma
 		asprintf(error, "Failed to begin command buffer: %s", string_VkResult(result));
 		return false;
 	}
+
+	return true;
 }
 
 bool endSingleTimeCommands(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkCommandBuffer commandBuffer, char **error)

@@ -103,7 +103,9 @@ bool copyBuffer(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuf
 	VkResult result;
 
 	VkCommandBuffer commandBuffer;
-	beginSingleTimeCommands(device, commandPool, &commandBuffer, error);
+	if (!beginSingleTimeCommands(device, commandPool, &commandBuffer, error)) {
+		return false;
+	}
 
 	VkBufferCopy copyRegion = {
 		.srcOffset = 0,
@@ -113,7 +115,11 @@ bool copyBuffer(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuf
 
 	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-	endSingleTimeCommands(device, commandPool, queue, commandBuffer, error);
+	if (!endSingleTimeCommands(device, commandPool, queue, commandBuffer, error)) {
+		return false;
+	}
+
+	return true;
 }
 
 void destroyBuffer(VmaAllocator allocator, VkBuffer buffer, VmaAllocation allocation)
