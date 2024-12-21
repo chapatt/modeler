@@ -1,6 +1,8 @@
 #include <string.h>
 
 #include "buffer.h"
+
+#include "command_buffer.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
@@ -100,28 +102,8 @@ bool copyBuffer(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuf
 {
 	VkResult result;
 
-	VkCommandBufferAllocateInfo allocInfo = {
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		.commandPool = commandPool,
-		.commandBufferCount = 1,
-	};
-
 	VkCommandBuffer commandBuffer;
-	if ((result = vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer)) != VK_SUCCESS) {
-		asprintf(error, "Failed to allocate command buffers: %s", string_VkResult(result));
-		return false;
-	}
-
-	VkCommandBufferBeginInfo beginInfo = {
-		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-		.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-	};
-
-	if ((result = vkBeginCommandBuffer(commandBuffer, &beginInfo)) != VK_SUCCESS) {
-		asprintf(error, "Failed to begin command buffer: %s", string_VkResult(result));
-		return false;
-	}
+	beginSingleTimeCommands(device, commandPool, &commandBuffer, error);
 
 	VkBufferCopy copyRegion = {
 		.srcOffset = 0,
@@ -131,29 +113,7 @@ bool copyBuffer(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuf
 
 	vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-	if ((result = vkEndCommandBuffer(commandBuffer)) != VK_SUCCESS) {
-		asprintf(error, "Failed to end command buffer: %s", string_VkResult(result));
-		return false;
-	}
-
-	VkSubmitInfo submitInfo = {
-		.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-		.commandBufferCount = 1,
-		.pCommandBuffers = &commandBuffer,
-	};
-
-	if ((result = vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE)) != VK_SUCCESS) {
-		asprintf(error, "Failed to submit queue: %s", string_VkResult(result));
-		return false;
-	}
-	if ((result = vkQueueWaitIdle(queue)) != VK_SUCCESS) {
-		asprintf(error, "Failed to wait for queue to be idle: %s", string_VkResult(result));
-		return false;
-	}
-
-	vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
-
-	return true;
+	endSingleTimeCommands(device, commandPool, queue, commandBuffer, error);
 }
 
 void destroyBuffer(VmaAllocator allocator, VkBuffer buffer, VmaAllocation allocation)
