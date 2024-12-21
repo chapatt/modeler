@@ -10,6 +10,8 @@
 #define CHESS_SQUARE_COUNT 8 * 8
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
+#define TEXTURE_WIDTH 512
+#define TEXTURE_HEIGHT 512
 
 struct chess_board_t {
 	VkDevice device;
@@ -75,8 +77,6 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 
 bool createChessBoardTexture(ChessBoard self, char **error)
 {
-	const int TEXTURE_WIDTH = 512;
-	const int TEXTURE_HEIGHT = 512;
 	VkExtent2D textureExtent = {
 		.width = TEXTURE_WIDTH,
 		.height = TEXTURE_HEIGHT
