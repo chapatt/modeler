@@ -29,6 +29,8 @@ struct chess_board_t {
 	VmaAllocation vertexBufferAllocation;
 	VkBuffer indexBuffer;
 	VmaAllocation indexBufferAllocation;
+	VkImage textureImage;
+	VmaAllocation textureImageAllocation;
 };
 
 bool createChessBoardTexture(ChessBoard self, char **error);
@@ -58,13 +60,13 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 		return false;
 	}
 
-	if (!createChessBoardPipeline(self, error)) {
-		asprintf(error, "Failed to create chess board pipeline.\n");
+	if (!createChessBoardTexture(self, error)) {
+		asprintf(error, "Failed to create chess board texture.\n");
 		return false;
 	}
 
-	if (!createChessBoardTexture(self, error)) {
-		asprintf(error, "Failed to create chess board texture.\n");
+	if (!createChessBoardPipeline(self, error)) {
+		asprintf(error, "Failed to create chess board pipeline.\n");
 		return false;
 	}
 
@@ -105,16 +107,20 @@ bool createChessBoardTexture(ChessBoard self, char **error)
 	memcpy(data, textureBytes, textureSize);
 	vmaUnmapMemory(self->allocator, stagingBufferAllocation);
 
-	VkImage textureImage;
-	VmaAllocation textureImageAllocation;
-	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, &textureImage, &textureImageAllocation, error)) {
+	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, &self->textureImage, &self->textureImageAllocation, error)) {
 		return false;
 	}
 
-	VkImageView textureImageView;
-	if (!createImageViews(self->device, &textureImage, 1, VK_FORMAT_R8G8B8A8_SRGB, &textureImageView, error)) {
-		return false;
-	}
+	// VkImageView textureImageView;
+	// if (!createImageViews(self->device, &self->textureImage, 1, VK_FORMAT_R8G8B8A8_SRGB, &textureImageView, error)) {
+	// 	return false;
+	// }
+
+	transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, error);
+	copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, TEXTURE_WIDTH, TEXTURE_HEIGHT, error);
+	transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, error);
+
+	destroyBuffer(self->allocator, stagingBuffer, stagingBufferAllocation);
 
 	return true;
 }
@@ -299,9 +305,10 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, WindowDimens
 
 void destroyChessBoard(ChessBoard self)
 {
-	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
-	destroyBuffer(self->allocator, self->indexBuffer, self->indexBufferAllocation);
 	destroyPipeline(self->device, self->pipeline);
 	destroyPipelineLayout(self->device, self->pipelineLayout);
+	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
+	destroyBuffer(self->allocator, self->indexBuffer, self->indexBufferAllocation);
+	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
 	free(self);
 }
