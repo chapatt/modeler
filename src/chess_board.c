@@ -116,9 +116,15 @@ bool createChessBoardTexture(ChessBoard self, char **error)
 	// 	return false;
 	// }
 
-	transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, error);
-	copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, TEXTURE_WIDTH, TEXTURE_HEIGHT, error);
-	transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, error);
+	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, error)) {
+		return false;
+	}
+	if (!copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, TEXTURE_WIDTH, TEXTURE_HEIGHT, error)) {
+		return false;
+	}
+	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, error)) {
+		return false;
+	}
 
 	destroyBuffer(self->allocator, stagingBuffer, stagingBufferAllocation);
 

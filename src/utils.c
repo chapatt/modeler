@@ -56,7 +56,7 @@ long readFileToString(char *path, char **bytes)
 	return size;
 }
 
-float *srgbToLinear(float vector[3])
+void srgbToLinear(float vector[3])
 {
 	for (size_t i = 0; i < 3; ++i) {
 		vector[i] = pow(vector[i], 2.2);

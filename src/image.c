@@ -91,6 +91,8 @@ bool transitionImageLayout(VkDevice device, VkCommandPool commandPool, VkQueue q
 	if (!endSingleTimeCommands(device, commandPool, queue, commandBuffer, error)) {
 		return false;
 	}
+
+	return true;
 }
 
 bool copyBufferToImage(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, char **error)
@@ -128,6 +130,8 @@ bool copyBufferToImage(VkDevice device, VkCommandPool commandPool, VkQueue queue
 	if (!endSingleTimeCommands(device, commandPool, queue, commandBuffer, error)) {
 		return false;
 	}
+
+	return true;
 }
 
 void destroyImage(VmaAllocator allocator, VkImage image, VmaAllocation allocation)
