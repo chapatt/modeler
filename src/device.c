@@ -49,7 +49,9 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
 		createInfo.pQueueCreateInfos = queueCreateInfos;
 	}
 
-	VkPhysicalDeviceFeatures deviceFeatures = {};
+	VkPhysicalDeviceFeatures deviceFeatures = {
+		.samplerAnisotropy = VK_TRUE
+	};
 	createInfo.pEnabledFeatures = &deviceFeatures;
 
 	const char* requiredExtensions[2] = {
@@ -62,13 +64,13 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
 		createInfo.enabledExtensionCount++;
 	}
 	createInfo.ppEnabledExtensionNames = requiredExtensions;
-    
+
 	VkResult result;
 	if ((result = vkCreateDevice(physicalDevice, &createInfo, NULL, device)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create logical device: %s", string_VkResult(result));
 		return false;
 	}
-    
+
 	vkGetDeviceQueue(*device, queueInfo->graphicsQueueFamilyIndex, 0, &queueInfo->graphicsQueue);
 	vkGetDeviceQueue(*device, queueInfo->presentationQueueFamilyIndex, 0, &queueInfo->presentationQueue);
 

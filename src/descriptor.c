@@ -5,19 +5,20 @@
 
 #include "descriptor.h"
 
-static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, char **error);
+static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, VkDescriptorType type, char **error);
 
 bool createDescriptorSets(
 	VkDevice device,
 	CreateDescriptorSetInfo info,
 	VkDescriptorPool *descriptorPool,
+	VkDescriptorType type,
 	VkDescriptorSet **imageDescriptorSets,
 	VkDescriptorSetLayout **imageDescriptorSetLayouts,
 	VkDescriptorSet **bufferDescriptorSets,
 	VkDescriptorSetLayout **bufferDescriptorSetLayouts,
 	char **error
 ) {
-	if (!createDescriptorPool(device, descriptorPool, error)) {
+	if (!createDescriptorPool(device, descriptorPool, type, error)) {
 		return false;
 	}
 
@@ -26,7 +27,7 @@ bool createDescriptorSets(
 		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {
 			.binding = 0,
 			.descriptorCount = 1,
-			.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+			.descriptorType = type,
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 			.pImmutableSamplers = NULL
 		};
@@ -58,13 +59,13 @@ bool createDescriptorSets(
 		VkDescriptorImageInfo descriptorImageInfo = {
 			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			.imageView = info.imageViews[i],
-			.sampler = VK_NULL_HANDLE
+			.sampler = info.imageSamplers[i]
 		};
 
 		writeDescriptorSets[i] = (VkWriteDescriptorSet) {
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 			.dstSet = *imageDescriptorSets[i],
-			.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+			.descriptorType = type,
 			.descriptorCount = 1,
 			.dstBinding = 0,
 			.pImageInfo = &descriptorImageInfo
@@ -86,9 +87,9 @@ void destroyDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool)
 	vkDestroyDescriptorPool(device, descriptorPool, NULL);
 }
 
-static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, char **error) {
+static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, VkDescriptorType type, char **error) {
 	VkDescriptorPoolSize descriptorPoolSize = {
-		.type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+		.type = type,
 		.descriptorCount = 1
 	};
 

@@ -19,6 +19,7 @@ bool createDescriptorSets(
 	VkDevice device,
 	CreateDescriptorSetInfo info,
 	VkDescriptorPool *descriptorPool,
+	VkDescriptorType type,
 	VkDescriptorSet **imageDescriptorSets,
 	VkDescriptorSetLayout **imageDescriptorSetLayouts,
 	VkDescriptorSet **bufferDescriptorSets,

@@ -2,9 +2,11 @@
 #include <string.h>
 
 #include "chess_board.h"
+#include "descriptor.h"
 #include "image.h"
 #include "image_view.h"
 #include "pipeline.h"
+#include "sampler.h"
 #include "utils.h"
 
 #define CHESS_SQUARE_COUNT 8 * 8
@@ -21,6 +23,7 @@ struct chess_board_t {
 	VkRenderPass renderPass;
 	uint32_t subpass;
 	const char *resourcePath;
+	float anisotropy;
 	float aspectRatio;
 	float width;
 	float originX;
@@ -33,13 +36,20 @@ struct chess_board_t {
 	VmaAllocation indexBufferAllocation;
 	VkImage textureImage;
 	VmaAllocation textureImageAllocation;
+	VkImageView textureImageView;
+	VkSampler sampler;
+	VkDescriptorPool textureDescriptorPool;
+	VkDescriptorSet *textureDescriptorSets;
+	VkDescriptorSetLayout *textureDescriptorSetLayouts;
 };
 
 bool createChessBoardTexture(ChessBoard self, char **error);
+bool createChessBoardSampler(ChessBoard self, char **error);
+bool createChessBoardDescriptors(ChessBoard self, char **error);
 bool createChessBoardVertexBuffer(ChessBoard self, char **error);
 bool createChessBoardPipeline(ChessBoard self, char **error);
 
-bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float aspectRatio, float width, float originX, float originY, char **error)
+bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float anisotropy, float aspectRatio, float width, float originX, float originY, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -52,6 +62,7 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 	self->renderPass = renderPass;
 	self->subpass = subpass;
 	self->resourcePath = resourcePath;
+	self->anisotropy = anisotropy;
 	self->aspectRatio = aspectRatio;
 	self->width = width;
 	self->originX = originX;
@@ -64,6 +75,16 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 
 	if (!createChessBoardTexture(self, error)) {
 		asprintf(error, "Failed to create chess board texture.\n");
+		return false;
+	}
+
+	if (!createChessBoardSampler(self, error)) {
+		asprintf(error, "Failed to create chess board sampler.\n");
+		return false;
+	}
+
+	if (!createChessBoardDescriptors(self, error)) {
+		asprintf(error, "Failed to create chess board descriptors.\n");
 		return false;
 	}
 
@@ -111,11 +132,6 @@ bool createChessBoardTexture(ChessBoard self, char **error)
 		return false;
 	}
 
-	// VkImageView textureImageView;
-	// if (!createImageViews(self->device, &self->textureImage, 1, VK_FORMAT_R8G8B8A8_SRGB, &textureImageView, error)) {
-	// 	return false;
-	// }
-
 	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, error)) {
 		return false;
 	}
@@ -127,6 +143,40 @@ bool createChessBoardTexture(ChessBoard self, char **error)
 	}
 
 	destroyBuffer(self->allocator, stagingBuffer, stagingBufferAllocation);
+
+	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, &self->textureImageView, error)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool createChessBoardSampler(ChessBoard self, char **error)
+{
+	if (!createSampler(self->device, self->anisotropy, &self->sampler, error)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool createChessBoardDescriptors(ChessBoard self, char **error)
+{
+	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
+	VkSampler samplers[] = {VK_NULL_HANDLE};
+	CreateDescriptorSetInfo createDescriptorSetInfo = {
+		.imageViews = &self->textureImageView,
+		.imageLayouts = imageLayouts,
+		.imageSamplers = &self->sampler,
+		.imageCount = 1,
+		.buffers = NULL,
+		.bufferOffsets = NULL,
+		.bufferRanges = NULL,
+		.bufferCount = 0
+	};
+	if (!createDescriptorSets(self->device, createDescriptorSetInfo, &self->textureDescriptorPool, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &self->textureDescriptorSets, &self->textureDescriptorSetLayouts, NULL, NULL, error)) {
+		return false;
+	}
 
 	return true;
 }
@@ -164,10 +214,10 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 			}
 		}
 
-		triangleVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}};
-		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}};
-		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}};
-		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}};
+		triangleVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {0.0f, 0.0f}};
+		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {1.0f, 0.0f}};
+		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {1.0f, 1.0f}};
+		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {0.0f, 1.0f}};
 
 		triangleIndices[indicesOffset] = verticesOffset + 0;
 		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
@@ -177,11 +227,11 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 		triangleIndices[indicesOffset + 5] = verticesOffset + 0;
 	}
 
-	if (!createVertexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->vertexBuffer, &self->vertexBufferAllocation, triangleVertices, sizeof(triangleVertices) / sizeof(triangleVertices[0]), error)) {
+	if (!createVertexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->vertexBuffer, &self->vertexBufferAllocation, triangleVertices, CHESS_VERTEX_COUNT, error)) {
 		return false;
 	}
 
-	if (!createIndexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->indexBuffer, &self->indexBufferAllocation, triangleIndices, sizeof(triangleIndices) / sizeof(triangleIndices[0]), error)) {
+	if (!createIndexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->indexBuffer, &self->indexBufferAllocation, triangleIndices, CHESS_INDEX_COUNT, error)) {
 		return false;
 	}
 
@@ -207,6 +257,11 @@ bool createChessBoardPipeline(ChessBoard self, char **error)
 			.location = 1,
 			.format = VK_FORMAT_R32G32B32_SFLOAT,
 			.offset = offsetof(Vertex, color),
+		}, {
+			.binding = 0,
+			.location = 2,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(Vertex, texCoord),
 		}
 	};
 
@@ -240,10 +295,10 @@ bool createChessBoardPipeline(ChessBoard self, char **error)
 		.fragmentShaderSize = fragmentShaderSize,
 		.vertexBindingDescriptionCount = 1,
 		.vertexBindingDescriptions = &vertexBindingDescription,
-		.vertexAttributeDescriptionCount = 2,
+		.vertexAttributeDescriptionCount = 3,
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
-		.descriptorSetLayouts = NULL,
-		.descriptorSetLayoutCount = 0,
+		.descriptorSetLayouts = self->textureDescriptorSetLayouts,
+		.descriptorSetLayoutCount = 1,
 	};
 	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->pipelineLayout, &self->pipeline, error);
 #ifndef EMBED_SHADERS
@@ -280,6 +335,7 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, WindowDimens
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->vertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, self->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
 	VkViewport viewport = {
 		.x = windowDimensions.activeArea.offset.x,
 		.y = windowDimensions.activeArea.offset.y,
@@ -313,8 +369,10 @@ void destroyChessBoard(ChessBoard self)
 {
 	destroyPipeline(self->device, self->pipeline);
 	destroyPipelineLayout(self->device, self->pipelineLayout);
+	destroySampler(self->device, self->sampler);
 	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
 	destroyBuffer(self->allocator, self->indexBuffer, self->indexBufferAllocation);
+	destroyImageView(self->device, self->textureImageView);
 	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
 	free(self);
 }
