@@ -12,8 +12,8 @@
 #define CHESS_SQUARE_COUNT 8 * 8
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
-#define TEXTURE_WIDTH 512
-#define TEXTURE_HEIGHT 512
+#define TEXTURE_WIDTH 2048
+#define TEXTURE_HEIGHT 2048
 
 struct chess_board_t {
 	VkDevice device;
@@ -104,7 +104,7 @@ bool createChessBoardTexture(ChessBoard self, char **error)
 	};
 
 	char *texturePath;
-	asprintf(&texturePath, "%s/%s", self->resourcePath, "lenna.rgba");
+	asprintf(&texturePath, "%s/%s", self->resourcePath, "pieces.rgba");
 	char *textureBytes;
 	uint32_t textureSize = 0;
 
@@ -215,9 +215,9 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 		}
 
 		triangleVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {0.0f, 0.0f}};
-		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {1.0f, 0.0f}};
-		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {1.0f, 1.0f}};
-		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {0.0f, 1.0f}};
+		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {0.25f, 0.0f}};
+		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {0.25f, 0.25f}};
+		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {0.0f, 0.25f}};
 
 		triangleIndices[indicesOffset] = verticesOffset + 0;
 		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
