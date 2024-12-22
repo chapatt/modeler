@@ -48,7 +48,7 @@ bool createVertexBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool c
 		asprintf(error, "Failed to map memory: %s", string_VkResult(result));
 		return false;
 	}
-	memcpy(data, vertices, (size_t) bufferSize);
+	memcpy(data, vertices, bufferSize);
 	vmaUnmapMemory(allocator, stagingBufferAllocation);
 
 	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, allocation, error)) {
@@ -82,7 +82,7 @@ bool createIndexBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool co
 		asprintf(error, "Failed to map memory: %s", string_VkResult(result));
 		return false;
 	}
-	memcpy(data, indices, (size_t) bufferSize);
+	memcpy(data, indices, bufferSize);
 	vmaUnmapMemory(allocator, stagingBufferAllocation);
 
 	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VMA_MEMORY_USAGE_AUTO, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, allocation, error)) {

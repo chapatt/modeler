@@ -125,7 +125,9 @@ void *threadProc(void *arg)
 		NULL,
 		0
 	};
-	createDescriptorSets(device, createDescriptorSetInfo, &descriptorPool, &imageDescriptorSets, &imageDescriptorSetLayouts, &bufferDescriptorSets, &bufferDescriptorSetLayouts, error);
+	if (!createDescriptorSets(device, createDescriptorSetInfo, &descriptorPool, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,  &imageDescriptorSets, &imageDescriptorSetLayouts, &bufferDescriptorSets, &bufferDescriptorSetLayouts, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
 #endif /* DRAW_WINDOW_DECORATION */
 
 	VkRenderPass renderPass;
@@ -165,7 +167,7 @@ void *threadProc(void *arg)
 
 	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
 	ChessBoard chessBoard;
-	if (!createChessBoard(&chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
+	if (!createChessBoard(&chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, characteristics.deviceProperties.limits.maxSamplerAnisotropy, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -382,16 +384,18 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions
 	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
 	VkSampler samplers[] = {VK_NULL_HANDLE};
 	CreateDescriptorSetInfo createDescriptorSetInfo = {
-		swapchainCreateInfo.offscreenImageView,
-		imageLayouts,
-		samplers,
-		1,
-		NULL,
-		NULL,
-		NULL,
-		0
+		.imageViews = swapchainCreateInfo.offscreenImageView,
+		.imageLayouts = imageLayouts,
+		.imageSamplers = samplers,
+		.imageCount = 1,
+		.buffers = NULL,
+		.bufferOffsets = NULL,
+		.bufferRanges = NULL,
+		.bufferCount = 0
 	};
-	createDescriptorSets(swapchainCreateInfo.device, createDescriptorSetInfo, swapchainCreateInfo.descriptorPool, swapchainCreateInfo.imageDescriptorSets, swapchainCreateInfo.imageDescriptorSetLayouts, swapchainCreateInfo.bufferDescriptorSets, swapchainCreateInfo.bufferDescriptorSetLayouts, error);
+	if !(createDescriptorSets(swapchainCreateInfo.device, createDescriptorSetInfo, swapchainCreateInfo.descriptorPool, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, swapchainCreateInfo.imageDescriptorSets, swapchainCreateInfo.imageDescriptorSetLayouts, swapchainCreateInfo.bufferDescriptorSets, swapchainCreateInfo.bufferDescriptorSetLayouts, error)) {
+		return false;
+	}
 #endif /* DRAW_WINDOW_DECORATION */
 
 	if (!createRenderPass(swapchainCreateInfo.device, *swapchainCreateInfo.swapchainInfo, swapchainCreateInfo.renderPass, error)) {

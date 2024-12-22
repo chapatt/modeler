@@ -20,12 +20,12 @@ bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface,
 		asprintf(error, "Failed to get physical device count: %s", string_VkResult(result));
 		return false;
 	}
-    
+
 	if (deviceCount == 0) {
 		asprintf(error, "Failed to find a Physical Device");
 		return false;
 	}
-    
+
 	VkPhysicalDevice *devices = malloc(sizeof(*devices) * deviceCount);
 	if ((result = vkEnumeratePhysicalDevices(instance, &deviceCount, devices)) != VK_SUCCESS) {
 		asprintf(error, "Failed to get physical devices: %s", string_VkResult(result));
@@ -62,7 +62,7 @@ bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface,
 		asprintf(error, "Failed to find a suitable GPU!");
 		return false;
 	}
-    
+
 	return true;
 }
 
@@ -114,7 +114,7 @@ SuitabilityResult isPhysicalDeviceSuitable(PhysicalDeviceCharacteristics charact
 		return SUITABILITY_UNSUITABLE;
 	}
 
-	bool hasFeatures = characteristics.deviceFeatures.robustBufferAccess;
+	bool hasFeatures = characteristics.deviceFeatures.robustBufferAccess && characteristics.deviceFeatures.samplerAnisotropy;
 	if (!hasFeatures) {
 		return SUITABILITY_UNSUITABLE;
 	}
@@ -179,7 +179,7 @@ void freePhysicalDeviceCharacteristics(PhysicalDeviceCharacteristics *characteri
 bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics *characteristics, char **error)
 {
 	VkResult result;
-    
+
 	if ((result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &characteristics->capabilities)) != VK_SUCCESS) {
 		asprintf(error, "Failed to get physical device capabilities: %s", string_VkResult(result));
 		return false;
