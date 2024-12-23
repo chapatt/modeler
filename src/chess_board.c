@@ -417,6 +417,7 @@ void destroyChessBoard(ChessBoard self)
 {
 	destroyPipeline(self->device, self->pipeline);
 	destroyPipelineLayout(self->device, self->pipelineLayout);
+	destroyDescriptorPool(self->device, self->textureDescriptorPool);
 	destroySampler(self->device, self->sampler);
 	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
 	destroyBuffer(self->allocator, self->indexBuffer, self->indexBufferAllocation);
