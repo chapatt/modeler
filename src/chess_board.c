@@ -15,25 +15,6 @@
 #define TEXTURE_WIDTH 2048
 #define TEXTURE_HEIGHT 2048
 
-typedef enum piece_t
-{
-	EMPTY,
-	BLACK_PAWN,
-	BLACK_KNIGHT,
-	BLACK_BISHOP,
-	BLACK_ROOK,
-	BLACK_QUEEN,
-	BLACK_KING,
-	WHITE_PAWN,
-	WHITE_KNIGHT,
-	WHITE_BISHOP,
-	WHITE_ROOK,
-	WHITE_QUEEN,
-	WHITE_KING
-} Piece;
-
-typedef Piece Board8x8[64];
-
 float pieceSpriteOriginMap[13][2] = {
 	{0.75f, 0.75f},
 	{0.25f, 0.75f},
@@ -76,13 +57,15 @@ struct chess_board_t {
 	VkDescriptorPool textureDescriptorPool;
 	VkDescriptorSet *textureDescriptorSets;
 	VkDescriptorSetLayout *textureDescriptorSetLayouts;
+	Board8x8 board;
 };
 
-bool createChessBoardTexture(ChessBoard self, char **error);
-bool createChessBoardSampler(ChessBoard self, char **error);
-bool createChessBoardDescriptors(ChessBoard self, char **error);
-bool createChessBoardVertexBuffer(ChessBoard self, char **error);
-bool createChessBoardPipeline(ChessBoard self, char **error);
+static void initializePieces(ChessBoard self);
+static bool createChessBoardTexture(ChessBoard self, char **error);
+static bool createChessBoardSampler(ChessBoard self, char **error);
+static bool createChessBoardDescriptors(ChessBoard self, char **error);
+static bool createChessBoardVertexBuffer(ChessBoard self, char **error);
+static bool createChessBoardPipeline(ChessBoard self, char **error);
 
 bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float anisotropy, float aspectRatio, float width, float originX, float originY, char **error)
 {
@@ -102,6 +85,8 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 	self->width = width;
 	self->originX = originX;
 	self->originY = originY;
+
+	initializePieces(self);
 
 	if (!createChessBoardVertexBuffer(self, error)) {
 		asprintf(error, "Failed to create chess board vertex buffer.\n");
@@ -131,7 +116,25 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 	return true;
 }
 
-bool createChessBoardTexture(ChessBoard self, char **error)
+static void initializePieces(ChessBoard self)
+{
+	Board8x8 initialSetUp = {
+		WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK,
+		WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
+		BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK
+	};
+
+	for (size_t i = 0; i < sizeof(initialSetUp); ++i) {
+		self->board[i] = initialSetUp[i];
+	}
+}
+
+static bool createChessBoardTexture(ChessBoard self, char **error)
 {
 	VkExtent2D textureExtent = {
 		.width = TEXTURE_WIDTH,
@@ -186,7 +189,7 @@ bool createChessBoardTexture(ChessBoard self, char **error)
 	return true;
 }
 
-bool createChessBoardSampler(ChessBoard self, char **error)
+static bool createChessBoardSampler(ChessBoard self, char **error)
 {
 	if (!createSampler(self->device, self->anisotropy, &self->sampler, error)) {
 		return false;
@@ -195,7 +198,7 @@ bool createChessBoardSampler(ChessBoard self, char **error)
 	return true;
 }
 
-bool createChessBoardDescriptors(ChessBoard self, char **error)
+static bool createChessBoardDescriptors(ChessBoard self, char **error)
 {
 	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
 	VkSampler samplers[] = {VK_NULL_HANDLE};
@@ -216,19 +219,8 @@ bool createChessBoardDescriptors(ChessBoard self, char **error)
 	return true;
 }
 
-bool createChessBoardVertexBuffer(ChessBoard self, char **error)
+static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
-	Board8x8 board = {
-		WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK,
-		WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
-		BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK
-	};
-
 	float dark[3] = {0.71f, 0.533f, 0.388f};
 	srgbToLinear(dark);
 	float light[3] = {0.941f, 0.851f, 0.71f};
@@ -241,7 +233,7 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 	Vertex triangleVertices[CHESS_VERTEX_COUNT];
 	uint16_t triangleIndices[CHESS_INDEX_COUNT];
 	for (size_t i = 0; i < 64; ++i) {
-		float *spriteOrigin = pieceSpriteOriginMap[board[i]];
+		float *spriteOrigin = pieceSpriteOriginMap[self->board[i]];
 		size_t verticesOffset = i * 4;
 		size_t indicesOffset = i * 6;
 		size_t offsetX = i % 8;
@@ -286,7 +278,7 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 	return true;
 }
 
-bool createChessBoardPipeline(ChessBoard self, char **error)
+static bool createChessBoardPipeline(ChessBoard self, char **error)
 {
 	VkVertexInputBindingDescription vertexBindingDescription = {
 		.binding = 0,
