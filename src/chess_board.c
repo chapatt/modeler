@@ -15,6 +15,41 @@
 #define TEXTURE_WIDTH 2048
 #define TEXTURE_HEIGHT 2048
 
+typedef enum piece_t
+{
+	EMPTY,
+	BLACK_PAWN,
+	BLACK_KNIGHT,
+	BLACK_BISHOP,
+	BLACK_ROOK,
+	BLACK_QUEEN,
+	BLACK_KING,
+	WHITE_PAWN,
+	WHITE_KNIGHT,
+	WHITE_BISHOP,
+	WHITE_ROOK,
+	WHITE_QUEEN,
+	WHITE_KING
+} Piece;
+
+typedef Piece Board8x8[64];
+
+float pieceSpriteOriginMap[13][2] = {
+	{0.75f, 0.75f},
+	{0.25f, 0.75f},
+	{0.75f, 0.5f},
+	{0.5f, 0.5f},
+	{0.0f, 0.75f},
+	{0.25f, 0.5f},
+	{0.0f, 0.5f},
+	{0.25f, 0.25f},
+	{0.75f, 0.0f},
+	{0.5f, 0.0f},
+	{0.0f, 0.25f},
+	{0.25f, 0.0f},
+	{0.0f, 0.0f}
+};
+
 struct chess_board_t {
 	VkDevice device;
 	VmaAllocator allocator;
@@ -183,6 +218,17 @@ bool createChessBoardDescriptors(ChessBoard self, char **error)
 
 bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
+	Board8x8 board = {
+		WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK,
+		WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
+		BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK
+	};
+
 	float dark[3] = {0.71f, 0.533f, 0.388f};
 	srgbToLinear(dark);
 	float light[3] = {0.941f, 0.851f, 0.71f};
@@ -192,13 +238,10 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 	float selectedLight[3] = {0.808f, 0.824f, 0.42f};
 	srgbToLinear(selectedLight);
 
-	float whiteKingSpriteOrigin[] = {0.0f, 0.0f};
-	float whiteQueenSpriteOrigin[] = {0.25f, 0.0f};
-
 	Vertex triangleVertices[CHESS_VERTEX_COUNT];
 	uint16_t triangleIndices[CHESS_INDEX_COUNT];
 	for (size_t i = 0; i < 64; ++i) {
-		float *spriteOrigin = whiteQueenSpriteOrigin;
+		float *spriteOrigin = pieceSpriteOriginMap[board[i]];
 		size_t verticesOffset = i * 4;
 		size_t indicesOffset = i * 6;
 		size_t offsetX = i % 8;
