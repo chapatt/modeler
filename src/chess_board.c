@@ -118,20 +118,18 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 
 static void initializePieces(ChessBoard self)
 {
-	Board8x8 initialSetUp = {
-		WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK,
-		WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+	Board8x8 initialSetup = {
+		BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK,
 		BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
-		BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
+		WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK
 	};
 
-	for (size_t i = 0; i < sizeof(initialSetUp); ++i) {
-		self->board[i] = initialSetUp[i];
-	}
+	setBoard(self, initialSetup);
 }
 
 static bool createChessBoardTexture(ChessBoard self, char **error)
@@ -243,8 +241,8 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 		float squareOriginX = self->originX + offsetX * squareWidth;
 		float squareOriginY = self->originY + offsetY * squareHeight;
 		const float *color = (offsetY % 2) ?
-			((offsetX % 2) ? dark : light) :
-			(offsetX % 2) ? light : dark;
+			((offsetX % 2) ? light : dark) :
+			(offsetX % 2) ? dark : light;
 
 		if (offsetX == 4) {
 			if (offsetY == 4) {
@@ -352,13 +350,23 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 	return true;
 }
 
-bool updateChessBoard(ChessBoard self, float aspectRatio, float width, float originX, float originY, char **error)
+void setSize(ChessBoard self, float aspectRatio, float width, float originX, float originY)
 {
 	self->aspectRatio = aspectRatio;
 	self->width = width;
 	self->originX = originX;
 	self->originY = originY;
+}
 
+void setBoard(ChessBoard self, Board8x8 board)
+{
+	for (size_t i = 0; i < sizeof(self->board); ++i) {
+		self->board[i] = board[i];
+	}
+}
+
+bool updateChessBoard(ChessBoard self, char **error)
+{
 	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
 	destroyBuffer(self->allocator, self->indexBuffer, self->indexBufferAllocation);
 
