@@ -417,7 +417,8 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions
 		}
 	}
 	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
-	if (!updateChessBoard(swapchainCreateInfo.chessBoard, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
+	setSize(swapchainCreateInfo.chessBoard, aspectRatio, 1.0f, -0.5f, -0.5f);
+	if (!updateChessBoard(swapchainCreateInfo.chessBoard, error)) {
 		return false;
 	}
 

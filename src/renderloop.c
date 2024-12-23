@@ -169,6 +169,20 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		if (ImGui_Button("Exit Fullscreen")) {
 			sendExitFullscreenSignal(platformWindow);
 		}
+		if (ImGui_Button("Move Pawn")) {
+			Board8x8 newSetup = {
+				BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK,
+				BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
+				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+				EMPTY, EMPTY, EMPTY, EMPTY, WHITE_PAWN, EMPTY, EMPTY, EMPTY,
+				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+				WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, EMPTY, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
+				WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK
+			};
+
+			setBoard(chessBoard, newSetup);
+		}
 		ImGui_End();
 		ImGui_ShowDemoWindow(NULL);
 		ImGui_PopFont();
