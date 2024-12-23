@@ -191,9 +191,14 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 	srgbToLinear(selectedDark);
 	float selectedLight[3] = {0.808f, 0.824f, 0.42f};
 	srgbToLinear(selectedLight);
+
+	float whiteKingSpriteOrigin[] = {0.0f, 0.0f};
+	float whiteQueenSpriteOrigin[] = {0.25f, 0.0f};
+
 	Vertex triangleVertices[CHESS_VERTEX_COUNT];
 	uint16_t triangleIndices[CHESS_INDEX_COUNT];
 	for (size_t i = 0; i < 64; ++i) {
+		float *spriteOrigin = whiteQueenSpriteOrigin;
 		size_t verticesOffset = i * 4;
 		size_t indicesOffset = i * 6;
 		size_t offsetX = i % 8;
@@ -214,10 +219,10 @@ bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 			}
 		}
 
-		triangleVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {0.0f, 0.0f}};
-		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {0.25f, 0.0f}};
-		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {0.25f, 0.25f}};
-		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {0.0f, 0.25f}};
+		triangleVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}};
+		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.0f}};
+		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}};
+		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.0f, spriteOrigin[1] + 0.25f}};
 
 		triangleIndices[indicesOffset] = verticesOffset + 0;
 		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
