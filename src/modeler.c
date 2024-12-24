@@ -30,8 +30,6 @@
 #ifdef EMBED_SHADERS
 #include "../shader_window_border.vert.h"
 #include "../shader_window_border.frag.h"
-#include "../shader_triangle.vert.h"
-#include "../shader_triangle.frag.h"
 #endif /* EMBED_SHADERS */
 
 #include "renderloop.h"

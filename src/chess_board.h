@@ -1,6 +1,8 @@
 #ifndef MODELER_CHESS_BOARD_H
 #define MODELER_CHESS_BOARD_H
 
+#define CHESS_SQUARE_COUNT 8 * 8
+
 #include <stdbool.h>
 
 #include "window.h"
@@ -32,7 +34,9 @@ typedef enum move_t
 	CAPTURE
 } Move;
 
-typedef Piece Board8x8[64];
+typedef Piece Board8x8[CHESS_SQUARE_COUNT];
+
+typedef Move MoveBoard8x8[CHESS_SQUARE_COUNT];
 
 typedef struct chess_board_t *ChessBoard;
 
@@ -41,6 +45,7 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, WindowDimens
 void destroyChessBoard(ChessBoard self);
 void setSize(ChessBoard self, float aspectRatio, float width, float originX, float originY);
 void setBoard(ChessBoard self, Board8x8 board);
+void setMove(ChessBoard self, MoveBoard8x8 move);
 bool updateChessBoard(ChessBoard self, char **error);
 
 #endif /* MODELER_CHESS_BOARD_H */
