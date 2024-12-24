@@ -46,6 +46,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 	long elapsedQueue[queueLength];
 	size_t head = 0;
 	long elapsed = 1;
+	bool updateBoard = false;
 
 	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions.scale, resourcePath);
 
@@ -91,6 +92,26 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 				free(inputEvent);
 				goto cancelMainLoop;
 			}
+		}
+
+		if (updateBoard) {
+			Board8x8 newSetup = {
+				BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK,
+				BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
+				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+				EMPTY, EMPTY, EMPTY, EMPTY, WHITE_PAWN, EMPTY, EMPTY, EMPTY,
+				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+				WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, EMPTY, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
+				WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK
+			};
+
+			setBoard(chessBoard, newSetup);
+			if (!updateChessBoard(chessBoard, error)) {
+				asprintf(error, "Failed to wait for update chess board.\n");
+				return false;
+			}
+			updateBoard = false;
 		}
 
 		if (windowResized) {
@@ -170,18 +191,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 			sendExitFullscreenSignal(platformWindow);
 		}
 		if (ImGui_Button("Move Pawn")) {
-			Board8x8 newSetup = {
-				BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK,
-				BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
-				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-				EMPTY, EMPTY, EMPTY, EMPTY, WHITE_PAWN, EMPTY, EMPTY, EMPTY,
-				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-				WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, EMPTY, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
-				WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK
-			};
-
-			setBoard(chessBoard, newSetup);
+			updateBoard = true;
 		}
 		ImGui_End();
 		ImGui_ShowDemoWindow(NULL);
