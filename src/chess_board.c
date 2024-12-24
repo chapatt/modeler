@@ -9,7 +9,11 @@
 #include "sampler.h"
 #include "utils.h"
 
-#define CHESS_SQUARE_COUNT 8 * 8
+#ifdef EMBED_SHADERS
+#include "../shader_chess_board.vert.h"
+#include "../shader_chess_board.frag.h"
+#endif /* EMBED_SHADERS */
+
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
 #define TEXTURE_WIDTH 2048
@@ -68,15 +72,18 @@ struct chess_board_t {
 	VkDescriptorSet *textureDescriptorSets;
 	VkDescriptorSetLayout *textureDescriptorSetLayouts;
 	Board8x8 board;
+	MoveBoard8x8 move;
 };
 
 static void initializePieces(ChessBoard self);
+static void initializeMove(ChessBoard self);
 static bool createChessBoardTexture(ChessBoard self, char **error);
 static bool createChessBoardSampler(ChessBoard self, char **error);
 static bool createChessBoardDescriptors(ChessBoard self, char **error);
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error);
 static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
 static bool createChessBoardPipeline(ChessBoard self, char **error);
+static void updateVertices(ChessBoard self);
 
 bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float anisotropy, float aspectRatio, float width, float originX, float originY, char **error)
 {
@@ -98,6 +105,7 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 	self->originY = originY;
 
 	initializePieces(self);
+	initializeMove(self);
 
 	if (!createChessBoardVertexBuffer(self, error)) {
 		asprintf(error, "Failed to create chess board vertex buffer.\n");
@@ -146,6 +154,22 @@ static void initializePieces(ChessBoard self)
 	};
 
 	setBoard(self, initialSetup);
+}
+
+static void initializeMove(ChessBoard self)
+{
+	MoveBoard8x8 initialSetup = {
+		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
+		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
+		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
+		ILLEGAL, ILLEGAL, ILLEGAL, OPEN, CAPTURE, ILLEGAL, ILLEGAL, ILLEGAL,
+		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
+		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
+		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
+		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL
+	};
+
+	setMove(self, initialSetup);
 }
 
 static bool createChessBoardTexture(ChessBoard self, char **error)
@@ -289,24 +313,29 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 			.location = 2,
 			.format = VK_FORMAT_R32G32_SFLOAT,
 			.offset = offsetof(Vertex, texCoord),
+		}, {
+			.binding = 0,
+			.location = 3,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(Vertex, texCoord2),
 		}
 	};
 
 #ifndef EMBED_SHADERS
-	char *vertexShaderPath;
-	char *fragmentShaderPath;
-	asprintf(&vertexShaderPath, "%s/%s", self->resourcePath, "triangle.vert.spv");
-	asprintf(&fragmentShaderPath, "%s/%s", self->resourcePath, "triangle.frag.spv");
-	char *vertexShaderBytes;
-	char *fragmentShaderBytes;
-	uint32_t vertexShaderSize = 0;
-	uint32_t fragmentShaderSize = 0;
+	char *chessBoardVertShaderPath;
+	char *chessBoardFragShaderPath;
+	asprintf(&chessBoardVertShaderPath, "%s/%s", self->resourcePath, "chessBoard.vert.spv");
+	asprintf(&chessBoardFragShaderPath, "%s/%s", self->resourcePath, "chessBoard.frag.spv");
+	char *chessBoardVertShaderBytes;
+	char *chessBoardFragShaderBytes;
+	uint32_t chessBoardVertShaderSize = 0;
+	uint32_t chessBoardFragShaderSize = 0;
 
-	if ((vertexShaderSize = readFileToString(vertexShaderPath, &vertexShaderBytes)) == -1) {
+	if ((chessBoardVertShaderSize = readFileToString(chessBoardVertShaderPath, &chessBoardVertShaderBytes)) == -1) {
 		asprintf(error, "Failed to open triangle vertex shader for reading.\n");
 		return false;
 	}
-	if ((fragmentShaderSize = readFileToString(fragmentShaderPath, &fragmentShaderBytes)) == -1) {
+	if ((chessBoardFragShaderSize = readFileToString(chessBoardFragShaderPath, &chessBoardFragShaderBytes)) == -1) {
 		asprintf(error, "Failed to open triangle fragment shader for reading.\n");
 		return false;
 	}
@@ -316,21 +345,21 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 		.device = self->device,
 		.renderPass = self->renderPass,
 		.subpassIndex = self->subpass,
-		.vertexShaderBytes = vertexShaderBytes,
-		.vertexShaderSize = vertexShaderSize,
-		.fragmentShaderBytes = fragmentShaderBytes,
-		.fragmentShaderSize = fragmentShaderSize,
+		.vertexShaderBytes = chessBoardVertShaderBytes,
+		.vertexShaderSize = chessBoardVertShaderSize,
+		.fragmentShaderBytes = chessBoardFragShaderBytes,
+		.fragmentShaderSize = chessBoardFragShaderSize,
 		.vertexBindingDescriptionCount = 1,
 		.vertexBindingDescriptions = &vertexBindingDescription,
-		.vertexAttributeDescriptionCount = 3,
+		.vertexAttributeDescriptionCount = sizeof(vertexAttributeDescriptions) / sizeof(*vertexAttributeDescriptions),
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
 		.descriptorSetLayouts = self->textureDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
 	};
 	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->pipelineLayout, &self->pipeline, error);
 #ifndef EMBED_SHADERS
-	free(fragmentShaderBytes);
-	free(vertexShaderBytes);
+	free(chessBoardFragShaderBytes);
+	free(chessBoardVertShaderBytes);
 #endif /* EMBED_SHADERS */
 	if (!pipelineCreateSuccess) {
 		return false;
@@ -345,6 +374,8 @@ void setSize(ChessBoard self, float aspectRatio, float width, float originX, flo
 	self->width = width;
 	self->originX = originX;
 	self->originY = originY;
+
+	updateVertices(self);
 }
 
 void setBoard(ChessBoard self, Board8x8 board)
@@ -353,6 +384,20 @@ void setBoard(ChessBoard self, Board8x8 board)
 		self->board[i] = board[i];
 	}
 
+	updateVertices(self);
+}
+
+void setMove(ChessBoard self, MoveBoard8x8 move)
+{
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+		self->move[i] = move[i];
+	}
+
+	updateVertices(self);
+}
+
+static void updateVertices(ChessBoard self)
+{
 	float dark[] = {0.71f, 0.533f, 0.388f};
 	srgbToLinear(dark);
 	float light[] = {0.941f, 0.851f, 0.71f};
@@ -368,6 +413,7 @@ void setBoard(ChessBoard self, Board8x8 board)
 
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		float *spriteOrigin = pieceSpriteOriginMap[self->board[i]];
+		float *sprite2Origin = iconSpriteOriginMap[self->move[i]];
 		size_t verticesOffset = i * 4;
 		size_t offsetX = i % 8;
 		size_t offsetY = i / 8;
@@ -387,10 +433,10 @@ void setBoard(ChessBoard self, Board8x8 board)
 			}
 		}
 
-		self->vertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}};
-		self->vertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.0f}};
-		self->vertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}};
-		self->vertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.0f, spriteOrigin[1] + 0.25f}};
+		self->vertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
+		self->vertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.0f}, {sprite2Origin[0], sprite2Origin[1]}};
+		self->vertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1]}};
+		self->vertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.0f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1]}};
 	}
 }
 

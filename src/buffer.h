@@ -9,6 +9,7 @@ typedef struct vertex_t {
 	float pos[2];
 	float color[3];
 	float texCoord[2];
+	float texCoord2[2];
 } Vertex;
 
 bool createBuffer(VkDevice device, VmaAllocator allocator, VkDeviceSize size, VkBufferUsageFlags bufferUsage, VkMemoryPropertyFlags memoryUsage, VkMemoryPropertyFlags memoryFlags, VkBuffer *buffer, VmaAllocation *allocation, char **error);
