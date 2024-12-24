@@ -235,7 +235,7 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
-	if (!createMutableVertexBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, self->stagingVertexBufferMappedMemory, &self->stagingVertexBuffer, &self->stagingVertexBufferAllocation, &self->vertexBuffer, &self->vertexBufferAllocation, self->vertices, CHESS_VERTEX_COUNT, error)) {
+	if (!createMutableVertexBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, &self->stagingVertexBufferMappedMemory, &self->stagingVertexBuffer, &self->stagingVertexBufferAllocation, &self->vertexBuffer, &self->vertexBufferAllocation, self->vertices, CHESS_VERTEX_COUNT, error)) {
 		return false;
 	}
 
