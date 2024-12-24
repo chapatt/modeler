@@ -42,7 +42,8 @@ endif
 SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv triangle.vert.spv triangle.frag.spv
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_triangle.vert.h shader_triangle.frag.h
 TEXTURES=pieces.rgba
-MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o vma_implementation.o pipeline.o buffer.o sampler.o chess_board.o
+MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o
+VENDOR_LIBS=vma_implementation.o
 
 ifdef DEBUG
 	CFLAGS+=-DDEBUG -g
@@ -57,7 +58,7 @@ endif
 
 ifdef ENABLE_IMGUI
 	CFLAGS+=-DENABLE_IMGUI
-	IMGUI_LIBS=imgui.a
+	IMGUI_LIBS+=imgui.a
 endif
 
 all: $(ALL_TARGET)
@@ -65,13 +66,13 @@ all: $(ALL_TARGET)
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $<
 
-modeler: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(IMGUI_LIBS)
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(IMGUI_LIBS) $(LDLIBS)
+modeler: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(VENDOR_LIBS) $(IMGUI_LIBS)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(VENDOR_LIBS) $(LDLIBS) $(IMGUI_LIBS)
 
-modeler.exe: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS)
-	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(IMGUI_LIBS) $(LDLIBS)
+modeler.exe: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS)
+	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_metal.o surface_metal.o
+modeler.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS)
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o
 
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
@@ -125,13 +126,17 @@ xdg-shell-client-protocol.h:
 vma_implementation.o: src/vk_mem_alloc.h
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/vma_implementation.cpp
 
-.PHONY: clean
-clean:
+.PHONY: clean clean-app clean-vendor
+clean: clean-app clean-vendor
+
+clean-app:
 	$(RM) -rf modeler modeler.exe modeler.a main_wayland.o main_win32.o \
 		modeler_win32.o modeler_wayland.o modeler_metal.o \
 		surface_win32.o surface_wayland.o surface_metal.o \
 		utils_win32.o \
-		$(MODELER_OBJS) \
+		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(TEXTURES)
+
+clean-vendor:
+	$(RM) -rf $(VENDOR_LIBS) \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
-		$(SPIRV_SHADERS) $(HEADER_SHADERS) \
 		imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
