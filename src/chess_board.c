@@ -324,8 +324,8 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 #ifndef EMBED_SHADERS
 	char *chessBoardVertShaderPath;
 	char *chessBoardFragShaderPath;
-	asprintf(&chessBoardVertShaderPath, "%s/%s", self->resourcePath, "chessBoard.vert.spv");
-	asprintf(&chessBoardFragShaderPath, "%s/%s", self->resourcePath, "chessBoard.frag.spv");
+	asprintf(&chessBoardVertShaderPath, "%s/%s", self->resourcePath, "chess_board.vert.spv");
+	asprintf(&chessBoardFragShaderPath, "%s/%s", self->resourcePath, "chess_board.frag.spv");
 	char *chessBoardVertShaderBytes;
 	char *chessBoardFragShaderBytes;
 	uint32_t chessBoardVertShaderSize = 0;
