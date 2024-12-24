@@ -108,7 +108,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 
 			setBoard(chessBoard, newSetup);
 			if (!updateChessBoard(chessBoard, error)) {
-				asprintf(error, "Failed to wait for update chess board.\n");
+				asprintf(error, "Failed to update chess board.\n");
 				return false;
 			}
 			updateBoard = false;
