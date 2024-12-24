@@ -31,7 +31,7 @@ float pieceSpriteOriginMap[13][2] = {
 	{0.0f, 0.0f}
 };
 
-float iconSpriteOriginMap[2][2] = {
+float iconSpriteOriginMap[3][2] = {
 	{0.75f, 0.75f},
 	{0.5f, 0.25f},
 	{0.75f, 0.25f}
