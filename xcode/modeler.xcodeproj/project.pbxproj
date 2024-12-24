@@ -23,11 +23,11 @@
 		AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */; };
 		AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
 		AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB60A70E2A6CFBE0001D4DB2 /* main.swift */; };
-		AB6C10242BA0F9A9004667E0 /* triangle.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB3270852B83303E000500E5 /* triangle.frag.spv */; };
-		AB6C10252BA0F9A9004667E0 /* triangle.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB3270862B83303E000500E5 /* triangle.vert.spv */; };
 		AB6C10262BA0F9A9004667E0 /* window_border.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */; };
 		AB6C10272BA0F9A9004667E0 /* window_border.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */; };
 		AB7E0B0E2D17A95C0068EC79 /* pieces.rgba in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B0D2D17A95C0068EC79 /* pieces.rgba */; };
+		AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */; };
+		AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */; };
 		ABC0F3052C02C93700771076 /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABC0F3062C05B82B00771076 /* roboto.ttf */; };
 		ABD9E0172B2BA4F8008932DB /* ModelerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */; };
@@ -62,8 +62,6 @@
 
 /* Begin PBXFileReference section */
 		AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modeler-Bridging-Header.h"; sourceTree = "<group>"; };
-		AB3270852B83303E000500E5 /* triangle.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = triangle.frag.spv; path = ../triangle.frag.spv; sourceTree = "<group>"; };
-		AB3270862B83303E000500E5 /* triangle.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = triangle.vert.spv; path = ../triangle.vert.spv; sourceTree = "<group>"; };
 		AB330ECE2BD9919400FC06CE /* libvulkan.1.3.280.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.3.280.dylib; path = macOS/lib/libvulkan.1.3.280.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_profiles.dylib; path = macOS/lib/libVkLayer_khronos_profiles.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED12BD9920700FC06CE /* libvulkan.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.dylib; path = macOS/lib/libvulkan.dylib; sourceTree = VULKAN_SDK; };
@@ -83,6 +81,8 @@
 		AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.vert.spv; path = ../window_border.vert.spv; sourceTree = "<group>"; };
 		AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.frag.spv; path = ../window_border.frag.spv; sourceTree = "<group>"; };
 		AB7E0B0D2D17A95C0068EC79 /* pieces.rgba */ = {isa = PBXFileReference; lastKnownFileType = file; name = pieces.rgba; path = ../pieces.rgba; sourceTree = "<group>"; };
+		AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.vert.spv; path = ../chess_board.vert.spv; sourceTree = "<group>"; };
+		AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.frag.spv; path = ../chess_board.frag.spv; sourceTree = "<group>"; };
 		ABC0F3062C05B82B00771076 /* roboto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = roboto.ttf; path = ../roboto.ttf; sourceTree = "<group>"; };
 		ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindowController.swift; sourceTree = "<group>"; };
 		ABE1DEF42A3592D600A963A6 /* vulkan */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vulkan; sourceTree = "<group>"; };
@@ -131,10 +131,10 @@
 		ABF1622C2A34E3A6007655F7 = {
 			isa = PBXGroup;
 			children = (
+				AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */,
+				AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */,
 				AB7E0B0D2D17A95C0068EC79 /* pieces.rgba */,
 				ABC0F3062C05B82B00771076 /* roboto.ttf */,
-				AB3270852B83303E000500E5 /* triangle.frag.spv */,
-				AB3270862B83303E000500E5 /* triangle.vert.spv */,
 				AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */,
 				AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */,
 				ABE1DEF42A3592D600A963A6 /* vulkan */,
@@ -239,10 +239,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */,
+				AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */,
 				AB7E0B0E2D17A95C0068EC79 /* pieces.rgba in Resources */,
 				ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */,
-				AB6C10242BA0F9A9004667E0 /* triangle.frag.spv in Resources */,
-				AB6C10252BA0F9A9004667E0 /* triangle.vert.spv in Resources */,
 				AB6C10262BA0F9A9004667E0 /* window_border.frag.spv in Resources */,
 				AB6C10272BA0F9A9004667E0 /* window_border.vert.spv in Resources */,
 				ABF162402A34E3AC007655F7 /* Preview Assets.xcassets in Resources */,
