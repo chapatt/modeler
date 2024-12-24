@@ -65,6 +65,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error);
 static bool createChessBoardSampler(ChessBoard self, char **error);
 static bool createChessBoardDescriptors(ChessBoard self, char **error);
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error);
+static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
 static bool createChessBoardPipeline(ChessBoard self, char **error);
 
 bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float anisotropy, float aspectRatio, float width, float originX, float originY, char **error)
@@ -90,6 +91,11 @@ bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allo
 
 	if (!createChessBoardVertexBuffer(self, error)) {
 		asprintf(error, "Failed to create chess board vertex buffer.\n");
+		return false;
+	}
+
+	if (!createChessBoardIndexBuffer(self, error)) {
+		asprintf(error, "Failed to create chess board index buffer.\n");
 		return false;
 	}
 
@@ -229,11 +235,9 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 	srgbToLinear(selectedLight);
 
 	Vertex triangleVertices[CHESS_VERTEX_COUNT];
-	uint16_t triangleIndices[CHESS_INDEX_COUNT];
-	for (size_t i = 0; i < 64; ++i) {
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		float *spriteOrigin = pieceSpriteOriginMap[self->board[i]];
 		size_t verticesOffset = i * 4;
-		size_t indicesOffset = i * 6;
 		size_t offsetX = i % 8;
 		size_t offsetY = i / 8;
 		float squareWidth = self->width / 8.0f;
@@ -256,6 +260,22 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.0f}};
 		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}};
 		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.0f, spriteOrigin[1] + 0.25f}};
+	}
+
+	if (!createVertexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->vertexBuffer, &self->vertexBufferAllocation, triangleVertices, CHESS_VERTEX_COUNT, error)) {
+		return false;
+	}
+
+	return true;
+}
+
+static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
+{
+	uint16_t triangleIndices[CHESS_INDEX_COUNT];
+
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+		size_t verticesOffset = i * 4;
+		size_t indicesOffset = i * 6;
 
 		triangleIndices[indicesOffset] = verticesOffset + 0;
 		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
@@ -263,10 +283,6 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 		triangleIndices[indicesOffset + 3] = verticesOffset + 2;
 		triangleIndices[indicesOffset + 4] = verticesOffset + 3;
 		triangleIndices[indicesOffset + 5] = verticesOffset + 0;
-	}
-
-	if (!createVertexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->vertexBuffer, &self->vertexBufferAllocation, triangleVertices, CHESS_VERTEX_COUNT, error)) {
-		return false;
 	}
 
 	if (!createIndexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->indexBuffer, &self->indexBufferAllocation, triangleIndices, CHESS_INDEX_COUNT, error)) {
@@ -360,7 +376,7 @@ void setSize(ChessBoard self, float aspectRatio, float width, float originX, flo
 
 void setBoard(ChessBoard self, Board8x8 board)
 {
-	for (size_t i = 0; i < sizeof(self->board); ++i) {
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		self->board[i] = board[i];
 	}
 }
@@ -368,7 +384,6 @@ void setBoard(ChessBoard self, Board8x8 board)
 bool updateChessBoard(ChessBoard self, char **error)
 {
 	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
-	destroyBuffer(self->allocator, self->indexBuffer, self->indexBufferAllocation);
 
 	if (!createChessBoardVertexBuffer(self, error)) {
 		return false;
