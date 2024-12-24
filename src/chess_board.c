@@ -31,6 +31,12 @@ float pieceSpriteOriginMap[13][2] = {
 	{0.0f, 0.0f}
 };
 
+float iconSpriteOriginMap[2][2] = {
+	{0.75f, 0.75f},
+	{0.5f, 0.25f},
+	{0.75f, 0.25f}
+};
+
 struct chess_board_t {
 	VkDevice device;
 	VmaAllocator allocator;
@@ -225,13 +231,17 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
-	float dark[3] = {0.71f, 0.533f, 0.388f};
+	float dark[] = {0.71f, 0.533f, 0.388f};
 	srgbToLinear(dark);
-	float light[3] = {0.941f, 0.851f, 0.71f};
+	float light[] = {0.941f, 0.851f, 0.71f};
 	srgbToLinear(light);
-	float selectedDark[3] = {0.671f, 0.635f, 0.227f};
+	float previousDark[] = {0.671f, 0.635f, 0.227f};
+	srgbToLinear(previousDark);
+	float previousLight[] = {0.808f, 0.824f, 0.42f};
+	srgbToLinear(previousLight);
+	float selectedDark[] = {0.749f, 0.475f, 0.271f};
 	srgbToLinear(selectedDark);
-	float selectedLight[3] = {0.808f, 0.824f, 0.42f};
+	float selectedLight[] = {0.914f, 0.694f, 0.494f};
 	srgbToLinear(selectedLight);
 
 	Vertex triangleVertices[CHESS_VERTEX_COUNT];
@@ -250,9 +260,9 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 
 		if (offsetX == 4) {
 			if (offsetY == 4) {
-				color = selectedDark;
-			} else if (offsetY == 5) {
 				color = selectedLight;
+			} else if (offsetY == 5) {
+				color = selectedDark;
 			}
 		}
 

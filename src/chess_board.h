@@ -25,6 +25,13 @@ typedef enum piece_t
 	WHITE_KING
 } Piece;
 
+typedef enum move_t
+{
+	ILLEGAL,
+	OPEN,
+	CAPTURE
+} Move;
+
 typedef Piece Board8x8[64];
 
 typedef struct chess_board_t *ChessBoard;
