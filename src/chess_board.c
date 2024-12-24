@@ -52,6 +52,10 @@ struct chess_board_t {
 	float originY;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
+	Vertex vertices[CHESS_VERTEX_COUNT];
+	void *stagingVertexBufferMappedMemory;
+	VkBuffer stagingVertexBuffer;
+	VmaAllocation stagingVertexBufferAllocation;
 	VkBuffer vertexBuffer;
 	VmaAllocation vertexBufferAllocation;
 	VkBuffer indexBuffer;
@@ -231,48 +235,7 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
-	float dark[] = {0.71f, 0.533f, 0.388f};
-	srgbToLinear(dark);
-	float light[] = {0.941f, 0.851f, 0.71f};
-	srgbToLinear(light);
-	float previousDark[] = {0.671f, 0.635f, 0.227f};
-	srgbToLinear(previousDark);
-	float previousLight[] = {0.808f, 0.824f, 0.42f};
-	srgbToLinear(previousLight);
-	float selectedDark[] = {0.749f, 0.475f, 0.271f};
-	srgbToLinear(selectedDark);
-	float selectedLight[] = {0.914f, 0.694f, 0.494f};
-	srgbToLinear(selectedLight);
-
-	Vertex triangleVertices[CHESS_VERTEX_COUNT];
-	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
-		float *spriteOrigin = pieceSpriteOriginMap[self->board[i]];
-		size_t verticesOffset = i * 4;
-		size_t offsetX = i % 8;
-		size_t offsetY = i / 8;
-		float squareWidth = self->width / 8.0f;
-		float squareHeight = squareWidth * self->aspectRatio;
-		float squareOriginX = self->originX + offsetX * squareWidth;
-		float squareOriginY = self->originY + offsetY * squareHeight;
-		const float *color = (offsetY % 2) ?
-			((offsetX % 2) ? light : dark) :
-			(offsetX % 2) ? dark : light;
-
-		if (offsetX == 4) {
-			if (offsetY == 4) {
-				color = selectedLight;
-			} else if (offsetY == 5) {
-				color = selectedDark;
-			}
-		}
-
-		triangleVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}};
-		triangleVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.0f}};
-		triangleVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}};
-		triangleVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.0f, spriteOrigin[1] + 0.25f}};
-	}
-
-	if (!createVertexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->vertexBuffer, &self->vertexBufferAllocation, triangleVertices, CHESS_VERTEX_COUNT, error)) {
+	if (!createMutableVertexBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, self->stagingVertexBufferMappedMemory, &self->stagingVertexBuffer, &self->stagingVertexBufferAllocation, &self->vertexBuffer, &self->vertexBufferAllocation, self->vertices, CHESS_VERTEX_COUNT, error)) {
 		return false;
 	}
 
@@ -389,13 +352,51 @@ void setBoard(ChessBoard self, Board8x8 board)
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		self->board[i] = board[i];
 	}
+
+	float dark[] = {0.71f, 0.533f, 0.388f};
+	srgbToLinear(dark);
+	float light[] = {0.941f, 0.851f, 0.71f};
+	srgbToLinear(light);
+	float previousDark[] = {0.671f, 0.635f, 0.227f};
+	srgbToLinear(previousDark);
+	float previousLight[] = {0.808f, 0.824f, 0.42f};
+	srgbToLinear(previousLight);
+	float selectedDark[] = {0.749f, 0.475f, 0.271f};
+	srgbToLinear(selectedDark);
+	float selectedLight[] = {0.914f, 0.694f, 0.494f};
+	srgbToLinear(selectedLight);
+
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+		float *spriteOrigin = pieceSpriteOriginMap[self->board[i]];
+		size_t verticesOffset = i * 4;
+		size_t offsetX = i % 8;
+		size_t offsetY = i / 8;
+		float squareWidth = self->width / 8.0f;
+		float squareHeight = squareWidth * self->aspectRatio;
+		float squareOriginX = self->originX + offsetX * squareWidth;
+		float squareOriginY = self->originY + offsetY * squareHeight;
+		const float *color = (offsetY % 2) ?
+			((offsetX % 2) ? light : dark) :
+			(offsetX % 2) ? dark : light;
+
+		if (offsetX == 4) {
+			if (offsetY == 4) {
+				color = selectedLight;
+			} else if (offsetY == 5) {
+				color = selectedDark;
+			}
+		}
+
+		self->vertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}};
+		self->vertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.0f}};
+		self->vertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}};
+		self->vertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.0f, spriteOrigin[1] + 0.25f}};
+	}
 }
 
 bool updateChessBoard(ChessBoard self, char **error)
 {
-	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
-
-	if (!createChessBoardVertexBuffer(self, error)) {
+	if (!updateMutableVertexBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, self->stagingVertexBufferMappedMemory, &self->stagingVertexBuffer, &self->vertexBuffer, self->vertices, CHESS_VERTEX_COUNT, error)) {
 		return false;
 	}
 
