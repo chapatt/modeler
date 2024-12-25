@@ -411,16 +411,19 @@ static void updateVertices(ChessBoard self)
 	float selectedLight[] = {0.914f, 0.694f, 0.494f};
 	srgbToLinear(selectedLight);
 
+	const float VIEWPORT_WIDTH = 2.0f;
+	const float VIEWPORT_HEIGHT = 2.0f;
+
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		float *spriteOrigin = pieceSpriteOriginMap[self->board[i]];
 		float *sprite2Origin = iconSpriteOriginMap[self->move[i]];
 		size_t verticesOffset = i * 4;
 		size_t offsetX = i % 8;
 		size_t offsetY = i / 8;
-		float squareWidth = self->width / 8.0f;
-		float squareHeight = squareWidth * self->aspectRatio;
-		float squareOriginX = self->originX + offsetX * squareWidth;
-		float squareOriginY = self->originY + offsetY * squareHeight;
+		float squareWidth = VIEWPORT_WIDTH / 8.0f;
+		float squareHeight = squareWidth;
+		float squareOriginX = (offsetX * squareWidth) - (VIEWPORT_WIDTH / 2);
+		float squareOriginY = (offsetY * squareHeight) - (VIEWPORT_HEIGHT / 2);
 		const float *color = (offsetY % 2) ?
 			((offsetX % 2) ? light : dark) :
 			(offsetX % 2) ? dark : light;
@@ -449,37 +452,13 @@ bool updateChessBoard(ChessBoard self, char **error)
 	return true;
 }
 
-bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, WindowDimensions windowDimensions, char **error)
+bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error)
 {
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->vertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, self->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
-	VkViewport viewport = {
-		.x = windowDimensions.activeArea.offset.x,
-		.y = windowDimensions.activeArea.offset.y,
-		.width = windowDimensions.activeArea.extent.width,
-		.height = windowDimensions.activeArea.extent.height,
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f
-	};
-	VkOffset2D scissorOffset = {
-		.x = 0,
-		.y = 0
-	};
-	VkRect2D scissor = {
-		.offset = scissorOffset,
-		.extent = windowDimensions.activeArea.extent
-	};
-	vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-	vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-	PushConstants pushConstants = {
-		.extent = {windowDimensions.activeArea.extent.width, windowDimensions.activeArea.extent.height},
-		.offset = {windowDimensions.activeArea.offset.x, windowDimensions.activeArea.offset.y},
-		.cornerRadius = windowDimensions.cornerRadius
-	};
-	vkCmdPushConstants(commandBuffer, self->pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
 	return true;
