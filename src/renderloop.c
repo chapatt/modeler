@@ -23,6 +23,14 @@ static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale)
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 
+typedef struct component_t {
+	void *data;
+	VkViewport viewport;
+} Component;
+
+static void sendInputToComponent(Component *components, InputEvent *inputEvent) {
+}
+
 bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
 {
 	Font *fonts = NULL;
@@ -54,6 +62,22 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		VkResult result;
 		bool windowResized = false;
 
+		VkViewport chessBoardViewport = {
+			.x = windowDimensions.activeArea.offset.x + (windowDimensions.activeArea.extent.width / 4),
+			.y = windowDimensions.activeArea.offset.y + (windowDimensions.activeArea.extent.height / 4),
+			.width = windowDimensions.activeArea.extent.width / 2,
+			.height = windowDimensions.activeArea.extent.width / 2,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+
+		Component components[] = {
+			{
+				.data = chessBoard,
+				.viewport = chessBoardViewport
+			}
+		};
+
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
 			InputEventType type = inputEvent->type;
@@ -65,12 +89,14 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 #ifdef ENABLE_IMGUI
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
+				sendInputToComponent(components, inputEvent);
 				free(inputEvent);
 				break;
 			case POINTER_MOVE:
 #ifdef ENABLE_IMGUI
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
+				sendInputToComponent(components, inputEvent);
 				free(data);
 				free(inputEvent);
 				break;
@@ -159,14 +185,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		vkBeginCommandBuffer((*commandBuffers)[imageIndex], &commandBufferBeginInfos[imageIndex]);
 		vkCmdBeginRenderPass((*commandBuffers)[imageIndex], &(renderPassBeginInfos[imageIndex]), VK_SUBPASS_CONTENTS_INLINE);
 
-		VkViewport viewport = {
-			.x = windowDimensions.activeArea.offset.x + (windowDimensions.activeArea.extent.width / 4),
-			.y = windowDimensions.activeArea.offset.y + (windowDimensions.activeArea.extent.height / 4),
-			.width = windowDimensions.activeArea.extent.width / 2,
-			.height = windowDimensions.activeArea.extent.width / 2,
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f
-		};
 		VkRect2D scissor = {
 			.offset = {
 				.x = 0,
@@ -174,7 +192,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 			},
 			.extent = windowDimensions.activeArea.extent
 		};
-		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &viewport);
+		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &chessBoardViewport);
 		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
 		if (!drawChessBoard(chessBoard, (*commandBuffers)[imageIndex], error)) {
 			return false;
