@@ -428,6 +428,14 @@ static void updateVertices(ChessBoard self)
 			((offsetX % 2) ? light : dark) :
 			(offsetX % 2) ? dark : light;
 
+		if (offsetX == 3) {
+			if (offsetY == 4) {
+				color = previousDark;
+			} else if (offsetY == 5) {
+				color = previousLight;
+			}
+		}
+
 		if (offsetX == 4) {
 			if (offsetY == 4) {
 				color = selectedLight;
