@@ -199,7 +199,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		ImGui_ImplModeler_NewFrame();
 		ImGui_NewFrame();
 		ImGui_PushFont(currentFont);
-		ImGui_Begin("A Window", NULL, 0);
+		ImGui_Begin("Debug", NULL, 0);
 		ImGui_Text("fps: %ld", 1000000000 / elapsed);
 		if (ImGui_Button("Fullscreen")) {
 			sendFullscreenSignal(platformWindow);
@@ -211,7 +211,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 			updateBoard = true;
 		}
 		ImGui_End();
-		ImGui_ShowDemoWindow(NULL);
 		ImGui_PopFont();
 		ImGui_Render();
 		ImDrawData *drawData = ImGui_GetDrawData();
