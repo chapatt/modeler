@@ -41,7 +41,7 @@ typedef Move MoveBoard8x8[CHESS_SQUARE_COUNT];
 typedef struct chess_board_t *ChessBoard;
 
 bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float anisotropy, float aspectRatio, float width, float originX, float originY, char **error);
-bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, WindowDimensions initialWindowDimensions, char **error);
+bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error);
 void destroyChessBoard(ChessBoard self);
 void setSize(ChessBoard self, float aspectRatio, float width, float originX, float originY);
 void setBoard(ChessBoard self, Board8x8 board);

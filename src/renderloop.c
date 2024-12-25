@@ -159,7 +159,24 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		vkBeginCommandBuffer((*commandBuffers)[imageIndex], &commandBufferBeginInfos[imageIndex]);
 		vkCmdBeginRenderPass((*commandBuffers)[imageIndex], &(renderPassBeginInfos[imageIndex]), VK_SUBPASS_CONTENTS_INLINE);
 
-		if (!drawChessBoard(chessBoard, (*commandBuffers)[imageIndex], windowDimensions, error)) {
+		VkViewport viewport = {
+			.x = windowDimensions.activeArea.offset.x + (windowDimensions.activeArea.extent.width / 4),
+			.y = windowDimensions.activeArea.offset.y + (windowDimensions.activeArea.extent.height / 4),
+			.width = windowDimensions.activeArea.extent.width / 2,
+			.height = windowDimensions.activeArea.extent.width / 2,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+		VkRect2D scissor = {
+			.offset = {
+				.x = 0,
+				.y = 0
+			},
+			.extent = windowDimensions.activeArea.extent
+		};
+		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &viewport);
+		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
+		if (!drawChessBoard(chessBoard, (*commandBuffers)[imageIndex], error)) {
 			return false;
 		}
 
@@ -214,12 +231,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};
-		VkOffset2D secondScissorOffset = {
-			.x = 0,
-			.y = 0
-		};
 		VkRect2D secondScissor = {
-			.offset = scissorOffset,
+			.offset = {
+				.x = 0,
+				.y = 0
+			},
 			.extent = swapchainInfo->extent
 		};
 		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &secondViewport);
