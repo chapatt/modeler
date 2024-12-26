@@ -6,6 +6,7 @@
 
 #include "imgui/cimgui_impl_vulkan.h"
 
+#include "modeler.h"
 #include "swapchain.h"
 #include "synchronization.h"
 #include "queue.h"
