@@ -28,7 +28,7 @@ typedef struct component_t {
 	void (*handleInputEvent)(void *, InputEvent *);
 } Component;
 
-static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, MousePosition pointerPosition)
+static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, PointerPosition pointerPosition)
 {
 	InputEvent newInputEvent;
 
@@ -38,8 +38,8 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
 				break;
 			case POINTER_MOVE:
-				NormalizedMousePosition normalizedMousePosition = normalizeMousePosition(components[i].viewport, pointerPosition);
-				newInputEvent.data = &normalizedMousePosition;
+				NormalizedPointerPosition normalizedPointerPosition = normalizePointerPosition(components[i].viewport, pointerPosition);
+				newInputEvent.data = &normalizedPointerPosition;
 				newInputEvent.type = NORMALIZED_POINTER_MOVE;
 				break;
 			}
@@ -74,7 +74,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 	size_t head = 0;
 	long elapsed = 1;
 	bool updateBoard = false;
-	MousePosition pointerPosition;
+	PointerPosition pointerPosition;
 
 	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions.scale, resourcePath);
 
@@ -117,7 +117,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 #ifdef ENABLE_IMGUI
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
-				pointerPosition = *((MousePosition *) inputEvent->data);
+				pointerPosition = *((PointerPosition *) inputEvent->data);
 				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), inputEvent, pointerPosition);
 				free(data);
 				free(inputEvent);

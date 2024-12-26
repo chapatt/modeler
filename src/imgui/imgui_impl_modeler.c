@@ -42,7 +42,7 @@ CIMGUI_IMPL_API void ImGui_ImplModeler_NewFrame(void)
 CIMGUI_IMPL_API void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
 {
 	ImGuiIO *io = ImGui_GetIO();
-	MousePosition *data = inputEvent->data;
+	PointerPosition *data = inputEvent->data;
 
 	switch (inputEvent->type) {
 	case POINTER_MOVE:
