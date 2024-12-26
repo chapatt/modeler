@@ -16,8 +16,8 @@ void enqueueInputEvent(Queue *queue, InputEventType type, void *data)
 
 void enqueueInputEventWithPosition(Queue *queue, InputEventType type, int x, int y)
 {
-	MousePosition *position = malloc(sizeof(*position));
-	*position = (const MousePosition) {
+	PointerPosition *position = malloc(sizeof(*position));
+	*position = (const PointerPosition) {
 		.x = x,
 		.y = y
 	};
@@ -48,7 +48,7 @@ void enqueueInputEventWithResizeInfo(Queue *queue, InputEventType type, ResizeIn
 	enqueueInputEvent(queue, type, resizeInfoP);
 }
 
-bool isPointerOnViewport(VkViewport viewport, MousePosition position)
+bool isPointerOnViewport(VkViewport viewport, PointerPosition position)
 {
 	return position.x > viewport.x &&
 		position.x < viewport.x + viewport.width &&
@@ -56,9 +56,9 @@ bool isPointerOnViewport(VkViewport viewport, MousePosition position)
 		position.y < viewport.y + viewport.height;
 }
 
-NormalizedMousePosition normalizeMousePosition(VkViewport viewport, MousePosition position)
+NormalizedPointerPosition normalizePointerPosition(VkViewport viewport, PointerPosition position)
 {
-	return (NormalizedMousePosition) {
+	return (NormalizedPointerPosition) {
 		.x = (position.x - viewport.x) / (float) viewport.width,
 		.y = (position.y - viewport.y) / (float) viewport.height,
 	};

@@ -486,7 +486,7 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 		printf("got a button up event\n");
 		break;
 	case NORMALIZED_POINTER_MOVE:
-		NormalizedMousePosition *pointerPosition = inputEvent->data;
+		NormalizedPointerPosition *pointerPosition = inputEvent->data;
 		printf("got a move event: %f, %f\n", pointerPosition->x, pointerPosition->y);
 		break;
 	}

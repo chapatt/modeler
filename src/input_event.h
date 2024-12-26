@@ -21,21 +21,21 @@ typedef struct input_event_t {
 	void *data;
 } InputEvent;
 
-typedef struct mouse_position_t {
+typedef struct pointer_position_t {
 	int x;
 	int y;
-} MousePosition;
+} PointerPosition;
 
-typedef struct normalized_mouse_position_t {
+typedef struct normalized_pointer_position_t {
 	float x;
 	float y;
-} NormalizedMousePosition;
+} NormalizedPointerPosition;
 
 void enqueueInputEvent(Queue *queue, InputEventType type, void *data);
 void enqueueInputEventWithPosition(Queue *queue, InputEventType type, int x, int y);
 void enqueueInputEventWithExtent(Queue *queue, InputEventType type, int width, int height);
 void enqueueInputEventWithWindowDimensions(Queue *queue, InputEventType type, WindowDimensions windowDimensions);
-bool isPointerOnViewport(VkViewport viewport, MousePosition position);
-NormalizedMousePosition normalizeMousePosition(VkViewport viewport, MousePosition position);
+bool isPointerOnViewport(VkViewport viewport, PointerPosition position);
+NormalizedPointerPosition normalizePointerPosition(VkViewport viewport, PointerPosition position);
 
 #endif /* MODELER_INPUT_EVENT_H */
