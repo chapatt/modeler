@@ -7,7 +7,6 @@
 #include "imgui/cimgui_impl_vulkan.h"
 #include "imgui/imgui_impl_modeler.h"
 
-#include "modeler.h"
 #include "pipeline.h"
 #include "utils.h"
 #include "vulkan_utils.h"
