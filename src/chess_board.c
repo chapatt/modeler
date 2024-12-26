@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "chess_board.h"
 #include "descriptor.h"
@@ -470,6 +471,11 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
 	return true;
+}
+
+void chessBoardHandleInputEvent(void *chessBoard, InputEventType type)
+{
+	printf("got an event: %d\n", type);
 }
 
 void destroyChessBoard(ChessBoard self)
