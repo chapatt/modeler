@@ -25,20 +25,26 @@ static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, 
 typedef struct component_t {
 	void *object;
 	VkViewport viewport;
-	void (*handleInputEvent)(void *, InputEventType);
+	void (*handleInputEvent)(void *, InputEvent *);
 } Component;
 
-bool isPointerOnViewport(VkViewport viewport, MousePosition position) {
-	return position.x > viewport.x &&
-		position.x < viewport.x + viewport.width &&
-		position.y > viewport.y &&
-		position.y < viewport.y + viewport.height;
-}
+static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, MousePosition pointerPosition)
+{
+	InputEvent newInputEvent;
 
-static void sendInputToComponent(Component *components, size_t componentCount, InputEventType type, MousePosition pointerPosition) {
 	for (size_t i = 0; i < componentCount; ++i) {
 		if (isPointerOnViewport(components[i].viewport, pointerPosition)) {
-			components[i].handleInputEvent(components[i].object, type);
+			switch(inputEvent->type) {
+			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
+				break;
+			case POINTER_MOVE:
+				NormalizedMousePosition normalizedMousePosition = normalizeMousePosition(components[i].viewport, pointerPosition);
+				newInputEvent.data = &normalizedMousePosition;
+				newInputEvent.type = NORMALIZED_POINTER_MOVE;
+				break;
+			}
+
+			components[i].handleInputEvent(components[i].object, &newInputEvent);
 			break;
 		}
 	}
@@ -104,7 +110,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 #ifdef ENABLE_IMGUI
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
-				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), type, pointerPosition);
+				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), inputEvent, pointerPosition);
 				free(inputEvent);
 				break;
 			case POINTER_MOVE:
@@ -112,6 +118,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
 				pointerPosition = *((MousePosition *) inputEvent->data);
+				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), inputEvent, pointerPosition);
 				free(data);
 				free(inputEvent);
 				break;
