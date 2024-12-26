@@ -3,7 +3,7 @@
 
 #include <vulkan/vulkan.h>
 
-#include "modeler.h"
+#include "window.h"
 #include "queue.h"
 
 typedef enum input_event_type_t {

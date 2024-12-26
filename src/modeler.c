@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <vulkan/vulkan.h>
 
 #include "imgui/cimgui.h"
 #include "imgui/cimgui_impl_vulkan.h"

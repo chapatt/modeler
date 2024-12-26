@@ -24,11 +24,25 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 
 typedef struct component_t {
-	void *data;
+	void *object;
 	VkViewport viewport;
+	void (*handleInputEvent)(void *, InputEventType);
 } Component;
 
-static void sendInputToComponent(Component *components, InputEvent *inputEvent) {
+bool isPointerOnViewport(VkViewport viewport, MousePosition position) {
+	return position.x > viewport.x &&
+		position.x < viewport.x + viewport.width &&
+		position.y > viewport.y &&
+		position.y < viewport.y + viewport.height;
+}
+
+static void sendInputToComponent(Component *components, size_t componentCount, InputEventType type, MousePosition pointerPosition) {
+	for (size_t i = 0; i < componentCount; ++i) {
+		if (isPointerOnViewport(components[i].viewport, pointerPosition)) {
+			components[i].handleInputEvent(components[i].object, type);
+			break;
+		}
+	}
 }
 
 bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
@@ -55,6 +69,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 	size_t head = 0;
 	long elapsed = 1;
 	bool updateBoard = false;
+	MousePosition pointerPosition;
 
 	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions.scale, resourcePath);
 
@@ -73,8 +88,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 
 		Component components[] = {
 			{
-				.data = chessBoard,
-				.viewport = chessBoardViewport
+				.object = chessBoard,
+				.viewport = chessBoardViewport,
+				.handleInputEvent = &chessBoardHandleInputEvent
 			}
 		};
 
@@ -89,14 +105,14 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 #ifdef ENABLE_IMGUI
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
-				sendInputToComponent(components, inputEvent);
+				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), type, pointerPosition);
 				free(inputEvent);
 				break;
 			case POINTER_MOVE:
 #ifdef ENABLE_IMGUI
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
-				sendInputToComponent(components, inputEvent);
+				pointerPosition = *((MousePosition *) inputEvent->data);
 				free(data);
 				free(inputEvent);
 				break;

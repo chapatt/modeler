@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 
+#include "input_event.h"
 #include "window.h"
 #include "buffer.h"
 #include "vulkan_utils.h"
@@ -47,5 +48,6 @@ void setSize(ChessBoard self, float aspectRatio, float width, float originX, flo
 void setBoard(ChessBoard self, Board8x8 board);
 void setMove(ChessBoard self, MoveBoard8x8 move);
 bool updateChessBoard(ChessBoard self, char **error);
+void chessBoardHandleInputEvent(void *chessBoard, InputEventType type);
 
 #endif /* MODELER_CHESS_BOARD_H */
