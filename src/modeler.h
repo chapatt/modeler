@@ -36,6 +36,16 @@ typedef struct swapchain_create_info_t {
 	ChessBoard chessBoard;
 } SwapchainCreateInfo;
 
+struct threadArguments {
+	void *platformWindow;
+	Queue *inputQueue;
+	char *resourcePath;
+	const char **instanceExtensions;
+	size_t instanceExtensionCount;
+	WindowDimensions windowDimensions;
+	char **error;
+};
+
 void *threadProc(void *arg);
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error);
 void sendFullscreenSignal(void *platformWindow);

@@ -47,3 +47,19 @@ void enqueueInputEventWithResizeInfo(Queue *queue, InputEventType type, ResizeIn
 	*resizeInfoP = resizeInfo;
 	enqueueInputEvent(queue, type, resizeInfoP);
 }
+
+bool isPointerOnViewport(VkViewport viewport, MousePosition position)
+{
+	return position.x > viewport.x &&
+		position.x < viewport.x + viewport.width &&
+		position.y > viewport.y &&
+		position.y < viewport.y + viewport.height;
+}
+
+NormalizedMousePosition normalizeMousePosition(VkViewport viewport, MousePosition position)
+{
+	return (NormalizedMousePosition) {
+		.x = (position.x - viewport.x) / (float) viewport.width,
+		.y = (position.y - viewport.y) / (float) viewport.height,
+	};
+}

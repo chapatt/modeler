@@ -48,6 +48,6 @@ void setSize(ChessBoard self, float aspectRatio, float width, float originX, flo
 void setBoard(ChessBoard self, Board8x8 board);
 void setMove(ChessBoard self, MoveBoard8x8 move);
 bool updateChessBoard(ChessBoard self, char **error);
-void chessBoardHandleInputEvent(void *chessBoard, InputEventType type);
+void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent);
 
 #endif /* MODELER_CHESS_BOARD_H */
