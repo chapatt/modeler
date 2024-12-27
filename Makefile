@@ -21,6 +21,7 @@ else
 	ifeq ($(UNAME_S),Linux)
 		CC=gcc
 		SED=sed
+		CP=cp
 		GLSLC=glslc
 		LDLIBS+=-lvulkan -lwayland-client -lwayland-cursor
 		ALL_TARGET=modeler
@@ -28,6 +29,7 @@ else
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		SED=gsed
+		CP=cp
 		GLSLC=/Users/chase/VulkanSDK/1.3.250.0/macOS/bin/glslc
 		CFLAGS+=-I/Users/chase/VulkanSDK/1.3.250.0/macOS/include
 		LDLIBS+=-lvulkan

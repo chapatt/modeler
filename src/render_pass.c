@@ -62,12 +62,9 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkRenderPass
 		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 #ifdef DRAW_WINDOW_DECORATION
 		.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-#else
-		.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-#endif
-#ifdef DRAW_WINDOW_DECORATION
 		.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 #else
+		.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
 		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 #endif
 	};

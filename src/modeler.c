@@ -200,7 +200,11 @@ void *threadProc(void *arg)
 	PipelineCreateInfo pipelineCreateInfoWindowDecoration = {
 		.device = device,
 		.renderPass = renderPass,
+#ifdef ENABLE_IMGUI
 		.subpassIndex = 2,
+#else
+		.subpassIndex = 1,
+#endif /* ENABLE_IMGUI */
 		.vertexShaderBytes = windowBorderVertShaderBytes,
 		.vertexShaderSize = windowBorderVertShaderSize,
 		.fragmentShaderBytes = windowBorderFragShaderBytes,
@@ -223,8 +227,8 @@ void *threadProc(void *arg)
 #endif /* DRAW_WINDOW_DECORATION */
 
 #if DRAW_WINDOW_DECORATION
-	VkPipeline pipelines[] = {pipelineTriangle, pipelineWindowDecoration};
-	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutTriangle, pipelineLayoutWindowDecoration};
+	VkPipeline pipelines[] = {pipelineWindowDecoration};
+	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutWindowDecoration};
 	size_t pipelineCount = 1;
 	VkDescriptorSet **drawDescriptorSets = &imageDescriptorSets;
 #else
@@ -246,6 +250,7 @@ void *threadProc(void *arg)
 		.swapchainInfo = &swapchainInfo,
 		.imageViews = &imageViews,
 		.framebuffers = &framebuffers,
+		.chessBoard = chessBoard,
 #ifdef DRAW_WINDOW_DECORATION
 		.descriptorPool = &descriptorPool,
 		.imageDescriptorSetLayouts = &imageDescriptorSetLayouts,
@@ -261,7 +266,6 @@ void *threadProc(void *arg)
 		.offscreenImageCount = 0,
 		.offscreenImageView = NULL,
 		.offscreenImageAllocation = NULL,
-		.chessBoard = chessBoard,
 #endif /* DRAW_WINDOW_DECORATION */
 	};
 
@@ -394,7 +398,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions
 		.bufferRanges = NULL,
 		.bufferCount = 0
 	};
-	if !(createDescriptorSets(swapchainCreateInfo.device, createDescriptorSetInfo, swapchainCreateInfo.descriptorPool, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, swapchainCreateInfo.imageDescriptorSets, swapchainCreateInfo.imageDescriptorSetLayouts, swapchainCreateInfo.bufferDescriptorSets, swapchainCreateInfo.bufferDescriptorSetLayouts, error)) {
+	if (!createDescriptorSets(swapchainCreateInfo.device, createDescriptorSetInfo, swapchainCreateInfo.descriptorPool, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, swapchainCreateInfo.imageDescriptorSets, swapchainCreateInfo.imageDescriptorSetLayouts, swapchainCreateInfo.bufferDescriptorSets, swapchainCreateInfo.bufferDescriptorSetLayouts, error)) {
 		return false;
 	}
 #endif /* DRAW_WINDOW_DECORATION */
