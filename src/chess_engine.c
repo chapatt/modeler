@@ -1,6 +1,5 @@
 #include <stdbool.h>
 #include <stdlib.h>
-#include <stdio.h>
 
 #include "chess_engine.h"
 #include "utils.h"
@@ -49,7 +48,6 @@ void chessEngineSquareSelected(ChessEngine self, ChessSquare square)
 		self->lastSelected = CHESS_SQUARE_COUNT;
 		setSelected(*self->chessBoard, self->lastSelected);
 	} else if (hasLastSelected(self)) {
-		printf("taking %d with %d\n", self->board[square], self->board[self->lastSelected]);
 		self->board[square] = self->board[self->lastSelected];
 		self->board[self->lastSelected] = EMPTY;
 
@@ -64,7 +62,6 @@ void chessEngineSquareSelected(ChessEngine self, ChessSquare square)
 		setLastMove(*self->chessBoard, lastMove);
 		setSelected(*self->chessBoard, self->lastSelected);
 	} else if (self->board[square] != EMPTY) {
-		printf("selecting: %d\n", square);
 		self->lastSelected = square;
 		setSelected(*self->chessBoard, self->lastSelected);
 	}

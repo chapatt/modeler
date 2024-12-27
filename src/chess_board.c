@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <math.h>
 
 #include "lodepng.h"
@@ -489,7 +488,7 @@ static void updateVertices(ChessBoard self)
 		const float *color = (offsetY % 2) ?
 			((offsetX % 2) ? thisLight : thisDark) :
 			(offsetX % 2) ? thisDark : thisLight;
-		
+
 		self->vertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
 		self->vertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
 		self->vertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
@@ -535,7 +534,6 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 		break;
 	case BUTTON_UP:
 		square = squareFromPointerPosition(self->pointerPosition);
-		printf("got a button up event in square: %d\n", square);
 		chessEngineSquareSelected(self->engine, square);
 		break;
 	case NORMALIZED_POINTER_MOVE:
