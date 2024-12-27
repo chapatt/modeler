@@ -1,13 +1,15 @@
 .DS_Store
 xcuserdata/
 
-*.a
-*.o
-*.exe
-xdg-shell-client-protocol.h
-xdg-shell-protocol.c
-*.spv
-*.vert.h
-*.frag.h
-*.rgba
+/*.a
+/*.o
+/*.exe
+/xdg-shell-client-protocol.h
+/xdg-shell-protocol.c
+/*.spv
+/*.vert.h
+/*.frag.h
+/texture_*.h
+/*.rgba
+/*.png
 /modeler

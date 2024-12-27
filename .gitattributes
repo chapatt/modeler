@@ -1,2 +1,4 @@
 src/imgui/* linguist-vendored
 src/vk_mem_alloc.h linguist-vendored
+src/lodepng.c linguist-vendored
+src/lodepng.h linguist-vendored
