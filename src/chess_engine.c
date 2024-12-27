@@ -43,20 +43,34 @@ void createChessEngine(ChessEngine *chessEngine, ChessBoard *chessBoard)
 
 void chessEngineSquareSelected(ChessEngine self, ChessSquare square)
 {
-	if (hasLastSelected(self)) {
+	char **error;
+
+	if (self->lastSelected == square) {
+		self->lastSelected = CHESS_SQUARE_COUNT;
+		setSelected(*self->chessBoard, self->lastSelected);
+	} else if (hasLastSelected(self)) {
 		printf("taking %d with %d\n", self->board[square], self->board[self->lastSelected]);
 		self->board[square] = self->board[self->lastSelected];
 		self->board[self->lastSelected] = EMPTY;
+
+		LastMove lastMove = {
+			.from = self->lastSelected,
+			.to = square
+		};
+
 		self->lastSelected = CHESS_SQUARE_COUNT;
 
-		char **error;
+		setSelected(*self->chessBoard, self->lastSelected);
 		setBoard(*self->chessBoard, self->board);
-		if (!updateChessBoard(*self->chessBoard, error)) {
-			asprintf(error, "Failed to update chess board.\n");
-			// return false;
-		}
+		setLastMove(*self->chessBoard, lastMove);
 	} else if (self->board[square] != EMPTY) {
 		printf("selecting: %d\n", square);
 		self->lastSelected = square;
+		setSelected(*self->chessBoard, self->lastSelected);
+	}
+
+	if (!updateChessBoard(*self->chessBoard, error)) {
+		asprintf(error, "Failed to update chess board.\n");
+		// return false;
 	}
 }

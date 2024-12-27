@@ -21,5 +21,7 @@ void setBoard(ChessBoard self, Board8x8 board);
 void setMove(ChessBoard self, MoveBoard8x8 move);
 bool updateChessBoard(ChessBoard self, char **error);
 void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent);
+void setSelected(ChessBoard self, ChessSquare selected);
+void setLastMove(ChessBoard self, LastMove lastMove);
 
 #endif /* MODELER_CHESS_BOARD_H */

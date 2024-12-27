@@ -5,8 +5,7 @@
 
 #define CHESS_SQUARE_COUNT 8 * 8
 
-typedef enum piece_t
-{
+typedef enum piece_t {
 	EMPTY,
 	BLACK_PAWN,
 	BLACK_KNIGHT,
@@ -22,8 +21,7 @@ typedef enum piece_t
 	WHITE_KING
 } Piece;
 
-typedef enum move_t
-{
+typedef enum move_t {
 	ILLEGAL,
 	OPEN,
 	CAPTURE
@@ -34,5 +32,10 @@ typedef Piece Board8x8[CHESS_SQUARE_COUNT];
 typedef Move MoveBoard8x8[CHESS_SQUARE_COUNT];
 
 typedef size_t ChessSquare;
+
+typedef struct lastMove {
+	ChessSquare from;
+	ChessSquare to;
+} LastMove;
 
 #endif /* MODELER_CHESS_H */
