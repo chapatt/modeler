@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <math.h>
 
 #include "imgui/cimgui.h"
 #include "imgui/cimgui_impl_vulkan.h"
