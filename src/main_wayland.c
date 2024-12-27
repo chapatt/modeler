@@ -101,7 +101,7 @@ static void surfaceLeaveHandler(void *data, struct wl_surface *surface, struct w
 static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
 static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states);
-static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, enum wl_output_subpixel subpixel, const char *make, const char *model, enum wl_output_transform transform);
+static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, const char *make, const char *model, int32_t transform);
 static void outputModeHandler(void *data, struct wl_output *output, enum wl_output_mode mode, int32_t width, int32_t height, int32_t refresh);
 static void outputDoneHandler(void *data, struct wl_output *output);
 static void outputScaleHandler(void *data, struct wl_output *output, int32_t factor);
@@ -636,7 +636,7 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 	}
 }
 
-static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, enum wl_output_subpixel subpixel, const char *make, const char *model, enum wl_output_transform transform)
+static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, const char *make, const char *model, int32_t transform)
 {
 	printf("Got an output geometry event\n");
 	OutputInfo *outputInfo = data;

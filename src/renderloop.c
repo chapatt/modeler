@@ -263,7 +263,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		vkCmdNextSubpass((*commandBuffers)[imageIndex], VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0]);
-		vkCmdBindDescriptorSets((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts[1], 0, 1, *descriptorSets, 0, NULL);
+		vkCmdBindDescriptorSets((*commandBuffers)[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts[0], 0, 1, *descriptorSets, 0, NULL);
 		VkViewport secondViewport = {
 			.x = 0.0f,
 			.y = 0.0f,
@@ -286,7 +286,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 			.offset = {windowDimensions.activeArea.offset.x, windowDimensions.activeArea.offset.y},
 			.cornerRadius = windowDimensions.cornerRadius
 		};
-		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[1], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(secondPushConstants), &secondPushConstants);
+		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[0], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(secondPushConstants), &secondPushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
 #endif /* DRAW_WINDOW_DECORATION */
 
