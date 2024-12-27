@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "chess_engine.h"
@@ -52,7 +53,7 @@ void chessEngineSquareSelected(ChessEngine self, ChessSquare square)
 		setBoard(*self->chessBoard, self->board);
 		if (!updateChessBoard(*self->chessBoard, error)) {
 			asprintf(error, "Failed to update chess board.\n");
-			return false;
+			// return false;
 		}
 	} else if (self->board[square] != EMPTY) {
 		printf("selecting: %d\n", square);

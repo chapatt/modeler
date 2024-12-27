@@ -485,13 +485,15 @@ ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition)
 void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 {
 	ChessBoard self = (ChessBoard) chessBoard;
+	ChessSquare square;
+
 	switch(inputEvent->type) {
 	case POINTER_LEAVE:
 		break;
 	case BUTTON_DOWN:
 		break;
 	case BUTTON_UP:
-		ChessSquare square = squareFromPointerPosition(self->pointerPosition);
+		square = squareFromPointerPosition(self->pointerPosition);
 		printf("got a button up event in square: %d\n", square);
 		chessEngineSquareSelected(self->engine, square);
 		break;
