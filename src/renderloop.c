@@ -36,6 +36,7 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 		if (isPointerOnViewport(components[i].viewport, pointerPosition)) {
 			switch(inputEvent->type) {
 			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
+				newInputEvent.type = inputEvent->type;
 				break;
 			case POINTER_MOVE:
 				NormalizedPointerPosition normalizedPointerPosition = normalizePointerPosition(components[i].viewport, pointerPosition);

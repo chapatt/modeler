@@ -25,6 +25,7 @@
 #include "buffer.h"
 #include "utils.h"
 #include "vulkan_utils.h"
+#include "chess_engine.h"
 
 #ifdef EMBED_SHADERS
 #include "../shader_window_border.vert.h"
@@ -162,9 +163,12 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
-	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
 	ChessBoard chessBoard;
-	if (!createChessBoard(&chessBoard, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, characteristics.deviceProperties.limits.maxSamplerAnisotropy, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
+	ChessEngine chessEngine;
+	createChessEngine(&chessEngine, &chessBoard);
+
+	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
+	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, characteristics.deviceProperties.limits.maxSamplerAnisotropy, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 

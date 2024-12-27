@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "chess_board.h"
 #include "descriptor.h"
@@ -74,6 +75,8 @@ struct chess_board_t {
 	VkDescriptorSetLayout *textureDescriptorSetLayouts;
 	Board8x8 board;
 	MoveBoard8x8 move;
+	NormalizedPointerPosition pointerPosition;
+	ChessEngine engine;
 };
 
 static void initializePieces(ChessBoard self);
@@ -86,12 +89,13 @@ static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
 static bool createChessBoardPipeline(ChessBoard self, char **error);
 static void updateVertices(ChessBoard self);
 
-bool createChessBoard(ChessBoard *chessBoard, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float anisotropy, float aspectRatio, float width, float originX, float originY, char **error)
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float anisotropy, float aspectRatio, float width, float originX, float originY, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
 	ChessBoard self = *chessBoard;
 
+	self->engine = engine;
 	self->device = device;
 	self->allocator = allocator;
 	self->commandPool = commandPool;
@@ -473,21 +477,26 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	return true;
 }
 
+ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition)
+{
+	return (floor(pointerPosition.y * 8) * 8) + floor(pointerPosition.x * 8);
+}
+
 void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 {
+	ChessBoard self = (ChessBoard) chessBoard;
 	switch(inputEvent->type) {
 	case POINTER_LEAVE:
-		printf("got a leave event\n");
 		break;
 	case BUTTON_DOWN:
-		printf("got a button down event\n");
 		break;
 	case BUTTON_UP:
-		printf("got a button up event\n");
+		ChessSquare square = squareFromPointerPosition(self->pointerPosition);
+		printf("got a button up event in square: %d\n", square);
+		chessEngineSquareSelected(self->engine, square);
 		break;
 	case NORMALIZED_POINTER_MOVE:
-		NormalizedPointerPosition *pointerPosition = inputEvent->data;
-		printf("got a move event: %f, %f\n", pointerPosition->x, pointerPosition->y);
+		self->pointerPosition = *(NormalizedPointerPosition *) inputEvent->data;
 		break;
 	}
 }
