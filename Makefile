@@ -41,16 +41,19 @@ endif
 
 SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h
-TEXTURES=pieces.rgba
+HEADER_TEXTURES=texture_pieces.h
 MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o
 VENDOR_LIBS=vma_implementation.o
 
 ifdef DEBUG
 	CFLAGS+=-DDEBUG -g
 	SHADERS=$(SPIRV_SHADERS)
+	TEXTURES=pieces.rgba
 else
 	CFLAGS+=-DEMBED_SHADERS
 	SHADERS=$(HEADER_SHADERS)
+	CFLAGS+=-DEMBED_TEXTURES
+	TEXTURES=$(HEADER_TEXTURES)
 	ifeq ($(OS),Windows_NT)
 		LDFLAGS+=-static
 	endif
@@ -92,6 +95,9 @@ modeler.o: src/modeler.c
 
 $(HEADER_SHADERS): shader_%.h: %.spv
 	./hexdump_include.sh "`echo $(basename $<)ShaderBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)ShaderSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
+
+$(HEADER_TEXTURES): texture_%.h: %.rgba
+	./hexdump_include.sh "`echo $(basename $<)TextureBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)TextureSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 
 imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
 	$(AR) rvs $@ cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o

@@ -16,6 +16,10 @@
 #include "../shader_chess_board.frag.h"
 #endif /* EMBED_SHADERS */
 
+#ifdef EMBED_TEXTURES
+#include "../texture_pieces.h"
+#endif /* EMBED_TEXTURES */
+
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
 #define TEXTURE_WIDTH 2048
@@ -75,6 +79,8 @@ struct chess_board_t {
 	VkDescriptorSetLayout *textureDescriptorSetLayouts;
 	Board8x8 board;
 	MoveBoard8x8 move;
+	ChessSquare selected;
+	LastMove lastMove;
 	NormalizedPointerPosition pointerPosition;
 	ChessEngine engine;
 };
@@ -109,6 +115,11 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	self->originX = originX;
 	self->originY = originY;
 
+	self->selected = CHESS_SQUARE_COUNT;
+	self->lastMove = (LastMove) {
+		.from = CHESS_SQUARE_COUNT,
+		.to = CHESS_SQUARE_COUNT
+	};
 	initializePieces(self);
 	initializeMove(self);
 
@@ -167,7 +178,7 @@ static void initializeMove(ChessBoard self)
 		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
 		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
 		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
-		ILLEGAL, ILLEGAL, ILLEGAL, OPEN, CAPTURE, ILLEGAL, ILLEGAL, ILLEGAL,
+		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
 		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
 		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
 		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL,
@@ -184,19 +195,21 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 		.height = TEXTURE_HEIGHT
 	};
 
+#ifndef EMBED_TEXTURES
 	char *texturePath;
 	asprintf(&texturePath, "%s/%s", self->resourcePath, "pieces.rgba");
-	char *textureBytes;
-	uint32_t textureSize = 0;
+	char *piecesTextureBytes;
+	uint32_t piecesTextureSize = 0;
 
-	if ((textureSize = readFileToString(texturePath, &textureBytes)) == -1) {
+	if ((piecesTextureSize = readFileToString(texturePath, &piecesTextureBytes)) == -1) {
 		asprintf(error, "Failed to open texture for reading.\n");
 		return false;
 	}
+#endif /* EMBED_TEXTURES */
 
 	VkBuffer stagingBuffer;
 	VmaAllocation stagingBufferAllocation;
-	if (!createBuffer(self->device, self->allocator, textureSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, &stagingBuffer, &stagingBufferAllocation, error)) {
+	if (!createBuffer(self->device, self->allocator, piecesTextureSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, &stagingBuffer, &stagingBufferAllocation, error)) {
 		return false;
 	}
 
@@ -206,7 +219,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 		asprintf(error, "Failed to map memory: %s", string_VkResult(result));
 		return false;
 	}
-	memcpy(data, textureBytes, textureSize);
+	memcpy(data, piecesTextureBytes, piecesTextureSize);
 	vmaUnmapMemory(self->allocator, stagingBufferAllocation);
 
 	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, &self->textureImage, &self->textureImageAllocation, error)) {
@@ -401,6 +414,20 @@ void setMove(ChessBoard self, MoveBoard8x8 move)
 	updateVertices(self);
 }
 
+void setSelected(ChessBoard self, ChessSquare selected)
+{
+	self->selected = selected;
+
+	updateVertices(self);
+}
+
+void setLastMove(ChessBoard self, LastMove lastMove)
+{
+	self->lastMove = lastMove;
+
+	updateVertices(self);
+}
+
 static void updateVertices(ChessBoard self)
 {
 	float dark[] = {0.71f, 0.533f, 0.388f};
@@ -429,26 +456,21 @@ static void updateVertices(ChessBoard self)
 		float squareHeight = squareWidth;
 		float squareOriginX = (offsetX * squareWidth) - (VIEWPORT_WIDTH / 2);
 		float squareOriginY = (offsetY * squareHeight) - (VIEWPORT_HEIGHT / 2);
+
+		float *thisLight = light;
+		float *thisDark = dark;
+		if (i == self->selected) {
+			thisLight = selectedLight;
+			thisDark = selectedDark;
+		}
+		if (i == self->lastMove.from || i == self->lastMove.to) {
+			thisLight = previousLight;
+			thisDark = previousDark;
+		}
 		const float *color = (offsetY % 2) ?
-			((offsetX % 2) ? light : dark) :
-			(offsetX % 2) ? dark : light;
-
-		if (offsetX == 3) {
-			if (offsetY == 4) {
-				color = previousDark;
-			} else if (offsetY == 5) {
-				color = previousLight;
-			}
-		}
-
-		if (offsetX == 4) {
-			if (offsetY == 4) {
-				color = selectedLight;
-			} else if (offsetY == 5) {
-				color = selectedDark;
-			}
-		}
-
+			((offsetX % 2) ? thisLight : thisDark) :
+			(offsetX % 2) ? thisDark : thisLight;
+		
 		self->vertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
 		self->vertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
 		self->vertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
