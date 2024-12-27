@@ -25,9 +25,9 @@
 		AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB60A70E2A6CFBE0001D4DB2 /* main.swift */; };
 		AB6C10262BA0F9A9004667E0 /* window_border.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */; };
 		AB6C10272BA0F9A9004667E0 /* window_border.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */; };
-		AB7E0B0E2D17A95C0068EC79 /* pieces.rgba in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B0D2D17A95C0068EC79 /* pieces.rgba */; };
 		AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */; };
 		AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */; };
+		AB7E0B142D1F42680068EC79 /* pieces.png in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B132D1F42680068EC79 /* pieces.png */; };
 		ABC0F3052C02C93700771076 /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABC0F3062C05B82B00771076 /* roboto.ttf */; };
 		ABD9E0172B2BA4F8008932DB /* ModelerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */; };
@@ -80,9 +80,9 @@
 		AB60A70E2A6CFBE0001D4DB2 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.vert.spv; path = ../window_border.vert.spv; sourceTree = "<group>"; };
 		AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.frag.spv; path = ../window_border.frag.spv; sourceTree = "<group>"; };
-		AB7E0B0D2D17A95C0068EC79 /* pieces.rgba */ = {isa = PBXFileReference; lastKnownFileType = file; name = pieces.rgba; path = ../pieces.rgba; sourceTree = "<group>"; };
 		AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.vert.spv; path = ../chess_board.vert.spv; sourceTree = "<group>"; };
 		AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.frag.spv; path = ../chess_board.frag.spv; sourceTree = "<group>"; };
+		AB7E0B132D1F42680068EC79 /* pieces.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pieces.png; path = ../pieces.png; sourceTree = "<group>"; };
 		ABC0F3062C05B82B00771076 /* roboto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = roboto.ttf; path = ../roboto.ttf; sourceTree = "<group>"; };
 		ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindowController.swift; sourceTree = "<group>"; };
 		ABE1DEF42A3592D600A963A6 /* vulkan */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vulkan; sourceTree = "<group>"; };
@@ -131,9 +131,9 @@
 		ABF1622C2A34E3A6007655F7 = {
 			isa = PBXGroup;
 			children = (
+				AB7E0B132D1F42680068EC79 /* pieces.png */,
 				AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */,
 				AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */,
-				AB7E0B0D2D17A95C0068EC79 /* pieces.rgba */,
 				ABC0F3062C05B82B00771076 /* roboto.ttf */,
 				AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */,
 				AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */,
@@ -239,9 +239,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB7E0B142D1F42680068EC79 /* pieces.png in Resources */,
 				AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */,
 				AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */,
-				AB7E0B0E2D17A95C0068EC79 /* pieces.rgba in Resources */,
 				ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */,
 				AB6C10262BA0F9A9004667E0 /* window_border.frag.spv in Resources */,
 				AB6C10272BA0F9A9004667E0 /* window_border.vert.spv in Resources */,
