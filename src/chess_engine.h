@@ -1,5 +1,5 @@
 #ifndef MODELER_CHESS_ENGINE_H
-#define MODELER_CHESS_
+#define MODELER_CHESS_ENGINE_H
 
 typedef struct chess_engine_t *ChessEngine;
 
