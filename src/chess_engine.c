@@ -60,9 +60,9 @@ void chessEngineSquareSelected(ChessEngine self, ChessSquare square)
 
 		self->lastSelected = CHESS_SQUARE_COUNT;
 
-		setSelected(*self->chessBoard, self->lastSelected);
 		setBoard(*self->chessBoard, self->board);
 		setLastMove(*self->chessBoard, lastMove);
+		setSelected(*self->chessBoard, self->lastSelected);
 	} else if (self->board[square] != EMPTY) {
 		printf("selecting: %d\n", square);
 		self->lastSelected = square;

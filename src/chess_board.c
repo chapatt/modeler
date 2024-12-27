@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "lodepng.h"
+
 #include "chess_board.h"
 #include "descriptor.h"
 #include "image.h"
@@ -196,20 +198,36 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 	};
 
 #ifndef EMBED_TEXTURES
-	char *texturePath;
-	asprintf(&texturePath, "%s/%s", self->resourcePath, "pieces.rgba");
+	char *piecesTexturePath;
+	asprintf(&piecesTexturePath, "%s/%s", self->resourcePath, "pieces.png");
 	char *piecesTextureBytes;
 	uint32_t piecesTextureSize = 0;
 
-	if ((piecesTextureSize = readFileToString(texturePath, &piecesTextureBytes)) == -1) {
+	if ((piecesTextureSize = readFileToString(piecesTexturePath, &piecesTextureBytes)) == -1) {
 		asprintf(error, "Failed to open texture for reading.\n");
 		return false;
 	}
 #endif /* EMBED_TEXTURES */
 
+	unsigned lodepngResult;
+	unsigned char *image;
+	unsigned width;
+	unsigned height;
+
+	if (lodepngResult = lodepng_decode32(&image, &width, &height, piecesTextureBytes, piecesTextureSize)) {
+		asprintf(error, "Failed to decode PNG: &s\n", lodepng_error_text(lodepngResult));
+		return false;
+	}
+
+	unsigned imageSize = (width * height) * (32 / sizeof(image));
+
+#ifndef EMBED_TEXTURES
+	free(piecesTextureBytes);
+#endif /* EMBED_TEXTURES */
+
 	VkBuffer stagingBuffer;
 	VmaAllocation stagingBufferAllocation;
-	if (!createBuffer(self->device, self->allocator, piecesTextureSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, &stagingBuffer, &stagingBufferAllocation, error)) {
+	if (!createBuffer(self->device, self->allocator, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, &stagingBuffer, &stagingBufferAllocation, error)) {
 		return false;
 	}
 
@@ -219,7 +237,8 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 		asprintf(error, "Failed to map memory: %s", string_VkResult(result));
 		return false;
 	}
-	memcpy(data, piecesTextureBytes, piecesTextureSize);
+	memcpy(data, image, imageSize);
+	free(image);
 	vmaUnmapMemory(self->allocator, stagingBufferAllocation);
 
 	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, &self->textureImage, &self->textureImageAllocation, error)) {
@@ -459,13 +478,13 @@ static void updateVertices(ChessBoard self)
 
 		float *thisLight = light;
 		float *thisDark = dark;
-		if (i == self->selected) {
-			thisLight = selectedLight;
-			thisDark = selectedDark;
-		}
 		if (i == self->lastMove.from || i == self->lastMove.to) {
 			thisLight = previousLight;
 			thisDark = previousDark;
+		}
+		if (i == self->selected) {
+			thisLight = selectedLight;
+			thisDark = selectedDark;
 		}
 		const float *color = (offsetY % 2) ?
 			((offsetX % 2) ? thisLight : thisDark) :
