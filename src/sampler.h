@@ -5,7 +5,7 @@
 
 #include "vulkan_utils.h"
 
-bool createSampler(VkDevice device, float anisotropy, VkSampler *sampler, char **error);
+bool createSampler(VkDevice device, float anisotropy, int mipLevels, VkSampler *sampler, char **error);
 void destroySampler(VkDevice device, VkSampler sampler);
 
 #endif /* MODELER_SAMPLER_H */

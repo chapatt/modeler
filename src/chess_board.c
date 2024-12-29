@@ -23,8 +23,6 @@
 
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
-#define TEXTURE_WIDTH 2048
-#define TEXTURE_HEIGHT 2048
 
 float pieceSpriteOriginMap[13][2] = {
 	{0.75f, 0.75f},
@@ -191,11 +189,6 @@ static void initializeMove(ChessBoard self)
 
 static bool createChessBoardTexture(ChessBoard self, char **error)
 {
-	VkExtent2D textureExtent = {
-		.width = TEXTURE_WIDTH,
-		.height = TEXTURE_HEIGHT
-	};
-
 #ifndef EMBED_TEXTURES
 	char *piecesTexturePath;
 	asprintf(&piecesTexturePath, "%s/%s", self->resourcePath, "pieces.png");
@@ -209,16 +202,20 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 #endif /* EMBED_TEXTURES */
 
 	unsigned lodepngResult;
-	unsigned char *image;
-	unsigned width;
-	unsigned height;
+	unsigned char *piecesTextureDecodedBytes;
+	unsigned piecesTextureDecodedWidth;
+	unsigned piecesTextureDecodedHeight;
 
-	if (lodepngResult = lodepng_decode32(&image, &width, &height, piecesTextureBytes, piecesTextureSize)) {
+	if (lodepngResult = lodepng_decode32(&piecesTextureDecodedBytes, &piecesTextureDecodedWidth, &piecesTextureDecodedHeight, piecesTextureBytes, piecesTextureSize)) {
 		asprintf(error, "Failed to decode PNG: &s\n", lodepng_error_text(lodepngResult));
 		return false;
 	}
 
-	unsigned imageSize = (width * height) * (32 / sizeof(image));
+	VkExtent2D textureExtent = {
+		.width = piecesTextureDecodedWidth,
+		.height = piecesTextureDecodedHeight
+	};
+	unsigned piecesTextureDecodedSize = (piecesTextureDecodedWidth * piecesTextureDecodedHeight) * (32 / sizeof(piecesTextureDecodedBytes));
 
 #ifndef EMBED_TEXTURES
 	free(piecesTextureBytes);
@@ -226,7 +223,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 
 	VkBuffer stagingBuffer;
 	VmaAllocation stagingBufferAllocation;
-	if (!createBuffer(self->device, self->allocator, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, &stagingBuffer, &stagingBufferAllocation, error)) {
+	if (!createBuffer(self->device, self->allocator, piecesTextureDecodedSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, &stagingBuffer, &stagingBufferAllocation, error)) {
 		return false;
 	}
 
@@ -236,8 +233,8 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 		asprintf(error, "Failed to map memory: %s", string_VkResult(result));
 		return false;
 	}
-	memcpy(data, image, imageSize);
-	free(image);
+	memcpy(data, piecesTextureDecodedBytes, piecesTextureDecodedSize);
+	free(piecesTextureDecodedBytes);
 	vmaUnmapMemory(self->allocator, stagingBufferAllocation);
 
 	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, &self->textureImage, &self->textureImageAllocation, error)) {
@@ -247,7 +244,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, error)) {
 		return false;
 	}
-	if (!copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, TEXTURE_WIDTH, TEXTURE_HEIGHT, error)) {
+	if (!copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, textureExtent.width, textureExtent.height, error)) {
 		return false;
 	}
 	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, error)) {
@@ -256,7 +253,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 
 	destroyBuffer(self->allocator, stagingBuffer, stagingBufferAllocation);
 
-	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, &self->textureImageView, error)) {
+	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, 7, &self->textureImageView, error)) {
 		return false;
 	}
 
@@ -265,7 +262,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 
 static bool createChessBoardSampler(ChessBoard self, char **error)
 {
-	if (!createSampler(self->device, self->anisotropy, &self->sampler, error)) {
+	if (!createSampler(self->device, self->anisotropy, 7, &self->sampler, error)) {
 		return false;
 	}
 

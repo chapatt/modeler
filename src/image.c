@@ -118,6 +118,27 @@ bool copyBufferToImage(VkDevice device, VkCommandPool commandPool, VkQueue queue
 		}
 	};
 
+VkDeviceSize currentOffset{ 0 };
+ 
+for (uint8 i{ 0 }; i < mipLevels; ++i)
+{
+    VkBufferImageCopy bufferImageCopy;
+ 
+    bufferImageCopy.bufferOffset = currentOffset;
+    bufferImageCopy.bufferRowLength = 0;
+    bufferImageCopy.bufferImageHeight = 0;
+    bufferImageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    bufferImageCopy.imageSubresource.mipLevel = i;
+    bufferImageCopy.imageSubresource.baseArrayLayer = 0;
+    bufferImageCopy.imageSubresource.layerCount = layerCount;
+    bufferImageCopy.imageOffset = { 0, 0, 0 };
+    bufferImageCopy.imageExtent = { width >> i, height >> i, 1 };
+ 
+    bufferImageCopies.EmplaceFast(bufferImageCopy);
+ 
+    currentOffset += (textureWidth>> i) * (textureHeight >> i) * textureChannels * textureTexelSize;
+}
+
 	vkCmdCopyBufferToImage(
 		commandBuffer,
 		buffer,
