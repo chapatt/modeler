@@ -1,7 +1,7 @@
 #include "sampler.h"
 #include "utils.h"
 
-bool createSampler(VkDevice device, float anisotropy, VkSampler *sampler, char **error)
+bool createSampler(VkDevice device, float anisotropy, int mipLevels, VkSampler *sampler, char **error)
 {
 	VkSamplerCreateInfo samplerInfo = {
 		.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -19,7 +19,7 @@ bool createSampler(VkDevice device, float anisotropy, VkSampler *sampler, char *
 		.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
 		.mipLodBias = 0.0f,
 		.minLod = 0.0f,
-		.maxLod = 0.0f,
+		.maxLod = (float) mipLevels
 	};
 
 	VkResult result;
