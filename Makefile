@@ -10,9 +10,9 @@ ifeq ($(OS),Windows_NT)
 	CP=/msys64/usr/bin/cp
 	HEXDUMP=/msys64/usr/bin/hexdump
 	SED=sed
-	GLSLC=/VulkanSDK/1.3.250.0/Bin/glslc
-	CFLAGS+=-I/VulkanSDK/1.3.250.0/Include -mwindows -municode
-	LDFLAGS+=-L/VulkanSDK/1.3.250.0/Lib
+	GLSLC=/VulkanSDK/1.3.296.0/Bin/glslc
+	CFLAGS+=-I/VulkanSDK/1.3.296.0/Include -mwindows -municode
+	LDFLAGS+=-L/VulkanSDK/1.3.296.0/Lib
 	LDLIBS+=-lvulkan-1 -ldwmapi
 	ALL_TARGET=modeler.exe
 	CFLAGS+=-DVK_USE_PLATFORM_WIN32_KHR
