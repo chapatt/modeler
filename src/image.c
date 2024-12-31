@@ -157,6 +157,8 @@ bool copyBufferToImage(VkDevice device, VkCommandPool commandPool, VkQueue queue
 		regions
 	);
 
+	free(regions);
+
 	if (!endSingleTimeCommands(device, commandPool, queue, commandBuffer, error)) {
 		return false;
 	}
