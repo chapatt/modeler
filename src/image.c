@@ -1,9 +1,11 @@
+#include <stdlib.h>
+
 #include "image.h"
 #include "command_buffer.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
-bool createImage(VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkFormat format, VkImageUsageFlagBits usage, VkImage *image, VmaAllocation *allocation, char **error)
+bool createImage(VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkFormat format, VkImageUsageFlagBits usage, uint32_t mipLevels, VkImage *image, VmaAllocation *allocation, char **error)
 {
 	VkImageCreateInfo imageCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -14,7 +16,7 @@ bool createImage(VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkF
 		.extent.width = extent.width,
 		.extent.height = extent.height,
 		.extent.depth = 1,
-		.mipLevels = 1,
+		.mipLevels = mipLevels,
 		.arrayLayers = 1,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
 		.tiling = VK_IMAGE_TILING_OPTIMAL,
@@ -38,7 +40,7 @@ bool createImage(VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkF
 	return true;
 }
 
-bool transitionImageLayout(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, char **error)
+bool transitionImageLayout(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels, char **error)
 {
 	VkCommandBuffer commandBuffer;
 	if (!beginSingleTimeCommands(device, commandPool, &commandBuffer, error)) {
@@ -54,7 +56,7 @@ bool transitionImageLayout(VkDevice device, VkCommandPool commandPool, VkQueue q
 		.image = image,
 		.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 		.subresourceRange.baseMipLevel = 0,
-		.subresourceRange.levelCount = 1,
+		.subresourceRange.levelCount = mipLevels,
 		.subresourceRange.baseArrayLayer = 0,
 		.subresourceRange.layerCount = 1,
 		.srcAccessMask = 0,
@@ -95,57 +97,64 @@ bool transitionImageLayout(VkDevice device, VkCommandPool commandPool, VkQueue q
 	return true;
 }
 
-bool copyBufferToImage(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, char **error)
+bool copyBufferToImage(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t mipLevels, char **error)
 {
 	VkCommandBuffer commandBuffer;
 	if (!beginSingleTimeCommands(device, commandPool, &commandBuffer, error)) {
 		return false;
 	}
 
-	VkBufferImageCopy region = {
+	uint32_t level0Width = height;
+	uint32_t level0Height = height;
+	VkBufferImageCopy *regions = malloc(sizeof(*regions) * mipLevels);
+
+	regions[0] = (VkBufferImageCopy) {
 		.bufferOffset = 0,
-		.bufferRowLength = 0,
-		.bufferImageHeight = 0,
+		.bufferRowLength = width,
+		.bufferImageHeight = height,
 		.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 		.imageSubresource.mipLevel = 0,
 		.imageSubresource.baseArrayLayer = 0,
 		.imageSubresource.layerCount = 1,
 		.imageOffset = {0, 0, 0},
 		.imageExtent = {
-			width,
-			height,
+			level0Width,
+			level0Height,
 			1
 		}
 	};
 
-VkDeviceSize currentOffset{ 0 };
- 
-for (uint8 i{ 0 }; i < mipLevels; ++i)
-{
-    VkBufferImageCopy bufferImageCopy;
- 
-    bufferImageCopy.bufferOffset = currentOffset;
-    bufferImageCopy.bufferRowLength = 0;
-    bufferImageCopy.bufferImageHeight = 0;
-    bufferImageCopy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    bufferImageCopy.imageSubresource.mipLevel = i;
-    bufferImageCopy.imageSubresource.baseArrayLayer = 0;
-    bufferImageCopy.imageSubresource.layerCount = layerCount;
-    bufferImageCopy.imageOffset = { 0, 0, 0 };
-    bufferImageCopy.imageExtent = { width >> i, height >> i, 1 };
- 
-    bufferImageCopies.EmplaceFast(bufferImageCopy);
- 
-    currentOffset += (textureWidth>> i) * (textureHeight >> i) * textureChannels * textureTexelSize;
-}
+	VkDeviceSize heightOffset = 0;
+	for (uint32_t i = 1; i < mipLevels; ++i) {
+		uint32_t extentWidth = level0Width >> i;
+		uint32_t extentHeight = level0Height >> i;
+		uint32_t bufferOffset = width * heightOffset + level0Width;
+		heightOffset += extentHeight;
+
+		regions[i] = (VkBufferImageCopy) {
+			.bufferOffset = bufferOffset * 4,
+			.bufferRowLength = width,
+			.bufferImageHeight = height,
+			.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.imageSubresource.mipLevel = i,
+			.imageSubresource.baseArrayLayer = 0,
+			.imageSubresource.layerCount = 1,
+			.imageOffset = {0, 0, 0},
+			.imageExtent = {
+				extentWidth,
+				extentHeight,
+				1
+			}
+		};
+	}
 
 	vkCmdCopyBufferToImage(
 		commandBuffer,
 		buffer,
 		image,
 		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-		1,
-		&region
+		mipLevels,
+		regions
 	);
 
 	if (!endSingleTimeCommands(device, commandPool, queue, commandBuffer, error)) {
