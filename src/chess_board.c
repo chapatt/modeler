@@ -23,6 +23,7 @@
 
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
+#define PIECES_TEXTURE_MIP_LEVELS 7
 
 float pieceSpriteOriginMap[13][2] = {
 	{0.75f, 0.75f},
@@ -237,23 +238,23 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 	free(piecesTextureDecodedBytes);
 	vmaUnmapMemory(self->allocator, stagingBufferAllocation);
 
-	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 7, &self->textureImage, &self->textureImageAllocation, error)) {
+	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, PIECES_TEXTURE_MIP_LEVELS, &self->textureImage, &self->textureImageAllocation, error)) {
 		return false;
 	}
 
-	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 7, error)) {
+	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, PIECES_TEXTURE_MIP_LEVELS, error)) {
 		return false;
 	}
-	if (!copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, piecesTextureDecodedWidth, piecesTextureDecodedHeight, 7, error)) {
+	if (!copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, piecesTextureDecodedWidth, piecesTextureDecodedHeight, PIECES_TEXTURE_MIP_LEVELS, error)) {
 		return false;
 	}
-	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 7, error)) {
+	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, PIECES_TEXTURE_MIP_LEVELS, error)) {
 		return false;
 	}
 
 	destroyBuffer(self->allocator, stagingBuffer, stagingBufferAllocation);
 
-	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, 7, &self->textureImageView, error)) {
+	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, PIECES_TEXTURE_MIP_LEVELS, &self->textureImageView, error)) {
 		return false;
 	}
 
@@ -262,7 +263,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 
 static bool createChessBoardSampler(ChessBoard self, char **error)
 {
-	if (!createSampler(self->device, self->anisotropy, 7, &self->sampler, error)) {
+	if (!createSampler(self->device, self->anisotropy, PIECES_TEXTURE_MIP_LEVELS, &self->sampler, error)) {
 		return false;
 	}
 
