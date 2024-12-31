@@ -55,7 +55,6 @@ struct chess_board_t {
 	VkRenderPass renderPass;
 	uint32_t subpass;
 	const char *resourcePath;
-	float anisotropy;
 	float aspectRatio;
 	float width;
 	float originX;
@@ -95,7 +94,7 @@ static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
 static bool createChessBoardPipeline(ChessBoard self, char **error);
 static void updateVertices(ChessBoard self);
 
-bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float anisotropy, float aspectRatio, float width, float originX, float originY, char **error)
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float aspectRatio, float width, float originX, float originY, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -109,7 +108,6 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	self->renderPass = renderPass;
 	self->subpass = subpass;
 	self->resourcePath = resourcePath;
-	self->anisotropy = anisotropy;
 	self->aspectRatio = aspectRatio;
 	self->width = width;
 	self->originX = originX;
@@ -263,7 +261,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 
 static bool createChessBoardSampler(ChessBoard self, char **error)
 {
-	if (!createSampler(self->device, self->anisotropy, PIECES_TEXTURE_MIP_LEVELS, &self->sampler, error)) {
+	if (!createSampler(self->device, 0, PIECES_TEXTURE_MIP_LEVELS, &self->sampler, error)) {
 		return false;
 	}
 

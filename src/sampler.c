@@ -22,6 +22,10 @@ bool createSampler(VkDevice device, float anisotropy, int mipLevels, VkSampler *
 		.maxLod = (float) mipLevels
 	};
 
+	if (!anisotropy) {
+		samplerInfo.anisotropyEnable = VK_FALSE;
+	}
+
 	VkResult result;
 	if ((result = vkCreateSampler(device, &samplerInfo, NULL, sampler)) != VK_SUCCESS) {
 		asprintf(error, "Failed to create sampler.\n");
