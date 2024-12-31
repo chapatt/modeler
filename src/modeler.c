@@ -168,7 +168,7 @@ void *threadProc(void *arg)
 	createChessEngine(&chessEngine, &chessBoard);
 
 	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
-	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, characteristics.deviceProperties.limits.maxSamplerAnisotropy, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
+	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
