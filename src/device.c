@@ -54,10 +54,11 @@ bool createDevice(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
 	};
 	createInfo.pEnabledFeatures = &deviceFeatures;
 
-	const char* requiredExtensions[2] = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	const char* requiredExtensions[3] = {
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE_4_EXTENSION_NAME
 	};
-	createInfo.enabledExtensionCount = 1;
+	createInfo.enabledExtensionCount = 2;
 	const char* optionalExtension = "VK_KHR_portability_subset";
 	if (compareExtensions(&optionalExtension, 1, characteristics.extensions, characteristics.extensionCount)) {
 		requiredExtensions[createInfo.enabledExtensionCount] = optionalExtension;

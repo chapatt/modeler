@@ -4,7 +4,7 @@
 #include "modeler.h"
 #include "utils.h"
 
-pthread_t initVulkanAndroid(ANativeWindow nativeWindow, Queue *inputQueue, char **error)
+pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, Queue *inputQueue, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
@@ -60,7 +60,7 @@ pthread_t initVulkanAndroid(ANativeWindow nativeWindow, Queue *inputQueue, char 
 
 void sendThreadFailureSignal(void *platformWindow)
 {
-	ANativeWindow nativeWindow = ((AndroidWindow *) platformWindow)->nativeWindow;
+	struct ANativeWindow *nativeWindow = ((AndroidWindow *) platformWindow)->nativeWindow;
 	pthread_exit(NULL);
 }
 
