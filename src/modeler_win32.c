@@ -1,10 +1,6 @@
 #include <stdlib.h>
 #include <vulkan/vulkan.h>
 
-#include "imgui/cimgui.h"
-#include "imgui/cimgui_impl_vulkan.h"
-#include "imgui/imgui_impl_modeler.h"
-
 #include "modeler.h"
 #include "utils.h"
 
