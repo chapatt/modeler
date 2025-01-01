@@ -1,13 +1,26 @@
-CFLAGS=-m64
+CFLAGS=
 CXXFLAGS+=-std=c++17
 LDFLAGS=
 LDLIBS=
 
 ifdef BUILD_ANDROID
-	LDLIBS+=-lvulkan-1
-	ALL_TARGET=modeler_android.a
-	CFLAGS+=-I/VulkanSDK/1.3.296.0/Include
+	NDK=/Users/enric/AppData/Local/Android/Sdk/ndk/28.0.12674087
+	TOOLCHAIN=$(NDK)/toolchains/llvm/prebuilt/windows-x86_64
+	CC=$(TOOLCHAIN)/bin/clang
+	CXX=$(TOOLCHAIN)/bin/clang++
+	AR=$(TOOLCHAIN)/bin/llvm-ar
+	CP=/msys64/usr/bin/cp
+	HEXDUMP=/msys64/usr/bin/hexdump
+	SED=sed
+	GLSLC=/VulkanSDK/1.3.296.0/Bin/glslc
+	TARGET=aarch64-linux-android
+	API=21
+	LDLIBS+=-lvulkan
+	ALL_TARGET=modeler_android.a imgui.a
+	CFLAGS+=--target=$(TARGET)$(API)
+	CFLAGS+=-I$(TOOLCHAIN)/sysroot/usr/include
 	CFLAGS+=-DVK_USE_PLATFORM_ANDROID_KHR
+	CFLAGS+=-fPIC
 else ifeq ($(OS),Windows_NT)
 	CC=/msys64/mingw64/bin/gcc
 	CXX=/msys64/mingw64/bin/g++
@@ -151,11 +164,11 @@ vma_implementation.o: src/vk_mem_alloc.h
 clean: clean-app clean-vendor
 
 clean-app:
-	$(RM) -rf modeler modeler.exe modeler.a main_wayland.o main_win32.o \
-		modeler_win32.o modeler_wayland.o modeler_metal.o \
-		surface_win32.o surface_wayland.o surface_metal.o \
+	$(RM) -rf modeler modeler.exe modeler.a modeler_android.a main_wayland.o main_win32.o \
+		modeler_win32.o modeler_wayland.o modeler_metal.o modeler_android.o \
+		surface_win32.o surface_wayland.o surface_metal.o surface_android.o \
 		utils_win32.o \
-		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(TEXTURES)
+		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(PNG_TEXTURES)
 
 clean-vendor:
 	$(RM) -rf $(VENDOR_LIBS) \
