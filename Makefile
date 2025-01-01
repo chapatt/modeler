@@ -3,7 +3,12 @@ CXXFLAGS+=-std=c++17
 LDFLAGS=
 LDLIBS=
 
-ifeq ($(OS),Windows_NT)
+ifdef BUILD_ANDROID
+	LDLIBS+=-lvulkan-1
+	ALL_TARGET=modeler_android.a
+	CFLAGS+=-I/VulkanSDK/1.3.296.0/Include
+	CFLAGS+=-DVK_USE_PLATFORM_ANDROID_KHR
+else ifeq ($(OS),Windows_NT)
 	CC=/msys64/mingw64/bin/gcc
 	CXX=/msys64/mingw64/bin/g++
 	RM=/msys64/usr/bin/rm
@@ -81,6 +86,9 @@ modeler.exe: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_win32.o modeler_win32.o
 
 modeler.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS)
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS)
+
+modeler_android.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS)
+	$(AR) rvs $@ $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS)
 
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
