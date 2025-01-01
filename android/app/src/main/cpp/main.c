@@ -3,6 +3,13 @@
 
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 
+#include "../../../../../src/modeler_android.h"
+
+typedef struct modeler_user_data_t {
+    Queue *inputQueue;
+    pthread_t thread;
+} ModelerUserData;
+
 /*!
  * Handles commands sent to this Android application
  * @param pApp the app the commands are coming from
@@ -15,7 +22,11 @@ void handle_cmd(struct android_app *pApp, int32_t cmd) {
             // "game" class if that suits your needs. Remember to change all instances of userData
             // if you change the class here as a reinterpret_cast is dangerous this in the
             // android_main function and the APP_CMD_TERM_WINDOW handler case.
-            pApp->userData = NULL;
+            char *error;
+            ModelerUserData *userData = (ModelerUserData *) (pApp->userData);
+            if (!(userData->thread = initVulkanAndroid(nativeWindow, &inputQueue, &error))) {
+                break;
+            }
             break;
         case APP_CMD_TERM_WINDOW:
             // The window is being destroyed. Use this to clean up your userData to avoid leaking
@@ -52,6 +63,14 @@ bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent) {
 void android_main(struct android_app *pApp) {
     // Can be removed, useful to ensure your code is running
     printf("Welcome to android_main");
+
+    Queue inputQueue;
+    initializeQueue(&inputQueue);
+    ModelerUserData userData = {
+            .inputQueue = inputQueue,
+            .thread = NULL
+    };
+    (ModelerUserData *) pApp->userData = &userData;
 
     // Register an event handler for Android events
     pApp->onAppCmd = handle_cmd;
@@ -90,9 +109,7 @@ void android_main(struct android_app *pApp) {
         }
 
         // Check if any user data is associated. This is assigned in handle_cmd
-        if (pApp->userData) {
-            // We know that our user data is a Renderer, so reinterpret cast it. If you change your
-            // user data remember to change it here
+        if ((ModelerUserData *) (pApp->userData)->thread) {
         }
     } while (!pApp->destroyRequested);
 }
