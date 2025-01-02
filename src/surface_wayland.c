@@ -10,10 +10,11 @@ bool createSurface(VkInstance instance, void *platformWindow, VkSurfaceKHR *surf
 {
 	WaylandWindow *window = (WaylandWindow *) platformWindow;
 
-	VkWaylandSurfaceCreateInfoKHR createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
-	createInfo.display = window->display;
-	createInfo.surface =window->surface;
+	VkWaylandSurfaceCreateInfoKHR createInfo = {
+		.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
+		.display = window->display,
+		.surface =window->surface
+	};
 
 	VkResult result;
 	if ((result = vkCreateWaylandSurfaceKHR(instance, &createInfo, NULL, surface)) != VK_SUCCESS) {
