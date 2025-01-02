@@ -8,9 +8,10 @@ bool createSurface(VkInstance instance, void *platformWindow, VkSurfaceKHR *surf
 {
 	MetalWindow *window = (MetalWindow *) platformWindow;
 
-	VkMetalSurfaceCreateInfoEXT createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
-	createInfo.pLayer = window->surfaceLayer;
+	VkMetalSurfaceCreateInfoEXT createInfo = {
+		.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT,
+		.pLayer = window->surfaceLayer
+	};
 
 	VkResult result;
 	if ((result = vkCreateMetalSurfaceEXT(instance, &createInfo, NULL, surface)) != VK_SUCCESS) {

@@ -9,10 +9,11 @@ bool createSurface(VkInstance instance, void *platformWindow, VkSurfaceKHR *surf
 {
 	Win32Window *window = (Win32Window *) platformWindow;
 
-	VkWin32SurfaceCreateInfoKHR createInfo = {};
-	createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	createInfo.hwnd = window->hWnd;
-	createInfo.hinstance = window->hInstance;
+	VkWin32SurfaceCreateInfoKHR createInfo = {
+		.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+		.hwnd = window->hWnd,
+		.hinstance = window->hInstance
+	};
     
 	VkResult result;
 	if ((result = vkCreateWin32SurfaceKHR(instance, &createInfo, NULL, surface)) != VK_SUCCESS) {
