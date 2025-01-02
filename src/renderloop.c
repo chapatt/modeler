@@ -84,11 +84,15 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		VkResult result;
 		bool windowResized = false;
 
+		int width = windowDimensions.activeArea.extent.width;
+		int height = windowDimensions.activeArea.extent.height;
+		bool isLandscape = width >= height;
+		int minorDimension = isLandscape ? height : width;
 		VkViewport chessBoardViewport = {
-			.x = windowDimensions.activeArea.offset.x + (windowDimensions.activeArea.extent.width / 4),
-			.y = windowDimensions.activeArea.offset.y + (windowDimensions.activeArea.extent.height / 4),
-			.width = windowDimensions.activeArea.extent.width / 2,
-			.height = windowDimensions.activeArea.extent.width / 2,
+			.x = isLandscape ? (width - height) / 2 : 0,
+			.y = isLandscape ? 0 : (height - width) / 2,
+			.width = minorDimension,
+			.height = minorDimension,
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};
