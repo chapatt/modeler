@@ -29,19 +29,15 @@ static void handle_cmd(struct android_app *pApp, int32_t cmd);
  */
 static void handle_cmd(struct android_app *pApp, int32_t cmd)
 {
-	__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "Got a command\n");
 	ModelerUserData *userData = (ModelerUserData *)(pApp->userData);
 	struct ANativeWindow *window = NULL;
 
 	switch (cmd) {
 	case APP_CMD_INIT_WINDOW:
 		window = (struct ANativeWindow *)(pApp->window);
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "Initializing vulkan\n");
 		if (!(userData->thread = initVulkanAndroid(window, userData->inputQueue, userData->threadPipe[1], userData->error))) {
-			__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "Failed to initialize vulkan\n");
 			break;
 		}
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "Initialized vulkan\n");
 		break;
 	case APP_CMD_TERM_WINDOW:
 		// The window is being destroyed. Use this to clean up your userData to avoid leaking

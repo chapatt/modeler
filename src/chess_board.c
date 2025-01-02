@@ -132,7 +132,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	}
 
 	if (!createChessBoardTexture(self, error)) {
-		asprintf(error, "Failed to create chess board texture.\n");
+		asprintf(error, "Failed to create chess board texture: %s\n", *error);
 		return false;
 	}
 
@@ -206,7 +206,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 	unsigned piecesTextureDecodedHeight;
 
 	if (lodepngResult = lodepng_decode32(&piecesTextureDecodedBytes, &piecesTextureDecodedWidth, &piecesTextureDecodedHeight, piecesTextureBytes, piecesTextureSize)) {
-		asprintf(error, "Failed to decode PNG: &s\n", lodepng_error_text(lodepngResult));
+		asprintf(error, "Failed to decode PNG: %s\n", lodepng_error_text(lodepngResult));
 		return false;
 	}
 
@@ -243,9 +243,11 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, PIECES_TEXTURE_MIP_LEVELS, error)) {
 		return false;
 	}
+
 	if (!copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, piecesTextureDecodedWidth, piecesTextureDecodedHeight, PIECES_TEXTURE_MIP_LEVELS, error)) {
 		return false;
 	}
+
 	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, PIECES_TEXTURE_MIP_LEVELS, error)) {
 		return false;
 	}

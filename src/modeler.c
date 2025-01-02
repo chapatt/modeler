@@ -89,6 +89,11 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	windowDimensions.surfaceArea.width = swapchainInfo.extent.width;
+	windowDimensions.surfaceArea.height = swapchainInfo.extent.height;
+	windowDimensions.activeArea.extent.width = swapchainInfo.extent.width;
+	windowDimensions.activeArea.extent.height = swapchainInfo.extent.height;
+
 	VkImageView *imageViews = malloc(sizeof(imageViews) * swapchainInfo.imageCount);
 	if (!createImageViews(device, swapchainInfo.images, swapchainInfo.imageCount, swapchainInfo.surfaceFormat.format, imageViews, error)) {
 		sendThreadFailureSignal(platformWindow);
