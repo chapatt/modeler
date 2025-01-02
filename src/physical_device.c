@@ -102,6 +102,8 @@ bool isPhysicalDeviceSurfaceSupportSuitable(PhysicalDeviceSurfaceCharacteristics
 	return characteristics.formatCount && characteristics.presentModeCount &&
 #if DRAW_WINDOW_DECORATION
 		(characteristics.capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR);
+#elif defined(ANDROID)
+		(characteristics.capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR);
 #else
 		(characteristics.capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
 #endif /* DRAW_WINDOW_DECORATION */
