@@ -33,13 +33,13 @@ pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, Queue *inputQueu
 
 	threadArgs->windowDimensions = (WindowDimensions) {
 		.surfaceArea = {
-			.width = 50,
-			.height = 50
+			.width = 0,
+			.height = 0
 		},
 		.activeArea = {
 			.extent = {
-				.width = 50,
-				.height = 50
+				.width = 0,
+				.height = 0
 			},
 			.offset = {0, 0}
 		},
