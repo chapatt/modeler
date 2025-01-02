@@ -20,6 +20,7 @@ ifdef BUILD_ANDROID
 	CFLAGS+=--target=$(TARGET)$(API)
 	CFLAGS+=-I$(TOOLCHAIN)/sysroot/usr/include
 	CFLAGS+=-DVK_USE_PLATFORM_ANDROID_KHR
+	CFLAGS+=-DANDROID
 	CFLAGS+=-fPIC
 else ifeq ($(OS),Windows_NT)
 	CC=/msys64/mingw64/bin/gcc

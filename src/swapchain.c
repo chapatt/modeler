@@ -35,6 +35,8 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 		.preTransform = surfaceCharacteristics.capabilities.currentTransform,
 #if DRAW_WINDOW_DECORATION
 		.compositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
+#elif defined(ANDROID)
+		.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
 #else
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 #endif /* DRAW_WINDOW_DECORATION */
