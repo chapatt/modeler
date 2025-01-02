@@ -6,7 +6,7 @@ bool createAllocator(VkInstance instance, VkPhysicalDevice physicalDevice, VkDev
 {
 	VmaAllocatorCreateInfo allocatorCreateInfo = {
 		.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT | VMA_ALLOCATOR_CREATE_KHR_MAINTENANCE4_BIT,
-		.vulkanApiVersion = VK_API_VERSION_1_2,
+		.vulkanApiVersion = VK_API_VERSION_1_1,
 		.physicalDevice = physicalDevice,
 		.device = device,
 		.instance = instance,
