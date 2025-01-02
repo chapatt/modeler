@@ -1,15 +1,17 @@
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "modeler_android.h"
 #include "modeler.h"
 #include "utils.h"
 
-pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, Queue *inputQueue, char **error)
+pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, Queue *inputQueue, int fd, char **error)
 {
 	pthread_t thread;
 	struct threadArguments *threadArgs = malloc(sizeof(*threadArgs));
 	AndroidWindow *window = malloc(sizeof(*window));
 	window->nativeWindow = nativeWindow;
+	window->fd = fd;
 	threadArgs->platformWindow = window;
 	threadArgs->inputQueue = inputQueue;
 	asprintf(&threadArgs->resourcePath, ".");
@@ -58,18 +60,27 @@ pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, Queue *inputQueu
 	return thread;
 }
 
+static void sendSignal(void *platformWindow, char signal)
+{
+	int fd = ((AndroidWindow *) platformWindow)->fd;
+	write(fd, &signal, 1);
+	close(fd);
+	pthread_exit(NULL);
+}
+
 void sendThreadFailureSignal(void *platformWindow)
 {
-	struct ANativeWindow *nativeWindow = ((AndroidWindow *) platformWindow)->nativeWindow;
-	pthread_exit(NULL);
+	sendSignal(platformWindow, 'f');
 }
 
 void sendFullscreenSignal(void *platformWindow)
 {
+	sendSignal(platformWindow, 'g');
 }
 
 void sendExitFullscreenSignal(void *platformWindow)
 {
+	sendSignal(platformWindow, 'h');
 }
 
 void ackResize(ResizeInfo *resizeInfo)

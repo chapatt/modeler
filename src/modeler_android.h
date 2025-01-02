@@ -8,8 +8,9 @@
 
 typedef struct android_window_t {
 	struct ANativeWindow *nativeWindow;
+	int fd;
 } AndroidWindow;
 
-pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, Queue *inputQueue, char **error);
+pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, Queue *inputQueue, int fd, char **error);
 
 #endif /* MODELER_ANDROID_H */
