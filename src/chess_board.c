@@ -120,32 +120,26 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	initializeMove(self);
 
 	if (!createChessBoardVertexBuffer(self, error)) {
-		asprintf(error, "Failed to create chess board vertex buffer.\n");
 		return false;
 	}
 
 	if (!createChessBoardIndexBuffer(self, error)) {
-		asprintf(error, "Failed to create chess board index buffer.\n");
 		return false;
 	}
 
 	if (!createChessBoardTexture(self, error)) {
-		asprintf(error, "Failed to create chess board texture: %s\n", *error);
 		return false;
 	}
 
 	if (!createChessBoardSampler(self, error)) {
-		asprintf(error, "Failed to create chess board sampler.\n");
 		return false;
 	}
 
 	if (!createChessBoardDescriptors(self, error)) {
-		asprintf(error, "Failed to create chess board descriptors.\n");
 		return false;
 	}
 
 	if (!createChessBoardPipeline(self, error)) {
-		asprintf(error, "Failed to create chess board pipeline.\n");
 		return false;
 	}
 
