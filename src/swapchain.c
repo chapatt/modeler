@@ -85,7 +85,10 @@ void destroySwapchain(VkDevice device, VkSwapchainKHR swapchain)
 
 VkSurfaceFormatKHR chooseSwapchainSurfaceFormat(VkSurfaceFormatKHR *surfaceFormats, uint32_t surfaceFormatCount) {
 	for (uint32_t i = 0; i < surfaceFormatCount; ++i) {
-		if (surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB && surfaceFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+		bool hasSuitableFormat = surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB ||
+			surfaceFormats[i].format == VK_FORMAT_R8G8B8A8_SRGB;
+
+		if (hasSuitableFormat && surfaceFormats[i].colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 			return surfaceFormats[i];
 		}
 	}
