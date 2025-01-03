@@ -1,6 +1,7 @@
 #include <android/log.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <stdio.h>
@@ -8,14 +9,15 @@
 
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 
+#include "modeler.h"
 #include "modeler_android.h"
 #include "utils.h"
 
 typedef struct modeler_user_data_t {
-	Queue *inputQueue;
+	Queue inputQueue;
 	pthread_t thread;
-	int *threadPipe;
-	char **error;
+	int threadPipe[2];
+	char *error;
 } ModelerUserData;
 
 static int handleCustomLooperEvent(int fd, int events, void *data);
@@ -29,23 +31,57 @@ static void handle_cmd(struct android_app *pApp, int32_t cmd);
  */
 static void handle_cmd(struct android_app *pApp, int32_t cmd)
 {
-	ModelerUserData *userData = (ModelerUserData *)(pApp->userData);
-	struct ANativeWindow *window = NULL;
-
 	switch (cmd) {
 	case APP_CMD_INIT_WINDOW:
-		window = (struct ANativeWindow *)(pApp->window);
-		if (!(userData->thread = initVulkanAndroid(window, userData->inputQueue, userData->threadPipe[1], userData->error))) {
-			break;
+		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_INIT_WINDOW\n");
+		{
+			struct ANativeWindow *window = (struct ANativeWindow *) (pApp->window);
+			ModelerUserData *userData = malloc(sizeof(*userData));
+
+			initializeQueue(&userData->inputQueue);
+
+			if (pipe(userData->threadPipe)) {
+				handleFatalError("Failed to create pipe");
+			}
+
+			ALooper_addFd(
+				ALooper_forThread(),
+				userData->threadPipe[0],
+				ALOOPER_POLL_CALLBACK,
+				ALOOPER_EVENT_INPUT,
+				&handleCustomLooperEvent,
+				userData
+			);
+
+			if (!(userData->thread = initVulkanAndroid(window, &userData->inputQueue, userData->threadPipe[1], &userData->error))) {
+				break;
+			}
+
+			pApp->userData = userData;
 		}
 		break;
+	case APP_CMD_START:
+		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_START\n");
+		break;
+	case APP_CMD_RESUME:
+		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_RESUME\n");
+		break;
+	case APP_CMD_PAUSE:
+		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_PAUSE\n");
+		break;
+	case APP_CMD_STOP:
+		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_STOP\n");
+		break;
+	case APP_CMD_DESTROY:
+		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_DESTROY\n");
+		break;
 	case APP_CMD_TERM_WINDOW:
-		// The window is being destroyed. Use this to clean up your userData to avoid leaking
-		// resources.
-		//
-		// We have to check if userData is assigned just in case this comes in really quickly
+		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_TERM_WINDOW\n");
 		if (pApp->userData) {
+			ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+			terminateVulkan(&userData->inputQueue, userData->thread);
 			pApp->userData = NULL;
+			free(userData);
 		}
 		break;
 	default:
@@ -74,34 +110,12 @@ bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent)
  */
 void android_main(struct android_app *pApp)
 {
-	char *error;
-	Queue inputQueue;
-	initializeQueue(&inputQueue);
-	int threadPipe[2];
-	if (pipe(threadPipe)) {
-		handleFatalError("Failed to create pipe");
-	}
-	ModelerUserData userData = {
-		.inputQueue = &inputQueue,
-		.threadPipe = threadPipe,
-		.error = &error};
-	pApp->userData = &userData;
-
 	pApp->onAppCmd = handle_cmd;
 
 	// Set input event filters (set it to NULL if the app wants to process all inputs).
 	// Note that for key inputs, this example uses the default default_key_filter()
 	// implemented in android_native_app_glue.c.
 	android_app_set_motion_event_filter(pApp, motion_event_filter_func);
-
-	ALooper_addFd(
-		ALooper_forThread(),
-		threadPipe[0],
-		ALOOPER_POLL_CALLBACK,
-		ALOOPER_EVENT_INPUT,
-		&handleCustomLooperEvent,
-		&userData
-	);
 
 	// This sets up a typical game/event loop. It will run until the app is destroyed.
 	do {
@@ -125,8 +139,7 @@ void android_main(struct android_app *pApp)
 			case ALOOPER_POLL_CALLBACK:
 				break;
 			default:
-				if (pSource)
-				{
+				if (pSource) {
 					pSource->process(pApp, pSource);
 				}
 			}
@@ -140,7 +153,7 @@ static int handleCustomLooperEvent(int fd, int events, void *data)
 	char c;
 	read(fd, &c, 1);
 	close(fd);
-	handleFatalError(*userData->error);
+	handleFatalError(userData->error);
 
 	return 1;
 }
