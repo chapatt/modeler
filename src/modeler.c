@@ -172,8 +172,7 @@ void *threadProc(void *arg)
 	ChessEngine chessEngine;
 	createChessEngine(&chessEngine, &chessBoard);
 
-	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
-	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, aspectRatio, 1.0f, -0.5f, -0.5f, error)) {
+	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, 1.0f, -0.5f, -0.5f, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -426,8 +425,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions
 			return false;
 		}
 	}
-	float aspectRatio = (windowDimensions.activeArea.extent.width / (float) windowDimensions.activeArea.extent.height);
-	setSize(swapchainCreateInfo.chessBoard, aspectRatio, 1.0f, -0.5f, -0.5f);
+	setSize(swapchainCreateInfo.chessBoard, 1.0f, -0.5f, -0.5f);
 	if (!updateChessBoard(swapchainCreateInfo.chessBoard, error)) {
 		return false;
 	}
