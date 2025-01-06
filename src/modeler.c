@@ -87,20 +87,7 @@ void *threadProc(void *arg)
 	}
 
 	SwapchainInfo swapchainInfo = {};
-	if (!createSwapchain(device, surface, surfaceCharacteristics, queueInfo.graphicsQueueFamilyIndex, queueInfo.presentationQueueFamilyIndex, windowDimensions.surfaceArea, VK_NULL_HANDLE, &swapchainInfo, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
-
-	windowDimensions.surfaceArea.width = swapchainInfo.extent.width;
-	windowDimensions.surfaceArea.height = swapchainInfo.extent.height;
-	windowDimensions.activeArea.extent.width = swapchainInfo.extent.width;
-	windowDimensions.activeArea.extent.height = swapchainInfo.extent.height;
-
-	VkImageView *imageViews = malloc(sizeof(imageViews) * swapchainInfo.imageCount);
-	if (!createImageViews(device, swapchainInfo.images, swapchainInfo.imageCount, swapchainInfo.surfaceFormat.format, imageViews, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
-
+	VkImageView *imageViews;
 	VkDescriptorPool descriptorPool;
 	VkDescriptorSet *imageDescriptorSets;
 	VkDescriptorSetLayout *imageDescriptorSetLayouts;
@@ -109,50 +96,42 @@ void *threadProc(void *arg)
 #ifdef DRAW_WINDOW_DECORATION
 	VkImage offscreenImage;
 	VmaAllocation offscreenImageAllocation;
-	if (!createImage(device, allocator, swapchainInfo.extent, swapchainInfo.surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, 1, &offscreenImage, &offscreenImageAllocation, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
-
 	VkImageView offscreenImageView;
-	if (!createImageViews(device, &offscreenImage, 1, swapchainInfo.surfaceFormat.format, &offscreenImageView, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
-
-	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
-	VkSampler samplers[] = {VK_NULL_HANDLE};
-	CreateDescriptorSetInfo createDescriptorSetInfo = {
-		&offscreenImageView,
-		imageLayouts,
-		samplers,
-		1,
-		NULL,
-		NULL,
-		NULL,
-		0
-	};
-	if (!createDescriptorSets(device, createDescriptorSetInfo, &descriptorPool, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,  &imageDescriptorSets, &imageDescriptorSetLayouts, &bufferDescriptorSets, &bufferDescriptorSetLayouts, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
 #endif /* DRAW_WINDOW_DECORATION */
-
 	VkRenderPass renderPass;
-	if (!createRenderPass(device, swapchainInfo, &renderPass, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
+	VkFramebuffer *framebuffers;
 
-	VkFramebuffer *framebuffers = malloc(sizeof(framebuffers) * swapchainInfo.imageCount);
-	for (uint32_t i = 0; i < swapchainInfo.imageCount; ++i) {
+	SwapchainCreateInfo swapchainCreateInfo = {
+		.device = device,
+		.allocator = allocator,
+		.physicalDevice = physicalDevice,
+		.surface = surface,
+		.surfaceCharacteristics = &surfaceCharacteristics,
+		.queueInfo = queueInfo,
+		.renderPass = &renderPass,
+		.swapchainInfo = &swapchainInfo,
+		.imageViews = &imageViews,
+		.framebuffers = &framebuffers,
 #ifdef DRAW_WINDOW_DECORATION
-		VkImageView attachments[] = {offscreenImageView, imageViews[i]};
-		uint32_t attachmentCount = 2;
+		.descriptorPool = &descriptorPool,
+		.imageDescriptorSetLayouts = &imageDescriptorSetLayouts,
+		.imageDescriptorSets = &imageDescriptorSets,
+		.bufferDescriptorSetLayouts = &bufferDescriptorSetLayouts,
+		.bufferDescriptorSets = &bufferDescriptorSets,
+		.offscreenImage = &offscreenImage,
+		.offscreenImageCount = 1,
+		.offscreenImageView = &offscreenImageView,
+		.offscreenImageAllocation = &offscreenImageAllocation
 #else
-		VkImageView attachments[] = {imageViews[i]};
-		uint32_t attachmentCount = 1;
+		.offscreenImage = NULL,
+		.offscreenImageCount = 0,
+		.offscreenImageView = NULL,
+		.offscreenImageAllocation = NULL,
 #endif /* DRAW_WINDOW_DECORATION */
+	};
 
-		if (!createFramebuffer(device, swapchainInfo, attachments, attachmentCount, renderPass, framebuffers + i, error)) {
-			sendThreadFailureSignal(platformWindow);
-		}
+	if (!createAppSwapchain(swapchainCreateInfo, windowDimensions, error)) {
+		sendThreadFailureSignal(platformWindow);
 	}
 
 	VkCommandPool commandPool;
@@ -232,6 +211,10 @@ void *threadProc(void *arg)
 	}
 #endif /* DRAW_WINDOW_DECORATION */
 
+	VkDescriptorPool imDescriptorPool;
+	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
+	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
+
 #if DRAW_WINDOW_DECORATION
 	VkPipeline pipelines[] = {pipelineWindowDecoration};
 	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutWindowDecoration};
@@ -243,41 +226,6 @@ void *threadProc(void *arg)
 	size_t pipelineCount = 0;
 	VkDescriptorSet **drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
-
-	SwapchainCreateInfo swapchainCreateInfo = {
-		.device = device,
-		.allocator = allocator,
-		.physicalDevice = physicalDevice,
-		.surface = surface,
-		.surfaceCharacteristics = &surfaceCharacteristics,
-		.queueInfo = queueInfo,
-		.commandPool = commandPool,
-		.renderPass = &renderPass,
-		.swapchainInfo = &swapchainInfo,
-		.imageViews = &imageViews,
-		.framebuffers = &framebuffers,
-		.chessBoard = chessBoard,
-#ifdef DRAW_WINDOW_DECORATION
-		.descriptorPool = &descriptorPool,
-		.imageDescriptorSetLayouts = &imageDescriptorSetLayouts,
-		.imageDescriptorSets = &imageDescriptorSets,
-		.bufferDescriptorSetLayouts = &bufferDescriptorSetLayouts,
-		.bufferDescriptorSets = &bufferDescriptorSets,
-		.offscreenImage = &offscreenImage,
-		.offscreenImageCount = 1,
-		.offscreenImageView = &offscreenImageView,
-		.offscreenImageAllocation = &offscreenImageAllocation
-#else
-		.offscreenImage = NULL,
-		.offscreenImageCount = 0,
-		.offscreenImageView = NULL,
-		.offscreenImageAllocation = NULL,
-#endif /* DRAW_WINDOW_DECORATION */
-	};
-
-	VkDescriptorPool imDescriptorPool;
-	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
-	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
 
 	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, chessBoard, error)) {
 		sendThreadFailureSignal(platformWindow);
@@ -353,6 +301,11 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error)
 {
 	destroyAppSwapchain(swapchainCreateInfo);
+
+	if (!getPhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.physicalDevice, swapchainCreateInfo.surface, swapchainCreateInfo.surfaceCharacteristics, error)) {
+		return false;
+	}
+
 	createAppSwapchain(swapchainCreateInfo, windowDimensions, error);
 
 	return true;
@@ -381,11 +334,6 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 
 bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error)
 {
-
-	if (!getPhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.physicalDevice, swapchainCreateInfo.surface, swapchainCreateInfo.surfaceCharacteristics, error)) {
-		return false;
-	}
-
 	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, *swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, windowDimensions.surfaceArea, swapchainCreateInfo.swapchainInfo->swapchain, swapchainCreateInfo.swapchainInfo, error)) {
 		return false;
 	}
