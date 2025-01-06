@@ -52,12 +52,11 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 	}
 }
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
 {
 	Font *fonts = NULL;
 	size_t fontCount = 0;
 	ImFont *currentFont = NULL;
-	WindowDimensions windowDimensions = initialWindowDimensions;
 	VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
 	VkRenderPassBeginInfo renderPassBeginInfos[swapchainInfo->imageCount];
 	VkClearValue clearValue = {0.1f, 0.3f, 0.3f, 1.0f};
@@ -78,14 +77,14 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 	bool updateBoard = false;
 	PointerPosition pointerPosition;
 
-	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions.scale, resourcePath);
+	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath);
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
 		bool windowResized = false;
 
-		int width = windowDimensions.activeArea.extent.width;
-		int height = windowDimensions.activeArea.extent.height;
+		int width = windowDimensions->activeArea.extent.width;
+		int height = windowDimensions->activeArea.extent.height;
 		bool isLandscape = width >= height;
 		int minorDimension = isLandscape ? height : width;
 		VkViewport chessBoardViewport = {
@@ -130,11 +129,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 				break;
 			case RESIZE:
 				resizeInfo = (ResizeInfo *) data;
-				if (resizeInfo->windowDimensions.scale != windowDimensions.scale) {
+				if (resizeInfo->windowDimensions.scale != windowDimensions->scale) {
 					rescaleImGui(&fonts, &fontCount, &currentFont, resizeInfo->windowDimensions.scale, resourcePath);
 				}
-				windowDimensions = resizeInfo->windowDimensions;
-				if (swapchainInfo->extent.width != windowDimensions.surfaceArea.width || swapchainInfo->extent.height != windowDimensions.surfaceArea.height) {
+				*windowDimensions = resizeInfo->windowDimensions;
+				if (swapchainInfo->extent.width != windowDimensions->surfaceArea.width || swapchainInfo->extent.height != windowDimensions->surfaceArea.height) {
 					windowResized = true;
 				}
 				ackResize(resizeInfo);
@@ -169,7 +168,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		}
 
 		if (windowResized) {
-			if (!recreateSwapchain(swapchainCreateInfo, windowDimensions, error)) {
+			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
 			windowResized = false;
@@ -183,7 +182,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		uint32_t imageIndex = 0;
 		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			if (!recreateSwapchain(swapchainCreateInfo, windowDimensions, error)) {
+			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
 			continue;
@@ -218,7 +217,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 				.x = 0,
 				.y = 0
 			},
-			.extent = windowDimensions.activeArea.extent
+			.extent = windowDimensions->activeArea.extent
 		};
 		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &chessBoardViewport);
 		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &scissor);
@@ -286,9 +285,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 		vkCmdSetViewport((*commandBuffers)[imageIndex], 0, 1, &secondViewport);
 		vkCmdSetScissor((*commandBuffers)[imageIndex], 0, 1, &secondScissor);
 		PushConstants secondPushConstants = {
-			.extent = {windowDimensions.activeArea.extent.width, windowDimensions.activeArea.extent.height},
-			.offset = {windowDimensions.activeArea.offset.x, windowDimensions.activeArea.offset.y},
-			.cornerRadius = windowDimensions.cornerRadius
+			.extent = {windowDimensions->activeArea.extent.width, windowDimensions->activeArea.extent.height},
+			.offset = {windowDimensions->activeArea.offset.x, windowDimensions->activeArea.offset.y},
+			.cornerRadius = windowDimensions->cornerRadius
 		};
 		vkCmdPushConstants((*commandBuffers)[imageIndex], pipelineLayouts[0], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(secondPushConstants), &secondPushConstants);
 		vkCmdDraw((*commandBuffers)[imageIndex], 3, 1, 0, 0);
@@ -328,7 +327,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions initialWindowD
 
 		result = vkQueuePresentKHR(presentationQueue, &presentInfo);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-			if (!recreateSwapchain(swapchainCreateInfo, windowDimensions, error)) {
+			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
 			continue;
