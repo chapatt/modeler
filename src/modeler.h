@@ -12,29 +12,7 @@
 #include "queue.h"
 #include "chess_board.h"
 
-typedef struct swapchain_create_info_t {
-	VkDevice device;
-	VmaAllocator allocator;
-	VkPhysicalDevice physicalDevice;
-	VkSurfaceKHR surface;
-	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics;
-	QueueInfo queueInfo;
-	VkCommandPool commandPool;
-	VkRenderPass *renderPass;
-	SwapchainInfo *swapchainInfo;
-	VkImage *offscreenImage;
-	uint32_t offscreenImageCount;
-	VkImageView *offscreenImageView;
-	VmaAllocation *offscreenImageAllocation;
-	VkImageView **imageViews;
-	VkFramebuffer **framebuffers;
-	VkDescriptorPool *descriptorPool;
-	VkDescriptorSet **imageDescriptorSets;
-	VkDescriptorSetLayout **imageDescriptorSetLayouts;
-	VkDescriptorSet **bufferDescriptorSets;
-	VkDescriptorSetLayout **bufferDescriptorSetLayouts;
-	WindowDimensions *windowDimensions;
-} SwapchainCreateInfo;
+typedef struct swapchain_create_info_t *SwapchainCreateInfo;
 
 struct threadArguments {
 	void *platformWindow;
