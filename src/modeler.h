@@ -33,6 +33,7 @@ typedef struct swapchain_create_info_t {
 	VkDescriptorSetLayout **imageDescriptorSetLayouts;
 	VkDescriptorSet **bufferDescriptorSets;
 	VkDescriptorSetLayout **bufferDescriptorSetLayouts;
+	WindowDimensions *windowDimensions;
 } SwapchainCreateInfo;
 
 struct threadArguments {
@@ -46,7 +47,7 @@ struct threadArguments {
 };
 
 void *threadProc(void *arg);
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error);
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
 void sendFullscreenSignal(void *platformWindow);
 void sendExitFullscreenSignal(void *platformWindow);
 void sendThreadFailureSignal(void *platformWindow);

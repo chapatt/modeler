@@ -38,7 +38,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard);
 static void imVkCheck(VkResult result);
 static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
-static bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error);
+static bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
 {
@@ -112,6 +112,7 @@ void *threadProc(void *arg)
 		.swapchainInfo = &swapchainInfo,
 		.imageViews = &imageViews,
 		.framebuffers = &framebuffers,
+		.windowDimensions = &windowDimensions,
 #ifdef DRAW_WINDOW_DECORATION
 		.descriptorPool = &descriptorPool,
 		.imageDescriptorSetLayouts = &imageDescriptorSetLayouts,
@@ -130,7 +131,7 @@ void *threadProc(void *arg)
 #endif /* DRAW_WINDOW_DECORATION */
 	};
 
-	if (!createAppSwapchain(swapchainCreateInfo, windowDimensions, error)) {
+	if (!createAppSwapchain(swapchainCreateInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -227,7 +228,7 @@ void *threadProc(void *arg)
 	VkDescriptorSet **drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
 
-	if (!draw(device, platformWindow, windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, chessBoard, error)) {
+	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, swapchainCreateInfo, chessBoard, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -298,7 +299,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 #endif /* ENABLE_IMGUI */
 }
 
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error)
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	destroyAppSwapchain(swapchainCreateInfo);
 
@@ -306,7 +307,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions
 		return false;
 	}
 
-	createAppSwapchain(swapchainCreateInfo, windowDimensions, error);
+	createAppSwapchain(swapchainCreateInfo, error);
 
 	return true;
 }
@@ -332,11 +333,16 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo.surfaceCharacteristics);
 }
 
-bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, WindowDimensions windowDimensions, char **error)
+bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
-	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, *swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, windowDimensions.surfaceArea, swapchainCreateInfo.swapchainInfo->swapchain, swapchainCreateInfo.swapchainInfo, error)) {
+	if (!createSwapchain(swapchainCreateInfo.device, swapchainCreateInfo.surface, *swapchainCreateInfo.surfaceCharacteristics, swapchainCreateInfo.queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo.queueInfo.presentationQueueFamilyIndex, swapchainCreateInfo.windowDimensions->surfaceArea, swapchainCreateInfo.swapchainInfo->swapchain, swapchainCreateInfo.swapchainInfo, error)) {
 		return false;
 	}
+
+	swapchainCreateInfo.windowDimensions->surfaceArea.width = swapchainCreateInfo.swapchainInfo->extent.width;
+	swapchainCreateInfo.windowDimensions->surfaceArea.height = swapchainCreateInfo.swapchainInfo->extent.height;
+	swapchainCreateInfo.windowDimensions->activeArea.extent.width = swapchainCreateInfo.swapchainInfo->extent.width;
+	swapchainCreateInfo.windowDimensions->activeArea.extent.height = swapchainCreateInfo.swapchainInfo->extent.height;
 
 	*swapchainCreateInfo.imageViews = malloc(sizeof(*swapchainCreateInfo.imageViews) * swapchainCreateInfo.swapchainInfo->imageCount);
 	if (!createImageViews(swapchainCreateInfo.device, swapchainCreateInfo.swapchainInfo->images, swapchainCreateInfo.swapchainInfo->imageCount, swapchainCreateInfo.swapchainInfo->surfaceFormat.format, *swapchainCreateInfo.imageViews, error)) {
