@@ -512,10 +512,11 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindIndexBuffer(commandBuffer, self->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
+	float zRotation = M_PI / 2;
 	ChessBoardPushConstants pushConstants = {
 		.mvp = {
-			0, -1, 0, 0,
-			1, 0, 0, 0,
+			cos(zRotation), -sin(zRotation), 0, 0,
+			sin(zRotation), cos(zRotation), 0, 0,
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		}
