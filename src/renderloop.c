@@ -20,6 +20,7 @@ typedef struct font_t {
 static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale);
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
+static bool resetChessBoard(ChessBoard chessBoard, char **error);
 
 typedef struct component_t {
 	void *object;
@@ -74,7 +75,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	long elapsedQueue[queueLength];
 	size_t head = 0;
 	long elapsed = 1;
-	bool updateBoard = false;
 	PointerPosition pointerPosition;
 
 	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath);
@@ -145,26 +145,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				free(inputEvent);
 				goto cancelMainLoop;
 			}
-		}
-
-		if (updateBoard) {
-			Board8x8 newSetup = {
-				BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK,
-				BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
-				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-				EMPTY, EMPTY, EMPTY, EMPTY, WHITE_PAWN, EMPTY, EMPTY, EMPTY,
-				EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-				WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, EMPTY, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
-				WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK
-			};
-
-			setBoard(chessBoard, newSetup);
-			if (!updateChessBoard(chessBoard, error)) {
-				asprintf(error, "Failed to update chess board.\n");
-				return false;
-			}
-			updateBoard = false;
 		}
 
 		if (windowResized) {
@@ -252,8 +232,10 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		if (ImGui_Button("Exit Fullscreen")) {
 			sendExitFullscreenSignal(platformWindow);
 		}
-		if (ImGui_Button("Move Pawn")) {
-			updateBoard = true;
+		if (ImGui_Button("Reset Board")) {
+			if (!resetChessBoard(chessBoard, error)) {
+				return false;
+			}
 		}
 		ImGui_End();
 		ImGui_PopFont();
@@ -376,4 +358,26 @@ static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, 
 		*currentFont = font;
 	}
 #endif /* ENABLE_IMGUI */
+}
+
+static bool resetChessBoard(ChessBoard chessBoard, char **error)
+{
+	Board8x8 newSetup = {
+		BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK,
+		BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
+		WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
+		WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK
+	};
+
+	setBoard(chessBoard, newSetup);
+	if (!updateChessBoard(chessBoard, error)) {
+		asprintf(error, "Failed to update chess board.\n");
+		return false;
+	}
+
+	return true;
 }
