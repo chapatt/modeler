@@ -136,12 +136,6 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		colorBlendStateCreateInfo.blendConstants[i] = 0.0f;
 	}
 
-	VkPushConstantRange pushConstantRange = {
-		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-		.offset = 0,
-		.size = 20
-	};
-
 	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 		.pNext = NULL,
@@ -149,7 +143,7 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.setLayoutCount = pipelineCreateInfo.descriptorSetLayoutCount,
 		.pSetLayouts = pipelineCreateInfo.descriptorSetLayouts,
 		.pushConstantRangeCount = 1,
-		.pPushConstantRanges = &pushConstantRange
+		.pPushConstantRanges = &pipelineCreateInfo.pushConstantRange
 	};
 
 	if ((result = vkCreatePipelineLayout(pipelineCreateInfo.device, &pipelineLayoutCreateInfo, NULL, pipelineLayout)) != VK_SUCCESS) {
