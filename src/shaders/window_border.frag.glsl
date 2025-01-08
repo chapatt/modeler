@@ -5,9 +5,9 @@ layout (input_attachment_index = 0, set = 0, binding = 0) uniform subpassInput i
 layout(location = 0) out vec4 outColor;
 
 layout (push_constant) uniform _push_constants {
-    vec2 extent;
-    vec2 offset;
-    float cornerRadius;
+	vec2 extent;
+	vec2 offset;
+	float cornerRadius;
 } PushConstants;
 
 float sdfRoundedRectangle(vec2 p, vec2 b, float r) {
@@ -16,7 +16,7 @@ float sdfRoundedRectangle(vec2 p, vec2 b, float r) {
 }
 
 float sigmoid(float t) {
-    return 1.0 / (1.0 + exp(-t));
+	return 1.0 / (1.0 + exp(-t));
 }
 
 vec2 extent = PushConstants.extent;

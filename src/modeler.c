@@ -204,6 +204,11 @@ void *threadProc(void *arg)
 #endif /* EMBED_SHADERS */
 
 #ifdef DRAW_WINDOW_DECORATION
+	VkPushConstantRange pushConstantRange = {
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.offset = 0,
+		.size = sizeof(PushConstants)
+	};
 	VkPipelineLayout pipelineLayoutWindowDecoration;
 	VkPipeline pipelineWindowDecoration;
 	PipelineCreateInfo pipelineCreateInfoWindowDecoration = {
@@ -224,6 +229,7 @@ void *threadProc(void *arg)
 		.VertexAttributeDescriptions = NULL,
 		.descriptorSetLayouts = imageDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
+		.pushConstantRange = pushConstantRange
 	};
 	bool pipelineCreateSuccessWindowDecoration = createPipeline(pipelineCreateInfoWindowDecoration, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
 #ifndef EMBED_SHADERS

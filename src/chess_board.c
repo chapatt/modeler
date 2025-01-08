@@ -25,6 +25,10 @@
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
 #define PIECES_TEXTURE_MIP_LEVELS 7
 
+typedef struct chess_board_push_constants_t {
+	float mvp[16];
+} ChessBoardPushConstants;
+
 float pieceSpriteOriginMap[13][2] = {
 	{0.75f, 0.75f},
 	{0.25f, 0.75f},
@@ -367,6 +371,12 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 	}
 #endif /* EMBED_SHADERS */
 
+	VkPushConstantRange pushConstantRange = {
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+		.offset = 0,
+		.size = sizeof(ChessBoardPushConstants)
+	};
+
 	PipelineCreateInfo pipelineCreateInfo = {
 		.device = self->device,
 		.renderPass = self->renderPass,
@@ -381,6 +391,7 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
 		.descriptorSetLayouts = self->textureDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
+		.pushConstantRange = pushConstantRange
 	};
 	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->pipelineLayout, &self->pipeline, error);
 #ifndef EMBED_SHADERS
@@ -501,6 +512,15 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindIndexBuffer(commandBuffer, self->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
+	ChessBoardPushConstants pushConstants = {
+		.mvp = {
+			0, -1, 0, 0,
+			1, 0, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
+		}
+	};
+	vkCmdPushConstants(commandBuffer, self->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
 	return true;
