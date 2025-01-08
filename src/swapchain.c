@@ -24,6 +24,15 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 		return false;
 	}
 
+	if (surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
+		surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
+	) {
+		uint32_t width = surfaceCharacteristics.capabilities.currentExtent.width;
+		uint32_t height = surfaceCharacteristics.capabilities.currentExtent.height;
+		surfaceCharacteristics.capabilities.currentExtent.height = width;
+		surfaceCharacteristics.capabilities.currentExtent.width = height;
+	}
+
 	VkSwapchainCreateInfoKHR createInfo = {
 		.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 		.surface = surface,
