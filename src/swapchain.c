@@ -13,6 +13,15 @@ VkExtent2D chooseSwapchainExtent(VkSurfaceCapabilitiesKHR capabilities, VkExtent
 
 bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, VkSwapchainKHR oldSwapchain, SwapchainInfo *swapchainInfo, char **error)
 {
+	if (surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
+		surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
+	) {
+		uint32_t width = surfaceCharacteristics.capabilities.currentExtent.width;
+		uint32_t height = surfaceCharacteristics.capabilities.currentExtent.height;
+		surfaceCharacteristics.capabilities.currentExtent.height = width;
+		surfaceCharacteristics.capabilities.currentExtent.width = height;
+	}
+
 	swapchainInfo->surfaceFormat = chooseSwapchainSurfaceFormat(surfaceCharacteristics.formats, surfaceCharacteristics.formatCount);
 #ifdef ENABLE_VSYNC
 	swapchainInfo->presentMode = VK_PRESENT_MODE_FIFO_KHR;
@@ -22,15 +31,6 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 	swapchainInfo->extent = chooseSwapchainExtent(surfaceCharacteristics.capabilities, windowExtent, error);
 	if (swapchainInfo->extent.width == 0 || swapchainInfo->extent.height == 0) {
 		return false;
-	}
-
-	if (surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
-		surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
-	) {
-		uint32_t width = surfaceCharacteristics.capabilities.currentExtent.width;
-		uint32_t height = surfaceCharacteristics.capabilities.currentExtent.height;
-		surfaceCharacteristics.capabilities.currentExtent.height = width;
-		surfaceCharacteristics.capabilities.currentExtent.width = height;
 	}
 
 	VkSwapchainCreateInfoKHR createInfo = {

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <pthread.h>
 
 #include "imgui/cimgui.h"
@@ -177,7 +178,7 @@ void *threadProc(void *arg)
 	ChessEngine chessEngine;
 	createChessEngine(&chessEngine, &chessBoard);
 
-	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, 1.0f, -0.5f, -0.5f, error)) {
+	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, 1.0f, -0.5f, -0.5f, -windowDimensions.rotation, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -372,6 +373,15 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	swapchainCreateInfo->windowDimensions->surfaceArea.height = swapchainCreateInfo->swapchainInfo->extent.height;
 	swapchainCreateInfo->windowDimensions->activeArea.extent.width = swapchainCreateInfo->swapchainInfo->extent.width;
 	swapchainCreateInfo->windowDimensions->activeArea.extent.height = swapchainCreateInfo->swapchainInfo->extent.height;
+
+	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
+	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR) {
+		swapchainCreateInfo->windowDimensions->rotation = M_PI / 2;
+	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR) {
+		swapchainCreateInfo->windowDimensions->rotation = -M_PI / 2;
+	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR) {
+		swapchainCreateInfo->windowDimensions->rotation = M_PI;
+	}
 
 	*swapchainCreateInfo->imageViews = malloc(sizeof(*swapchainCreateInfo->imageViews) * swapchainCreateInfo->swapchainInfo->imageCount);
 	if (!createImageViews(swapchainCreateInfo->device, swapchainCreateInfo->swapchainInfo->images, swapchainCreateInfo->swapchainInfo->imageCount, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, *swapchainCreateInfo->imageViews, error)) {

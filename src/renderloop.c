@@ -76,6 +76,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	size_t head = 0;
 	long elapsed = 1;
 	PointerPosition pointerPosition;
+	float lastRotation = windowDimensions->rotation;
 
 	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath);
 
@@ -151,6 +152,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
+			if (lastRotation != windowDimensions->rotation) {
+				lastRotation = windowDimensions->rotation;
+				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
+				if (!updateChessBoard(chessBoard, error)) {
+					return false;
+				}
+			}
 			windowResized = false;
 		}
 
@@ -164,6 +172,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
+			}
+			if (lastRotation != windowDimensions->rotation) {
+				lastRotation = windowDimensions->rotation;
+				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
+				if (!updateChessBoard(chessBoard, error)) {
+					return false;
+				}
 			}
 			continue;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -311,6 +326,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
+			}
+			if (lastRotation != windowDimensions->rotation) {
+				lastRotation = windowDimensions->rotation;
+				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
+				if (!updateChessBoard(chessBoard, error)) {
+					return false;
+				}
 			}
 			continue;
 		} else if (result != VK_SUCCESS) {
