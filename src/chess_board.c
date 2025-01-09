@@ -62,6 +62,7 @@ struct chess_board_t {
 	float width;
 	float originX;
 	float originY;
+	float rotation;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
 	Vertex vertices[CHESS_VERTEX_COUNT];
@@ -97,7 +98,7 @@ static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
 static bool createChessBoardPipeline(ChessBoard self, char **error);
 static void updateVertices(ChessBoard self);
 
-bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float width, float originX, float originY, char **error)
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float width, float originX, float originY, float rotation, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -114,6 +115,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	self->width = width;
 	self->originX = originX;
 	self->originY = originY;
+	self->rotation = rotation;
 
 	self->selected = CHESS_SQUARE_COUNT;
 	self->lastMove = (LastMove) {
@@ -405,11 +407,12 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 	return true;
 }
 
-void setSize(ChessBoard self, float width, float originX, float originY)
+void setDimensions(ChessBoard self, float width, float originX, float originY, float rotation)
 {
 	self->width = width;
 	self->originX = originX;
 	self->originY = originY;
+	self->rotation = rotation;
 
 	updateVertices(self);
 }
@@ -512,11 +515,10 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindIndexBuffer(commandBuffer, self->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
-	float zRotation = M_PI / 2;
 	ChessBoardPushConstants pushConstants = {
 		.mvp = {
-			cos(zRotation), -sin(zRotation), 0, 0,
-			sin(zRotation), cos(zRotation), 0, 0,
+			cos(self->rotation), -sin(self->rotation), 0, 0,
+			sin(self->rotation), cos(self->rotation), 0, 0,
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		}

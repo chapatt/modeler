@@ -11,6 +11,7 @@ typedef struct window_dimensions_t {
 	int cornerRadius;
 	float scale;
 	bool fullscreen;
+	float rotation;
 } WindowDimensions;
 
 typedef struct resize_info_t {
