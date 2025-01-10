@@ -242,9 +242,11 @@ void *threadProc(void *arg)
 	}
 #endif /* DRAW_WINDOW_DECORATION */
 
+#ifdef ENABLE_IMGUI
 	VkDescriptorPool imDescriptorPool;
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
 	initializeImgui(platformWindow, &swapchainInfo, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, error);
+#endif /* ENABLE_IMGUI */
 
 #if DRAW_WINDOW_DECORATION
 	VkPipeline pipelines[] = {pipelineWindowDecoration};
