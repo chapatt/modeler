@@ -5,7 +5,7 @@
 
 #include "synchronization.h"
 
-bool createSynchronization(VkDevice device, SwapchainInfo swapchainInfo, SynchronizationInfo *synchronizationInfo, char **error)
+bool createSynchronization(VkDevice device, SynchronizationInfo *synchronizationInfo, char **error)
 {
 	synchronizationInfo->imageAvailableSemaphores = malloc(sizeof(*synchronizationInfo->imageAvailableSemaphores) * MAX_FRAMES_IN_FLIGHT);
 	synchronizationInfo->renderFinishedSemaphores = malloc(sizeof(*synchronizationInfo->renderFinishedSemaphores) * MAX_FRAMES_IN_FLIGHT);

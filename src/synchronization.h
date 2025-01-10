@@ -15,7 +15,7 @@ typedef struct synchronization_info_t {
 	VkFence *frameInFlightFences;
 } SynchronizationInfo;
 
-bool createSynchronization(VkDevice device, SwapchainInfo swapchainInfo, SynchronizationInfo *synchronizationInfo, char **error);
+bool createSynchronization(VkDevice device, SynchronizationInfo *synchronizationInfo, char **error);
 
 void destroySynchronization(VkDevice device, SynchronizationInfo synchronizationInfo);
 
