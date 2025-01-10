@@ -170,7 +170,7 @@ void *threadProc(void *arg)
 	}
 
 	SynchronizationInfo synchronizationInfo;
-	if (!createSynchronization(device, swapchainInfo, &synchronizationInfo, error)) {
+	if (!createSynchronization(device, &synchronizationInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
