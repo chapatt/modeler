@@ -13,15 +13,6 @@ VkExtent2D chooseSwapchainExtent(VkSurfaceCapabilitiesKHR capabilities, VkExtent
 
 bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, uint32_t graphicsQueueFamilyIndex, uint32_t presentationQueueFamilyIndex, VkExtent2D windowExtent, VkSwapchainKHR oldSwapchain, SwapchainInfo *swapchainInfo, char **error)
 {
-	if (surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
-		surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
-	) {
-		uint32_t width = surfaceCharacteristics.capabilities.currentExtent.width;
-		uint32_t height = surfaceCharacteristics.capabilities.currentExtent.height;
-		surfaceCharacteristics.capabilities.currentExtent.height = width;
-		surfaceCharacteristics.capabilities.currentExtent.width = height;
-	}
-
 	swapchainInfo->surfaceFormat = chooseSwapchainSurfaceFormat(surfaceCharacteristics.formats, surfaceCharacteristics.formatCount);
 #ifdef ENABLE_VSYNC
 	swapchainInfo->presentMode = VK_PRESENT_MODE_FIFO_KHR;
@@ -116,18 +107,16 @@ VkPresentModeKHR chooseSwapchainPresentMode(VkPresentModeKHR *presentModes, uint
 }
 
 VkExtent2D chooseSwapchainExtent(VkSurfaceCapabilitiesKHR capabilities, VkExtent2D windowExtent, char **error) {
-	if (capabilities.currentExtent.width != UINT32_MAX) {
+	if (!(windowExtent.width < capabilities.minImageExtent.width ||
+		windowExtent.width > capabilities.maxImageExtent.width ||
+		windowExtent.height < capabilities.minImageExtent.height ||
+		windowExtent.height > capabilities.maxImageExtent.height))
+	{
+		return windowExtent;
+	} else if (capabilities.currentExtent.width != UINT32_MAX) {
 		return capabilities.currentExtent;
 	} else {
-		if (windowExtent.width < capabilities.minImageExtent.width ||
-			windowExtent.width > capabilities.maxImageExtent.width ||
-			windowExtent.height < capabilities.minImageExtent.height ||
-			windowExtent.height > capabilities.maxImageExtent.height)
-		{
-			asprintf(error, "Failed to select valid swap extent");
-			return NULL_EXTENT;
-		}
-
-		return windowExtent;
+		asprintf(error, "Failed to select valid swap extent");
+		return NULL_EXTENT;
 	}
 }

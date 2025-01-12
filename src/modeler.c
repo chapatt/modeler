@@ -100,6 +100,26 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+#ifdef ANDROID
+	uint32_t width = surfaceCharacteristics.capabilities.currentExtent.width;
+	uint32_t height = surfaceCharacteristics.capabilities.currentExtent.height;
+
+	if (surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
+		surfaceCharacteristics.capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
+	) {
+		windowDimensions.surfaceArea.width = height;
+		windowDimensions.surfaceArea.height = width;
+		windowDimensions.activeArea.extent.width = height;
+		windowDimensions.activeArea.extent.height = width;
+	} else {
+		windowDimensions.surfaceArea.width = width;
+		windowDimensions.surfaceArea.height = height;
+		windowDimensions.activeArea.extent.width = width;
+		windowDimensions.activeArea.extent.height = height;
+	}
+#endif /* ANDROID */
+
+
 	VkDevice device;
 	QueueInfo queueInfo = {};
 	if (!createDevice(physicalDevice, surface, characteristics, &device, &queueInfo, error)) {
