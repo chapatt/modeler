@@ -58,7 +58,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	Font *fonts = NULL;
 	size_t fontCount = 0;
 	ImFont *currentFont = NULL;
-	VkRenderPassBeginInfo renderPassBeginInfos[MAX_FRAMES_IN_FLIGHT];
 	VkClearValue clearValue = {0.1f, 0.3f, 0.3f, 1.0f};
 	VkClearValue secondClearValue = {0.0f, 0.0f, 0.0f, 0.0f};
 	VkClearValue clearValues[] = {clearValue, secondClearValue};
@@ -76,12 +75,22 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		VkResult result;
 		bool windowResized = false;
 
+		VkRenderPassBeginInfo renderPassBeginInfos[MAX_FRAMES_IN_FLIGHT];
 		VkCommandBufferBeginInfo commandBufferBeginInfos[MAX_FRAMES_IN_FLIGHT];
-		for (uint32_t i = 0; i < swapchainInfo->imageCount; ++i) {
-			commandBufferBeginInfos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			commandBufferBeginInfos[i].pNext = NULL;
-			commandBufferBeginInfos[i].flags = 0;
-			commandBufferBeginInfos[i].pInheritanceInfo = NULL;
+		for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+			commandBufferBeginInfos[i] = (VkCommandBufferBeginInfo) {
+				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+				.pNext = NULL,
+				.flags = 0,
+				.pInheritanceInfo = NULL
+			};
+			renderPassBeginInfos[i] = (VkRenderPassBeginInfo) {
+				.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+				.pNext = NULL,
+				.renderPass = *renderPass,
+				.clearValueCount = 2,
+				.pClearValues = clearValues
+			};
 		}
 
 		int width = windowDimensions->activeArea.extent.width;
@@ -189,15 +198,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.offset = {},
 			.extent = swapchainInfo->extent
 		};
-		renderPassBeginInfos[currentFrame] = (VkRenderPassBeginInfo) {
-			.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-			.pNext = NULL,
-			.renderPass = *renderPass,
-			.framebuffer = (*framebuffers)[imageIndex],
-			.renderArea = renderArea,
-			.clearValueCount = 1,
-			.pClearValues = clearValues
-		};
+		renderPassBeginInfos[currentFrame].framebuffer = (*framebuffers)[imageIndex];
+		renderPassBeginInfos[currentFrame].renderArea = renderArea;
 
 		vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 		vkBeginCommandBuffer(commandBuffers[currentFrame], &commandBufferBeginInfos[currentFrame]);
