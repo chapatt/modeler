@@ -1,19 +1,20 @@
 #include <stdlib.h>
 
+#include "synchronization.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
 #include "command_buffer.h"
 
-bool createCommandBuffers(VkDevice device, SwapchainInfo swapchainInfo, VkCommandPool commandPool, VkCommandBuffer **commandBuffers, char **error)
+bool createCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBuffer **commandBuffers, char **error)
 {
-	*commandBuffers = malloc(sizeof(*commandBuffers) * swapchainInfo.imageCount);
+	*commandBuffers = malloc(sizeof(*commandBuffers) * MAX_FRAMES_IN_FLIGHT);
 	VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
 		.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
 		.pNext = NULL,
 		.commandPool = commandPool,
 		.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-		.commandBufferCount = swapchainInfo.imageCount
+		.commandBufferCount = MAX_FRAMES_IN_FLIGHT
 	};
 
 	VkResult result;

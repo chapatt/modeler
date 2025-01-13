@@ -6,7 +6,7 @@
 
 #include "swapchain.h"
 
-bool createCommandBuffers(VkDevice device, SwapchainInfo swapchainInfo, VkCommandPool commandPool, VkCommandBuffer **commandBuffers, char **error);
+bool createCommandBuffers(VkDevice device, VkCommandPool commandPool, VkCommandBuffer **commandBuffers, char **error);
 
 bool beginSingleTimeCommands(VkDevice device, VkCommandPool commandPool, VkCommandBuffer *commandBuffer, char **error);
 
