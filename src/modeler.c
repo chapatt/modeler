@@ -403,6 +403,8 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		swapchainCreateInfo->windowDimensions->rotation = -M_PI / 2;
 	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR) {
 		swapchainCreateInfo->windowDimensions->rotation = M_PI;
+	} else {
+		swapchainCreateInfo->windowDimensions->rotation = 0;
 	}
 
 	*swapchainCreateInfo->imageViews = malloc(sizeof(*swapchainCreateInfo->imageViews) * swapchainCreateInfo->swapchainInfo->imageCount);
