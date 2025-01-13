@@ -88,6 +88,8 @@ struct chess_board_t {
 	ChessEngine engine;
 };
 
+static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
+static void basicSetBoard(ChessBoard self, Board8x8 board);
 static void initializePieces(ChessBoard self);
 static void initializeMove(ChessBoard self);
 static bool createChessBoardTexture(ChessBoard self, char **error);
@@ -124,6 +126,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	};
 	initializePieces(self);
 	initializeMove(self);
+	updateVertices(self);
 
 	if (!createChessBoardVertexBuffer(self, error)) {
 		return false;
@@ -165,7 +168,7 @@ static void initializePieces(ChessBoard self)
 		WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK
 	};
 
-	setBoard(self, initialSetup);
+	basicSetBoard(self, initialSetup);
 }
 
 static void initializeMove(ChessBoard self)
@@ -181,7 +184,7 @@ static void initializeMove(ChessBoard self)
 		ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL, ILLEGAL
 	};
 
-	setMove(self, initialSetup);
+	basicSetMove(self, initialSetup);
 }
 
 static bool createChessBoardTexture(ChessBoard self, char **error)
@@ -417,21 +420,29 @@ void setDimensions(ChessBoard self, float width, float originX, float originY, f
 	updateVertices(self);
 }
 
-void setBoard(ChessBoard self, Board8x8 board)
+void basicSetBoard(ChessBoard self, Board8x8 board)
 {
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		self->board[i] = board[i];
 	}
+}
 
+void setBoard(ChessBoard self, Board8x8 board)
+{
+	basicSetBoard(self, board);
 	updateVertices(self);
 }
 
-void setMove(ChessBoard self, MoveBoard8x8 move)
+void basicSetMove(ChessBoard self, MoveBoard8x8 move)
 {
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		self->move[i] = move[i];
 	}
+}
 
+void setMove(ChessBoard self, MoveBoard8x8 move)
+{
+	basicSetMove(self, move);
 	updateVertices(self);
 }
 
