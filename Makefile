@@ -4,7 +4,7 @@ LDFLAGS=
 LDLIBS=
 
 ifdef BUILD_ANDROID
-	NDK=/Users/enric/AppData/Local/Android/Sdk/ndk/28.0.12674087
+	NDK=$(LOCALAPPDATA)/Android/Sdk/ndk/28.0.12674087
 	TOOLCHAIN=$(NDK)/toolchains/llvm/prebuilt/windows-x86_64
 	CC=$(TOOLCHAIN)/bin/clang
 	CXX=$(TOOLCHAIN)/bin/clang++
