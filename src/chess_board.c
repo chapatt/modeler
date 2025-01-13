@@ -460,11 +460,6 @@ void setLastMove(ChessBoard self, LastMove lastMove)
 	updateVertices(self);
 }
 
-void setCommandPool(ChessBoard self, VkCommandPool commandPool)
-{
-	self->commandPool = commandPool;
-}
-
 static void updateVertices(ChessBoard self)
 {
 	float dark[] = {0.71f, 0.533f, 0.388f};

@@ -53,7 +53,7 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 	}
 }
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandPool *commandPool, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
 {
 	Font *fonts = NULL;
 	size_t fontCount = 0;
@@ -156,7 +156,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (lastRotation != windowDimensions->rotation) {
 				lastRotation = windowDimensions->rotation;
 				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
-				setCommandPool(chessBoard, *commandPool);
 				if (!updateChessBoard(chessBoard, error)) {
 					return false;
 				}
@@ -178,7 +177,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (lastRotation != windowDimensions->rotation) {
 				lastRotation = windowDimensions->rotation;
 				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
-				setCommandPool(chessBoard, *commandPool);
 				if (!updateChessBoard(chessBoard, error)) {
 					return false;
 				}
@@ -333,7 +331,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (lastRotation != windowDimensions->rotation) {
 				lastRotation = windowDimensions->rotation;
 				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
-				setCommandPool(chessBoard, *commandPool);
 				if (!updateChessBoard(chessBoard, error)) {
 					return false;
 				}
