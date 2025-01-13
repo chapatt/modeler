@@ -42,7 +42,6 @@ struct swapchain_create_info_t {
 	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics;
 	QueueInfo queueInfo;
 	VkCommandPool commandPool;
-	VkCommandBuffer **commandBuffers;
 	VkRenderPass *renderPass;
 	SwapchainInfo *swapchainInfo;
 	VkImage *offscreenImage;
@@ -136,6 +135,11 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	VkCommandBuffer *commandBuffers;
+	if (!createCommandBuffers(device, commandPool, &commandBuffers, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
 	SwapchainInfo swapchainInfo = {};
 	VkImageView *imageViews;
 	VkDescriptorPool descriptorPool;
@@ -150,7 +154,6 @@ void *threadProc(void *arg)
 #endif /* DRAW_WINDOW_DECORATION */
 	VkRenderPass renderPass;
 	VkFramebuffer *framebuffers;
-	VkCommandBuffer *commandBuffers;
 
 	struct swapchain_create_info_t swapchainCreateInfo = {
 		.device = device,
@@ -165,7 +168,6 @@ void *threadProc(void *arg)
 		.framebuffers = &framebuffers,
 		.windowDimensions = &windowDimensions,
 		.commandPool = commandPool,
-		.commandBuffers = &commandBuffers,
 #ifdef DRAW_WINDOW_DECORATION
 		.descriptorPool = &descriptorPool,
 		.imageDescriptorSetLayouts = &imageDescriptorSetLayouts,
@@ -279,7 +281,7 @@ void *threadProc(void *arg)
 	VkDescriptorSet **drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
 
-	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, &commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, &swapchainCreateInfo, chessBoard, error)) {
+	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, &swapchainCreateInfo, chessBoard, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -352,6 +354,8 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
+	vkDeviceWaitIdle(swapchainCreateInfo->device);
+
 	destroyAppSwapchain(swapchainCreateInfo);
 
 	if (!getPhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo->physicalDevice, swapchainCreateInfo->surface, swapchainCreateInfo->surfaceCharacteristics, error)) {
@@ -365,9 +369,6 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 
 void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 {
-	vkDeviceWaitIdle(swapchainCreateInfo->device);
-
-	freeCommandBuffers(swapchainCreateInfo->device, swapchainCreateInfo->commandPool, *swapchainCreateInfo->commandBuffers, swapchainCreateInfo->swapchainInfo->imageCount);
 	destroyFramebuffers(swapchainCreateInfo->device, *swapchainCreateInfo->framebuffers, swapchainCreateInfo->swapchainInfo->imageCount);
 	destroyRenderPass(swapchainCreateInfo->device, *swapchainCreateInfo->renderPass);
 #ifdef DRAW_WINDOW_DECORATION
@@ -455,10 +456,6 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		if (!createFramebuffer(swapchainCreateInfo->device, *swapchainCreateInfo->swapchainInfo, attachments, attachmentCount, *swapchainCreateInfo->renderPass, *swapchainCreateInfo->framebuffers + i, error)) {
 			return false;
 		}
-	}
-
-	if (!createCommandBuffers(swapchainCreateInfo->device, *swapchainCreateInfo->swapchainInfo, swapchainCreateInfo->commandPool, swapchainCreateInfo->commandBuffers, error)) {
-		return false;
 	}
 
 	return true;
