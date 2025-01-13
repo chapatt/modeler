@@ -98,10 +98,10 @@ modeler: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_wayland.o modeler_wayland.o
 modeler.exe: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS)
+modeler.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS)
 
-modeler_android.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS)
+modeler_android.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS)
 
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
