@@ -53,22 +53,15 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 	}
 }
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandPool *commandPool, VkCommandBuffer **commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
 {
 	Font *fonts = NULL;
 	size_t fontCount = 0;
 	ImFont *currentFont = NULL;
-	VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
 	VkRenderPassBeginInfo renderPassBeginInfos[swapchainInfo->imageCount];
 	VkClearValue clearValue = {0.1f, 0.3f, 0.3f, 1.0f};
 	VkClearValue secondClearValue = {0.0f, 0.0f, 0.0f, 0.0f};
 	VkClearValue clearValues[] = {clearValue, secondClearValue};
-	for (uint32_t i = 0; i < swapchainInfo->imageCount; ++i) {
-		commandBufferBeginInfos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		commandBufferBeginInfos[i].pNext = NULL;
-		commandBufferBeginInfos[i].flags = 0;
-		commandBufferBeginInfos[i].pInheritanceInfo = NULL;
-	}
 
 	struct timespec previousTime = {};
 	const size_t queueLength = 10;
@@ -83,6 +76,14 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
 		bool windowResized = false;
+
+		VkCommandBufferBeginInfo commandBufferBeginInfos[swapchainInfo->imageCount];
+		for (uint32_t i = 0; i < swapchainInfo->imageCount; ++i) {
+			commandBufferBeginInfos[i].sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			commandBufferBeginInfos[i].pNext = NULL;
+			commandBufferBeginInfos[i].flags = 0;
+			commandBufferBeginInfos[i].pInheritanceInfo = NULL;
+		}
 
 		int width = windowDimensions->activeArea.extent.width;
 		int height = windowDimensions->activeArea.extent.height;
@@ -155,6 +156,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (lastRotation != windowDimensions->rotation) {
 				lastRotation = windowDimensions->rotation;
 				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
+				setCommandPool(chessBoard, *commandPool);
 				if (!updateChessBoard(chessBoard, error)) {
 					return false;
 				}
@@ -176,6 +178,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (lastRotation != windowDimensions->rotation) {
 				lastRotation = windowDimensions->rotation;
 				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
+				setCommandPool(chessBoard, *commandPool);
 				if (!updateChessBoard(chessBoard, error)) {
 					return false;
 				}
@@ -330,6 +333,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (lastRotation != windowDimensions->rotation) {
 				lastRotation = windowDimensions->rotation;
 				setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -lastRotation);
+				setCommandPool(chessBoard, *commandPool);
 				if (!updateChessBoard(chessBoard, error)) {
 					return false;
 				}

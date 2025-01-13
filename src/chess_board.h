@@ -19,6 +19,7 @@ void destroyChessBoard(ChessBoard self);
 void setDimensions(ChessBoard self, float width, float originX, float originY, float rotation);
 void setBoard(ChessBoard self, Board8x8 board);
 void setMove(ChessBoard self, MoveBoard8x8 move);
+void setCommandPool(ChessBoard self, VkCommandPool commandPool);
 bool updateChessBoard(ChessBoard self, char **error);
 void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent);
 void setSelected(ChessBoard self, ChessSquare selected);
