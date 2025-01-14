@@ -145,7 +145,8 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
                 activeArea: rect,
                 cornerRadius: 0,
                 scale: scale,
-                fullscreen: false
+                fullscreen: false,
+                rotation: 0
             )
             let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
             
