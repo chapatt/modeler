@@ -87,7 +87,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			renderPassBeginInfos[i] = (VkRenderPassBeginInfo) {
 				.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 				.pNext = NULL,
-				.renderPass = *renderPass,
 				.clearValueCount = 2,
 				.pClearValues = clearValues
 			};
@@ -198,6 +197,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.offset = {},
 			.extent = swapchainInfo->extent
 		};
+		renderPassBeginInfos[currentFrame].renderPass = *renderPass;
 		renderPassBeginInfos[currentFrame].framebuffer = (*framebuffers)[imageIndex];
 		renderPassBeginInfos[currentFrame].renderArea = renderArea;
 
