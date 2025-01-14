@@ -16,7 +16,7 @@
 		AB330EE12BD9920800FC06CE /* libVkLayer_screenshot.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE32BD9929000FC06CE /* libvulkan.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED42BD9920800FC06CE /* libvulkan.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE42BD9929000FC06CE /* libvulkan.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED12BD9920700FC06CE /* libvulkan.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EE52BD992AD00FC06CE /* libvulkan.1.3.280.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.3.280.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EE52BD992AD00FC06CE /* libvulkan.1.3.296.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE72BD993E600FC06CE /* libMoltenVK.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; };
 		AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EEB2BD9D46700FC06CE /* ModelerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */; };
@@ -46,7 +46,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */,
-				AB330EE52BD992AD00FC06CE /* libvulkan.1.3.280.dylib in CopyFiles */,
+				AB330EE52BD992AD00FC06CE /* libvulkan.1.3.296.dylib in CopyFiles */,
 				AB330EE32BD9929000FC06CE /* libvulkan.1.dylib in CopyFiles */,
 				AB330EE42BD9929000FC06CE /* libvulkan.dylib in CopyFiles */,
 				AB330ED92BD9920800FC06CE /* libVkLayer_khronos_profiles.dylib in CopyFiles */,
@@ -62,15 +62,15 @@
 
 /* Begin PBXFileReference section */
 		AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modeler-Bridging-Header.h"; sourceTree = "<group>"; };
-		AB330ECE2BD9919400FC06CE /* libvulkan.1.3.280.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.3.280.dylib; path = macOS/lib/libvulkan.1.3.280.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_profiles.dylib; path = macOS/lib/libVkLayer_khronos_profiles.dylib; sourceTree = VULKAN_SDK; };
+		AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.3.296.dylib; path = macOS/lib/libvulkan.1.3.296.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_khronos_profiles.dylib; path = macOS/lib/libVkLayer_khronos_profiles.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED12BD9920700FC06CE /* libvulkan.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.dylib; path = macOS/lib/libvulkan.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_synchronization2.dylib; path = macOS/lib/libVkLayer_khronos_synchronization2.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED32BD9920700FC06CE /* libVkLayer_khronos_validation.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_validation.dylib; path = macOS/lib/libVkLayer_khronos_validation.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_khronos_synchronization2.dylib; path = macOS/lib/libVkLayer_khronos_synchronization2.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED32BD9920700FC06CE /* libVkLayer_khronos_validation.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_khronos_validation.dylib; path = macOS/lib/libVkLayer_khronos_validation.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED42BD9920800FC06CE /* libvulkan.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.dylib; path = macOS/lib/libvulkan.1.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED62BD9920800FC06CE /* libVkLayer_api_dump.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_api_dump.dylib; path = macOS/lib/libVkLayer_api_dump.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED72BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_shader_object.dylib; path = macOS/lib/libVkLayer_khronos_shader_object.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_screenshot.dylib; path = macOS/lib/libVkLayer_screenshot.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED62BD9920800FC06CE /* libVkLayer_api_dump.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_api_dump.dylib; path = macOS/lib/libVkLayer_api_dump.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED72BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_khronos_shader_object.dylib; path = macOS/lib/libVkLayer_khronos_shader_object.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_screenshot.dylib; path = macOS/lib/libVkLayer_screenshot.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMoltenVK.dylib; path = macOS/lib/libMoltenVK.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE92BD99D3A00FC06CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewController.swift; sourceTree = "<group>"; };
@@ -114,7 +114,7 @@
 			children = (
 				AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */,
 				AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */,
-				AB330ECE2BD9919400FC06CE /* libvulkan.1.3.280.dylib */,
+				AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */,
 				AB4D1BEB2B384AC500717FEC /* imgui.a */,
 				AB4D1BE92B384A0200717FEC /* modeler.a */,
 				AB330ED62BD9920800FC06CE /* libVkLayer_api_dump.dylib */,
