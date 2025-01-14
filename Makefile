@@ -49,8 +49,8 @@ else
 	ifeq ($(UNAME_S),Darwin)
 		SED=gsed
 		CP=cp
-		GLSLC=/Users/chase/VulkanSDK/1.3.250.0/macOS/bin/glslc
-		CFLAGS+=-I/Users/chase/VulkanSDK/1.3.250.0/macOS/include
+		GLSLC=/Users/chase/VulkanSDK/1.3.296.0/macOS/bin/glslc
+		CFLAGS+=-I/Users/chase/VulkanSDK/1.3.296.0/macOS/include
 		LDLIBS+=-lvulkan
 		ALL_TARGET=modeler.a
 		CFLAGS+=-DVK_USE_PLATFORM_METAL_EXT
