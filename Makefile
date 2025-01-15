@@ -22,6 +22,15 @@ ifdef ANDROID
 	CFLAGS+=-DVK_USE_PLATFORM_ANDROID_KHR
 	CFLAGS+=-DANDROID
 	CFLAGS+=-fPIC
+else ifdef IOS
+	SED=gsed
+	CP=cp
+	GLSLC=/Users/chase/VulkanSDK/1.3.296.0/iOS/bin/glslc
+	CFLAGS+=-I/Users/chase/VulkanSDK/1.3.296.0/iOS/include
+	LDLIBS+=-lvulkan
+	ALL_TARGET=modeler.a
+	CFLAGS+=-DVK_USE_PLATFORM_METAL_EXT
+	CFLAGS+=--target=arm64-apple-ios-simulator
 else ifeq ($(OS),Windows_NT)
 	CC=/msys64/mingw64/bin/gcc
 	CXX=/msys64/mingw64/bin/g++
