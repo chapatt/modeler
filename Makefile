@@ -3,7 +3,7 @@ CXXFLAGS+=-std=c++17
 LDFLAGS=
 LDLIBS=
 
-ifdef BUILD_ANDROID
+ifdef ANDROID
 	NDK=$(LOCALAPPDATA)/Android/Sdk/ndk/28.0.12674087
 	TOOLCHAIN=$(NDK)/toolchains/llvm/prebuilt/windows-x86_64
 	CC=$(TOOLCHAIN)/bin/clang
