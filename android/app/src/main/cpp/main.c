@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <math.h>
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <jni.h>
@@ -24,11 +25,6 @@ static int handleCustomLooperEvent(int fd, int events, void *data);
 static void handleFatalError(char *message);
 static void handle_cmd(struct android_app *pApp, int32_t cmd);
 
-/*!
- * Handles commands sent to this Android application
- * @param pApp the app the commands are coming from
- * @param cmd the command to handle
- */
 static void handle_cmd(struct android_app *pApp, int32_t cmd)
 {
 	switch (cmd) {
@@ -61,22 +57,16 @@ static void handle_cmd(struct android_app *pApp, int32_t cmd)
 		}
 		break;
 	case APP_CMD_START:
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_START\n");
 		break;
 	case APP_CMD_RESUME:
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_RESUME\n");
 		break;
 	case APP_CMD_PAUSE:
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_PAUSE\n");
 		break;
 	case APP_CMD_STOP:
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_STOP\n");
 		break;
 	case APP_CMD_DESTROY:
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_DESTROY\n");
 		break;
 	case APP_CMD_TERM_WINDOW:
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_TERM_WINDOW\n");
 		if (pApp->userData) {
 			ModelerUserData *userData = (ModelerUserData *) pApp->userData;
 			terminateVulkan(&userData->inputQueue, userData->thread);
@@ -101,8 +91,8 @@ static void handle_cmd(struct android_app *pApp, int32_t cmd)
 bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent)
 {
 	int32_t sourceClass = motionEvent->source & AINPUT_SOURCE_CLASS_MASK;
-	return (sourceClass == AINPUT_SOURCE_CLASS_POINTER ||
-		sourceClass == AINPUT_SOURCE_CLASS_JOYSTICK);
+
+	return (sourceClass == AINPUT_SOURCE_CLASS_POINTER);
 }
 
 /*!
@@ -112,17 +102,13 @@ void android_main(struct android_app *pApp)
 {
 	pApp->onAppCmd = handle_cmd;
 
-	// Set input event filters (set it to NULL if the app wants to process all inputs).
-	// Note that for key inputs, this example uses the default default_key_filter()
-	// implemented in android_native_app_glue.c.
 	android_app_set_motion_event_filter(pApp, motion_event_filter_func);
 
-	// This sets up a typical game/event loop. It will run until the app is destroyed.
 	do {
-		// Process all pending events before running game logic.
+		ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+
 		bool done = false;
 		while (!done) {
-			// 0 is non-blocking.
 			int timeout = 0;
 			int events;
 			struct android_poll_source *pSource;
@@ -130,7 +116,6 @@ void android_main(struct android_app *pApp)
 			switch (result) {
 			case ALOOPER_POLL_TIMEOUT:
 			case ALOOPER_POLL_WAKE:
-				// No events occurred before the timeout or explicit wake. Stop checking for events.
 				done = true;
 				break;
 			case ALOOPER_EVENT_ERROR:
@@ -143,6 +128,41 @@ void android_main(struct android_app *pApp)
 					pSource->process(pApp, pSource);
 				}
 			}
+		}
+
+		struct android_input_buffer *inputBuffer = android_app_swap_input_buffers(pApp);
+		if (inputBuffer && inputBuffer->motionEventsCount) {
+			for (uint64_t i = 0; i < inputBuffer->motionEventsCount; ++i) {
+				GameActivityMotionEvent* motionEvent = &inputBuffer->motionEvents[i];
+
+				if (motionEvent->pointerCount > 0) {
+					switch (motionEvent->action & AMOTION_EVENT_ACTION_MASK) {
+					case AMOTION_EVENT_ACTION_DOWN:
+						if (userData) {
+							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, floor(motionEvent->pointers[0].rawX), floor(motionEvent->pointers[0].rawY));
+							enqueueInputEvent(&userData->inputQueue, BUTTON_DOWN, NULL);
+						}
+						break;
+					case AMOTION_EVENT_ACTION_UP:
+						if (userData) {
+							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, floor(motionEvent->pointers[0].rawX), floor(motionEvent->pointers[0].rawY));
+							enqueueInputEvent(&userData->inputQueue, BUTTON_UP, NULL);
+						}
+						break;
+					case AMOTION_EVENT_ACTION_MOVE: {
+						if (userData) {
+							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, floor(motionEvent->pointers[0].rawX), floor(motionEvent->pointers[0].rawY));
+						}
+						break;
+					}
+					default:
+						break;
+					}
+
+				}
+			}
+
+			android_app_clear_motion_events(inputBuffer);
 		}
 	} while (!pApp->destroyRequested);
 }
