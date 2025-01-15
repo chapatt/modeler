@@ -132,6 +132,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
 				pointerPosition = *((PointerPosition *) inputEvent->data);
+				if (windowDimensions->rotation) {
+					int x = pointerPosition.x;
+					pointerPosition.x = pointerPosition.y;
+					pointerPosition.y = x;
+				}
 				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), inputEvent, pointerPosition);
 				free(data);
 				free(inputEvent);
