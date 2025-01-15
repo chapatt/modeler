@@ -6,7 +6,6 @@ class ModelerWindowController: NSWindowController, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) {
-        print("closing")
         (window?.contentView as! ModelerView).terminateVulkanThread()
     }
 }

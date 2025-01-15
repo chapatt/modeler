@@ -3,10 +3,15 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB2363092D3755FC0066094F /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
+		AB23630A2D3756010066094F /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
+		AB2363102D382E7B0066094F /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = AB23630F2D382E7B0066094F /* libc++.tbd */; };
+		AB2363222D3835D70066094F /* MoltenVK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB23631F2D3835A40066094F /* MoltenVK.xcframework */; };
+		AB2363232D3835D70066094F /* MoltenVK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AB23631F2D3835A40066094F /* MoltenVK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB330ED92BD9920800FC06CE /* libVkLayer_khronos_profiles.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EDA2BD9920800FC06CE /* libvulkan.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330ED12BD9920700FC06CE /* libvulkan.dylib */; };
 		AB330EDB2BD9920800FC06CE /* libVkLayer_khronos_synchronization2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -22,12 +27,12 @@
 		AB330EEB2BD9D46700FC06CE /* ModelerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */; };
 		AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */; };
 		AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
-		AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB60A70E2A6CFBE0001D4DB2 /* main.swift */; };
 		AB6C10262BA0F9A9004667E0 /* window_border.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */; };
 		AB6C10272BA0F9A9004667E0 /* window_border.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */; };
 		AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */; };
 		AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */; };
 		AB7E0B142D1F42680068EC79 /* pieces.png in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B132D1F42680068EC79 /* pieces.png */; };
+		AB9B603F2D373D9800E0F273 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9B603E2D373D9800E0F273 /* main.swift */; };
 		ABC0F3052C02C93700771076 /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABC0F3062C05B82B00771076 /* roboto.ttf */; };
 		ABD9E0172B2BA4F8008932DB /* ModelerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */; };
@@ -58,32 +63,46 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AB23630E2D375C350066094F /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				AB2363232D3835D70066094F /* MoltenVK.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modeler-Bridging-Header.h"; sourceTree = "<group>"; };
+		AB23630F2D382E7B0066094F /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.2.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		AB23631F2D3835A40066094F /* MoltenVK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MoltenVK.xcframework; path = ../../MoltenVK/Package/Release/MoltenVK/dynamic/MoltenVK.xcframework; sourceTree = "<group>"; };
 		AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.3.296.dylib; path = macOS/lib/libvulkan.1.3.296.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_khronos_profiles.dylib; path = macOS/lib/libVkLayer_khronos_profiles.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_profiles.dylib; path = macOS/lib/libVkLayer_khronos_profiles.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED12BD9920700FC06CE /* libvulkan.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.dylib; path = macOS/lib/libvulkan.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_khronos_synchronization2.dylib; path = macOS/lib/libVkLayer_khronos_synchronization2.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED32BD9920700FC06CE /* libVkLayer_khronos_validation.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_khronos_validation.dylib; path = macOS/lib/libVkLayer_khronos_validation.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_synchronization2.dylib; path = macOS/lib/libVkLayer_khronos_synchronization2.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED32BD9920700FC06CE /* libVkLayer_khronos_validation.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_validation.dylib; path = macOS/lib/libVkLayer_khronos_validation.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED42BD9920800FC06CE /* libvulkan.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.dylib; path = macOS/lib/libvulkan.1.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED62BD9920800FC06CE /* libVkLayer_api_dump.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_api_dump.dylib; path = macOS/lib/libVkLayer_api_dump.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED72BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_khronos_shader_object.dylib; path = macOS/lib/libVkLayer_khronos_shader_object.dylib; sourceTree = VULKAN_SDK; };
-		AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libVkLayer_screenshot.dylib; path = macOS/lib/libVkLayer_screenshot.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED62BD9920800FC06CE /* libVkLayer_api_dump.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_api_dump.dylib; path = macOS/lib/libVkLayer_api_dump.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED72BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_shader_object.dylib; path = macOS/lib/libVkLayer_khronos_shader_object.dylib; sourceTree = VULKAN_SDK; };
+		AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_screenshot.dylib; path = macOS/lib/libVkLayer_screenshot.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMoltenVK.dylib; path = macOS/lib/libMoltenVK.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE92BD99D3A00FC06CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewController.swift; sourceTree = "<group>"; };
 		AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindow.swift; sourceTree = "<group>"; };
 		AB4D1BE92B384A0200717FEC /* modeler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = modeler.a; path = ../modeler.a; sourceTree = "<group>"; };
 		AB4D1BEB2B384AC500717FEC /* imgui.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = imgui.a; path = ../imgui.a; sourceTree = "<group>"; };
-		AB60A70E2A6CFBE0001D4DB2 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.vert.spv; path = ../window_border.vert.spv; sourceTree = "<group>"; };
 		AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.frag.spv; path = ../window_border.frag.spv; sourceTree = "<group>"; };
 		AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.vert.spv; path = ../chess_board.vert.spv; sourceTree = "<group>"; };
 		AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.frag.spv; path = ../chess_board.frag.spv; sourceTree = "<group>"; };
 		AB7E0B132D1F42680068EC79 /* pieces.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pieces.png; path = ../pieces.png; sourceTree = "<group>"; };
+		AB9B603E2D373D9800E0F273 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		ABC0F3062C05B82B00771076 /* roboto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = roboto.ttf; path = ../roboto.ttf; sourceTree = "<group>"; };
+		ABC4BB9E2D37331D00A9D2CF /* modeler-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "modeler-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindowController.swift; sourceTree = "<group>"; };
 		ABE1DEF42A3592D600A963A6 /* vulkan */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vulkan; sourceTree = "<group>"; };
 		ABE1DF292A40C18800A963A6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -94,15 +113,40 @@
 		ABF162412A34E3AC007655F7 /* modeler.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = modeler.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		ABC4BBB12D37331E00A9D2CF /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = ABC4BB9D2D37331D00A9D2CF /* modeler-ios */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		ABC4BB9F2D37331D00A9D2CF /* modeler-ios */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (ABC4BBB12D37331E00A9D2CF /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = "modeler-ios"; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		ABC4BB9B2D37331D00A9D2CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB2363102D382E7B0066094F /* libc++.tbd in Frameworks */,
+				AB2363092D3755FC0066094F /* imgui.a in Frameworks */,
+				AB23630A2D3756010066094F /* modeler.a in Frameworks */,
+				AB2363222D3835D70066094F /* MoltenVK.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		ABF162322A34E3A7007655F7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ABC0F3052C02C93700771076 /* imgui.a in Frameworks */,
 				AB330EDA2BD9920800FC06CE /* libvulkan.dylib in Frameworks */,
-				AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */,
 				AB330EE72BD993E600FC06CE /* libMoltenVK.dylib in Frameworks */,
+				ABC0F3052C02C93700771076 /* imgui.a in Frameworks */,
+				AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +156,8 @@
 		AB1511E92A3505B800A6D87E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				AB23631F2D3835A40066094F /* MoltenVK.xcframework */,
+				AB23630F2D382E7B0066094F /* libc++.tbd */,
 				AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */,
 				AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */,
 				AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */,
@@ -139,6 +185,7 @@
 				AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */,
 				ABE1DEF42A3592D600A963A6 /* vulkan */,
 				ABF162372A34E3A7007655F7 /* modeler */,
+				ABC4BB9F2D37331D00A9D2CF /* modeler-ios */,
 				ABF162362A34E3A7007655F7 /* Products */,
 				AB1511E92A3505B800A6D87E /* Frameworks */,
 			);
@@ -148,6 +195,7 @@
 			isa = PBXGroup;
 			children = (
 				ABF162352A34E3A7007655F7 /* modeler.app */,
+				ABC4BB9E2D37331D00A9D2CF /* modeler-ios.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -156,15 +204,15 @@
 			isa = PBXGroup;
 			children = (
 				AB330EE92BD99D3A00FC06CE /* Info.plist */,
-				ABF1623A2A34E3A7007655F7 /* ModelerView.swift */,
 				ABF1623C2A34E3AC007655F7 /* Assets.xcassets */,
 				ABF162412A34E3AC007655F7 /* modeler.entitlements */,
 				ABF1623E2A34E3AC007655F7 /* Preview Content */,
 				AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */,
+				AB9B603E2D373D9800E0F273 /* main.swift */,
 				ABE1DF292A40C18800A963A6 /* AppDelegate.swift */,
-				AB60A70E2A6CFBE0001D4DB2 /* main.swift */,
 				AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */,
 				ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */,
+				ABF1623A2A34E3A7007655F7 /* ModelerView.swift */,
 				AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */,
 			);
 			path = modeler;
@@ -181,6 +229,30 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		ABC4BB9D2D37331D00A9D2CF /* modeler-ios */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = ABC4BBB22D37331E00A9D2CF /* Build configuration list for PBXNativeTarget "modeler-ios" */;
+			buildPhases = (
+				AB23630B2D3757F00066094F /* Run Make */,
+				ABC4BB9A2D37331D00A9D2CF /* Sources */,
+				ABC4BB9B2D37331D00A9D2CF /* Frameworks */,
+				ABC4BB9C2D37331D00A9D2CF /* Resources */,
+				AB23630E2D375C350066094F /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				ABC4BB9F2D37331D00A9D2CF /* modeler-ios */,
+			);
+			name = "modeler-ios";
+			packageProductDependencies = (
+			);
+			productName = "modeler-ios";
+			productReference = ABC4BB9E2D37331D00A9D2CF /* modeler-ios.app */;
+			productType = "com.apple.product-type.application";
+		};
 		ABF162342A34E3A7007655F7 /* modeler */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = ABF162442A34E3AC007655F7 /* Build configuration list for PBXNativeTarget "modeler" */;
@@ -207,9 +279,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1410;
+				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1410;
 				TargetAttributes = {
+					ABC4BB9D2D37331D00A9D2CF = {
+						CreatedOnToolsVersion = 16.2;
+					};
 					ABF162342A34E3A7007655F7 = {
 						CreatedOnToolsVersion = 14.1;
 						LastSwiftMigration = 1410;
@@ -230,11 +305,19 @@
 			projectRoot = "";
 			targets = (
 				ABF162342A34E3A7007655F7 /* modeler */,
+				ABC4BB9D2D37331D00A9D2CF /* modeler-ios */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		ABC4BB9C2D37331D00A9D2CF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		ABF162332A34E3A7007655F7 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -254,6 +337,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		AB23630B2D3757F00066094F /* Run Make */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run Make";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C ../ modeler.a IOS=true ENABLE_IMGUI=true DEBUG=true\nmake -C ../ imgui.a IOS=true ENABLE_IMGUI=true DEBUG=true\n";
+		};
 		AB4D1BEE2B384CBF00717FEC /* Run make */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -276,13 +377,20 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		ABC4BB9A2D37331D00A9D2CF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		ABF162312A34E3A7007655F7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				ABD9E0172B2BA4F8008932DB /* ModelerWindowController.swift in Sources */,
 				AB330EEB2BD9D46700FC06CE /* ModelerViewController.swift in Sources */,
-				AB60A70F2A6CFBE0001D4DB2 /* main.swift in Sources */,
+				AB9B603F2D373D9800E0F273 /* main.swift in Sources */,
 				AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */,
 				ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */,
 				ABE1DF2A2A40C18800A963A6 /* AppDelegate.swift in Sources */,
@@ -292,6 +400,95 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		ABC4BBAF2D37331E00A9D2CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_WARN_INHIBIT_ALL_WARNINGS = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = $VULKAN_IOS_HEADERS;
+				INFOPLIST_FILE = "modeler-ios/Info.plist";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.abalog.modeler-ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "modeler-ios/modeler-ios-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		ABC4BBB02D37331E00A9D2CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				FRAMEWORK_SEARCH_PATHS = "";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_WARN_INHIBIT_ALL_WARNINGS = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = $VULKAN_IOS_HEADERS;
+				INFOPLIST_FILE = "modeler-ios/Info.plist";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.abalog.modeler-ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "modeler-ios/modeler-ios-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		ABF162422A34E3AC007655F7 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -410,6 +607,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = modeler/modeler.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -420,6 +618,7 @@
 				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = $VULKAN_HEADERS;
 				INFOPLIST_FILE = modeler/Info.plist;
@@ -446,6 +645,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = modeler/modeler.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -456,6 +656,7 @@
 				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = $VULKAN_HEADERS;
 				INFOPLIST_FILE = modeler/Info.plist;
@@ -479,6 +680,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		ABC4BBB22D37331E00A9D2CF /* Build configuration list for PBXNativeTarget "modeler-ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABC4BBAF2D37331E00A9D2CF /* Debug */,
+				ABC4BBB02D37331E00A9D2CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		ABF162302A34E3A7007655F7 /* Build configuration list for PBXProject "modeler" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
