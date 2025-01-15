@@ -62,7 +62,7 @@ struct chess_board_t {
 	float width;
 	float originX;
 	float originY;
-	float rotation;
+	Orientation orientation;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
 	Vertex vertices[CHESS_VERTEX_COUNT];
@@ -99,8 +99,9 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error);
 static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
 static bool createChessBoardPipeline(ChessBoard self, char **error);
 static void updateVertices(ChessBoard self);
+static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition, Orientation orientation);
 
-bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float width, float originX, float originY, float rotation, char **error)
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float width, float originX, float originY, Orientation orientation, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -117,7 +118,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	self->width = width;
 	self->originX = originX;
 	self->originY = originY;
-	self->rotation = rotation;
+	self->orientation = orientation;
 
 	self->selected = CHESS_SQUARE_COUNT;
 	self->lastMove = (LastMove) {
@@ -410,12 +411,12 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 	return true;
 }
 
-void setDimensions(ChessBoard self, float width, float originX, float originY, float rotation)
+void setDimensions(ChessBoard self, float width, float originX, float originY, Orientation orientation)
 {
 	self->width = width;
 	self->originX = originX;
 	self->originY = originY;
-	self->rotation = rotation;
+	self->orientation = orientation;
 
 	updateVertices(self);
 }
@@ -526,10 +527,25 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindIndexBuffer(commandBuffer, self->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
+	float rotation;
+	switch (self->orientation) {
+		case ROTATE_0:
+			rotation = 0;
+			break;
+		case ROTATE_90:
+			rotation = M_PI_2;
+			break;
+		case ROTATE_180:
+			rotation = M_PI;
+			break;
+		case ROTATE_270:
+			rotation = -M_PI_2;
+			break;
+	}
 	ChessBoardPushConstants pushConstants = {
 		.mvp = {
-			cos(self->rotation), -sin(self->rotation), 0, 0,
-			sin(self->rotation), cos(self->rotation), 0, 0,
+			cos(rotation), -sin(rotation), 0, 0,
+			sin(rotation), cos(rotation), 0, 0,
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		}
@@ -540,9 +556,18 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	return true;
 }
 
-ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition)
+static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition, Orientation orientation)
 {
-	return (floor(pointerPosition.y * 8) * 8) + floor(pointerPosition.x * 8);
+	switch (orientation) {
+	case ROTATE_0:
+		return (floor(pointerPosition.y * 8) * 8) + floor(pointerPosition.x * 8);
+	case ROTATE_90:
+		return ((int) floor(pointerPosition.x * 8) * 8) + (int) floor((1.0 - pointerPosition.y) * 8);
+	case ROTATE_180:
+		return (floor((1 - pointerPosition.y) * 8) * 8) + floor((1.0 - pointerPosition.x) * 8);
+	case ROTATE_270:
+		return ((int) floor((1.0 - pointerPosition.x) * 8) * 8) + (int) floor(pointerPosition.y * 8);
+	}
 }
 
 void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
@@ -556,7 +581,7 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 	case BUTTON_DOWN:
 		break;
 	case BUTTON_UP:
-		square = squareFromPointerPosition(self->pointerPosition);
+		square = squareFromPointerPosition(self->pointerPosition, self->orientation);
 		chessEngineSquareSelected(self->engine, square);
 		break;
 	case NORMALIZED_POINTER_MOVE:

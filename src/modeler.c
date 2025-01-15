@@ -10,7 +10,6 @@
 #include "vk_mem_alloc.h"
 
 #include "modeler.h"
-#include "window.h"
 #include "instance.h"
 #include "surface.h"
 #include "image.h"
@@ -63,6 +62,18 @@ static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCal
 static void imVkCheck(VkResult result);
 static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
 static bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
+
+static inline Orientation negateRotation(Orientation orientation)
+{
+	switch (orientation) {
+	case ROTATE_90:
+		return ROTATE_270;
+	case ROTATE_270:
+		return ROTATE_90;
+	case ROTATE_0: case ROTATE_180: default:
+		return orientation;
+	}
+}
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
 {
@@ -199,7 +210,7 @@ void *threadProc(void *arg)
 	ChessEngine chessEngine;
 	createChessEngine(&chessEngine, &chessBoard);
 
-	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, 1.0f, -0.5f, -0.5f, -windowDimensions.rotation, error)) {
+	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, resourcePath, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions.orientation), error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -399,13 +410,13 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 
 	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
 	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR) {
-		swapchainCreateInfo->windowDimensions->rotation = M_PI / 2;
-	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR) {
-		swapchainCreateInfo->windowDimensions->rotation = -M_PI / 2;
+		swapchainCreateInfo->windowDimensions->orientation = ROTATE_90;
 	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR) {
-		swapchainCreateInfo->windowDimensions->rotation = M_PI;
+		swapchainCreateInfo->windowDimensions->orientation = ROTATE_180;
+	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR) {
+		swapchainCreateInfo->windowDimensions->orientation = ROTATE_270;
 	} else {
-		swapchainCreateInfo->windowDimensions->rotation = 0;
+		swapchainCreateInfo->windowDimensions->orientation = ROTATE_0;
 	}
 
 	*swapchainCreateInfo->imageViews = malloc(sizeof(*swapchainCreateInfo->imageViews) * swapchainCreateInfo->swapchainInfo->imageCount);

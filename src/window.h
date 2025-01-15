@@ -5,13 +5,20 @@
 
 #include "vulkan_utils.h"
 
+typedef enum orientation_t {
+	ROTATE_0,
+	ROTATE_90,
+	ROTATE_180,
+	ROTATE_270
+} Orientation;
+
 typedef struct window_dimensions_t {
 	VkExtent2D surfaceArea;
 	VkRect2D activeArea;
 	int cornerRadius;
 	float scale;
 	bool fullscreen;
-	float rotation;
+	Orientation orientation;
 } WindowDimensions;
 
 typedef struct resize_info_t {

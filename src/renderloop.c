@@ -28,6 +28,18 @@ typedef struct component_t {
 	void (*handleInputEvent)(void *, InputEvent *);
 } Component;
 
+static inline Orientation negateRotation(Orientation orientation)
+{
+	switch (orientation) {
+	case ROTATE_90:
+		return ROTATE_270;
+	case ROTATE_270:
+		return ROTATE_90;
+	case ROTATE_0: case ROTATE_180: default:
+		return orientation;
+	}
+}
+
 static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, PointerPosition pointerPosition)
 {
 	InputEvent newInputEvent;
@@ -132,10 +144,20 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				ImGui_ImplModeler_HandleInput(inputEvent);
 #endif
 				pointerPosition = *((PointerPosition *) inputEvent->data);
-				if (windowDimensions->rotation) {
-					int x = pointerPosition.x;
-					pointerPosition.x = pointerPosition.y;
+				int x = pointerPosition.x;
+				switch (windowDimensions->orientation) {
+				case ROTATE_90:
+					pointerPosition.x = windowDimensions->activeArea.extent.width - pointerPosition.y;
 					pointerPosition.y = x;
+					break;
+				case ROTATE_180:
+					pointerPosition.x = windowDimensions->activeArea.extent.width - pointerPosition.x;
+					pointerPosition.y = windowDimensions->activeArea.extent.height - pointerPosition.y;
+					break;
+				case ROTATE_270:
+					pointerPosition.x = pointerPosition.y;
+					pointerPosition.y = windowDimensions->activeArea.extent.height - x;
+					break;
 				}
 				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), inputEvent, pointerPosition);
 				free(data);
@@ -165,7 +187,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
-			setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -windowDimensions->rotation);
+			setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}
@@ -183,7 +205,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
-			setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -windowDimensions->rotation);
+			setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}
@@ -330,7 +352,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
-			setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, -windowDimensions->rotation);
+			setDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}
