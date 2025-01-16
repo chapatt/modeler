@@ -353,7 +353,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C ../ modeler.a IOS=true ENABLE_IMGUI=true DEBUG=true\nmake -C ../ imgui.a IOS=true ENABLE_IMGUI=true DEBUG=true\n";
+			shellScript = "make -C ../ modeler.a IOS=true\nmake -C ../ imgui.a IOS=true\n";
 		};
 		AB4D1BEE2B384CBF00717FEC /* Run make */ = {
 			isa = PBXShellScriptBuildPhase;
