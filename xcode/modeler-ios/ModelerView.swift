@@ -12,8 +12,6 @@ class ModelerView: UIView {
     override init(frame: CGRect) {
         self.inputQueue = createQueue()
         super.init(frame: frame)
-        self.backgroundColor = UIColor.systemBlue
-        layer.delegate = self
         layer.setNeedsDisplay()
         
         errorPointerPointer = UnsafeMutablePointer.allocate(capacity: 1)
@@ -23,22 +21,36 @@ class ModelerView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func startRenderloop() {
-        let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
+    override func didMoveToWindow() {
+        if let nativeScale = self.window?.windowScene?.screen.nativeScale {
+            self.contentScaleFactor = nativeScale
+        }
+        layer.delegate = self
+    }
+    
+    override func display(_ layer: CALayer) {
+        if let layer = (layer as? CAMetalLayer) {
+            var drawableSize = bounds.size
+            drawableSize.width *= contentScaleFactor
+            drawableSize.height *= contentScaleFactor
+            layer.drawableSize = drawableSize
             
-        let width = Int32(layer.bounds.size.width)
-        let height = Int32(layer.bounds.size.height)
-        let scale = Float(contentScaleFactor);
-        
-        let resourcePath = Bundle.main.resourcePath!
-
-        resourcePath.withCString { resourcePathCString in
-            thread = initVulkanMetal(layerPointer, width, height, scale, resourcePathCString, inputQueue, errorPointerPointer)
+            let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
             
-            if (thread == nil) {
-                if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
-                    if let error: String = String(validatingUTF8: pointer) {
-                        self.handleFatalError(message: error)
+            let width = Int32(layer.drawableSize.width)
+            let height = Int32(layer.drawableSize.height)
+            let scale = Float(contentScaleFactor);
+            
+            let resourcePath = Bundle.main.resourcePath!
+            
+            resourcePath.withCString { resourcePathCString in
+                thread = initVulkanMetal(layerPointer, width, height, scale, resourcePathCString, inputQueue, errorPointerPointer)
+                
+                if (thread == nil) {
+                    if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
+                        if let error: String = String(validatingUTF8: pointer) {
+                            self.handleFatalError(message: error)
+                        }
                     }
                 }
             }
