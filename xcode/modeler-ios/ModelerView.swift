@@ -12,9 +12,10 @@ class ModelerView: UIView {
     override init(frame: CGRect) {
         self.inputQueue = createQueue()
         super.init(frame: frame)
-        layer.setNeedsDisplay()
         
         errorPointerPointer = UnsafeMutablePointer.allocate(capacity: 1)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleErrorNotification), name: Notification.Name("THREAD_FAILURE"), object: nil)
     }
     
     required init?(coder: NSCoder) {
@@ -28,7 +29,7 @@ class ModelerView: UIView {
         layer.delegate = self
     }
     
-    override func display(_ layer: CALayer) {
+    func startVulkanThread() {
         if let layer = (layer as? CAMetalLayer) {
             var drawableSize = bounds.size
             drawableSize.width *= contentScaleFactor
@@ -57,6 +58,48 @@ class ModelerView: UIView {
         }
     }
     
+    func terminateVulkanThread() {
+        terminateVulkan(inputQueue, thread)
+    }
+
+    @objc func handleErrorNotification(notification: NSNotification) {
+        if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
+            if let error: String = String(validatingUTF8: pointer) {
+                handleFatalError(message: error)
+            }
+        }
+    }
+    
+    func handleLayoutChanged() {
+        print("orientation changed\n")
+        let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
+        let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
+        var orientation = ROTATE_0
+        switch UIDevice.current.orientation {
+        case .portrait:
+            orientation = ROTATE_0
+        case .portraitUpsideDown:
+            orientation = ROTATE_180
+        case .landscapeLeft:
+            orientation = ROTATE_90
+        case .landscapeRight:
+            orientation = ROTATE_270
+        default:
+            orientation = ROTATE_0
+        }
+        let windowDimensions = WindowDimensions(
+            surfaceArea: extent,
+            activeArea: rect,
+            cornerRadius: 0,
+            scale: Float(contentScaleFactor),
+            fullscreen: false,
+            orientation: orientation
+        )
+        let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
+            
+        enqueueResizeEvent(inputQueue, windowDimensions, layerPointer)
+    }
+
     func handleFatalError(message: String) {
     }
 }
