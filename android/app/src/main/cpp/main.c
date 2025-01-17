@@ -65,22 +65,24 @@ void android_main(struct android_app *pApp)
 				GameActivityMotionEvent* motionEvent = &inputBuffer->motionEvents[i];
 
 				if (motionEvent->pointerCount > 0) {
+					int x = floor(GameActivityPointerAxes_getAxisValue(motionEvent->pointers, 0));
+					int y = floor(GameActivityPointerAxes_getAxisValue(motionEvent->pointers, 1));
 					switch (motionEvent->action & AMOTION_EVENT_ACTION_MASK) {
 					case AMOTION_EVENT_ACTION_DOWN:
 						if (userData) {
-							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, floor(motionEvent->pointers[0].rawX), floor(motionEvent->pointers[0].rawY));
+							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, x, y);
 							enqueueInputEvent(&userData->inputQueue, BUTTON_DOWN, NULL);
 						}
 						break;
 					case AMOTION_EVENT_ACTION_UP:
 						if (userData) {
-							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, floor(motionEvent->pointers[0].rawX), floor(motionEvent->pointers[0].rawY));
+							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, x, y);
 							enqueueInputEvent(&userData->inputQueue, BUTTON_UP, NULL);
 						}
 						break;
 					case AMOTION_EVENT_ACTION_MOVE: {
 						if (userData) {
-							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, floor(motionEvent->pointers[0].rawX), floor(motionEvent->pointers[0].rawY));
+							enqueueInputEventWithPosition(&userData->inputQueue, POINTER_MOVE, x, y);
 						}
 						break;
 					}
@@ -126,7 +128,6 @@ static void handleAppCmd(struct android_app *pApp, int32_t cmd)
 		}
 		break;
 	case APP_CMD_WINDOW_RESIZED:
-#if 0
 		ModelerUserData *userData = (ModelerUserData *) pApp->userData;
 		int width = ANativeWindow_getWidth(pApp->window);
 		int height = ANativeWindow_getHeight(pApp->window);
@@ -146,7 +147,6 @@ static void handleAppCmd(struct android_app *pApp, int32_t cmd)
 			.scale = 1
 		};
 		enqueueResizeEvent(&userData->inputQueue, windowDimensions, pApp->window);
-#endif
 		break;
 	case APP_CMD_START:
 		break;
