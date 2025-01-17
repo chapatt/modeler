@@ -27,6 +27,8 @@
 		AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
 		AB4F60E92D3A1A130028842B /* ModelerViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F60E82D3A1A130028842B /* ModelerViewRepresentable.swift */; };
 		AB4F60EB2D3A1AD30028842B /* ModelerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F60EA2D3A1AD30028842B /* ModelerApp.swift */; };
+		AB4F60ED2D3B08530028842B /* ModelerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F60EC2D3B08530028842B /* ModelerViewController.swift */; };
+		AB4F60EF2D3B08960028842B /* ModelerViewControllerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F60EE2D3B08960028842B /* ModelerViewControllerRepresentable.swift */; };
 		AB6C10262BA0F9A9004667E0 /* window_border.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */; };
 		AB6C10272BA0F9A9004667E0 /* window_border.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */; };
 		AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */; };
@@ -92,6 +94,8 @@
 		AB4D1BEB2B384AC500717FEC /* imgui.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = imgui.a; path = ../imgui.a; sourceTree = "<group>"; };
 		AB4F60E82D3A1A130028842B /* ModelerViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewRepresentable.swift; sourceTree = "<group>"; };
 		AB4F60EA2D3A1AD30028842B /* ModelerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerApp.swift; sourceTree = "<group>"; };
+		AB4F60EC2D3B08530028842B /* ModelerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewController.swift; sourceTree = "<group>"; };
+		AB4F60EE2D3B08960028842B /* ModelerViewControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewControllerRepresentable.swift; sourceTree = "<group>"; };
 		AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.vert.spv; path = ../window_border.vert.spv; sourceTree = "<group>"; };
 		AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.frag.spv; path = ../window_border.frag.spv; sourceTree = "<group>"; };
 		AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.vert.spv; path = ../chess_board.vert.spv; sourceTree = "<group>"; };
@@ -205,6 +209,8 @@
 				AB4F60EA2D3A1AD30028842B /* ModelerApp.swift */,
 				ABF1623A2A34E3A7007655F7 /* ModelerView.swift */,
 				AB4F60E82D3A1A130028842B /* ModelerViewRepresentable.swift */,
+				AB4F60EC2D3B08530028842B /* ModelerViewController.swift */,
+				AB4F60EE2D3B08960028842B /* ModelerViewControllerRepresentable.swift */,
 			);
 			path = modeler;
 			sourceTree = "<group>";
@@ -379,7 +385,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AB4F60EF2D3B08960028842B /* ModelerViewControllerRepresentable.swift in Sources */,
 				AB4F60EB2D3A1AD30028842B /* ModelerApp.swift in Sources */,
+				AB4F60ED2D3B08530028842B /* ModelerViewController.swift in Sources */,
 				ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */,
 				AB4F60E92D3A1A130028842B /* ModelerViewRepresentable.swift in Sources */,
 			);
