@@ -21,88 +21,17 @@ typedef struct modeler_user_data_t {
 	char *error;
 } ModelerUserData;
 
+static void handleAppCmd(struct android_app *pApp, int32_t cmd);
+static bool filterMotionEvents(const GameActivityMotionEvent *motionEvent);
 static int handleCustomLooperEvent(int fd, int events, void *data);
 static void handleFatalError(char *message);
-static void handle_cmd(struct android_app *pApp, int32_t cmd);
+static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, struct ANativeWindow *nativeWindow);
 
-static void handle_cmd(struct android_app *pApp, int32_t cmd)
-{
-	switch (cmd) {
-	case APP_CMD_INIT_WINDOW:
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_LIFECYCLE", "APP_CMD_INIT_WINDOW\n");
-		{
-			struct ANativeWindow *window = (struct ANativeWindow *) (pApp->window);
-			ModelerUserData *userData = malloc(sizeof(*userData));
-
-			initializeQueue(&userData->inputQueue);
-
-			if (pipe(userData->threadPipe)) {
-				handleFatalError("Failed to create pipe");
-			}
-
-			ALooper_addFd(
-				ALooper_forThread(),
-				userData->threadPipe[0],
-				ALOOPER_POLL_CALLBACK,
-				ALOOPER_EVENT_INPUT,
-				&handleCustomLooperEvent,
-				userData
-			);
-
-			if (!(userData->thread = initVulkanAndroid(window, &userData->inputQueue, userData->threadPipe[1], &userData->error))) {
-				break;
-			}
-
-			pApp->userData = userData;
-		}
-		break;
-	case APP_CMD_START:
-		break;
-	case APP_CMD_RESUME:
-		break;
-	case APP_CMD_PAUSE:
-		break;
-	case APP_CMD_STOP:
-		break;
-	case APP_CMD_DESTROY:
-		break;
-	case APP_CMD_TERM_WINDOW:
-		if (pApp->userData) {
-			ModelerUserData *userData = (ModelerUserData *) pApp->userData;
-			terminateVulkan(&userData->inputQueue, userData->thread);
-			pApp->userData = NULL;
-			free(userData);
-		}
-		break;
-	default:
-		break;
-	}
-}
-
-/*!
- * Enable the motion events you want to handle; not handled events are
- * passed back to OS for further processing. For this example case,
- * only pointer and joystick devices are enabled.
- *
- * @param motionEvent the newly arrived GameActivityMotionEvent.
- * @return true if the event is from a pointer or joystick device,
- *         false for all other input devices.
- */
-bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent)
-{
-	int32_t sourceClass = motionEvent->source & AINPUT_SOURCE_CLASS_MASK;
-
-	return (sourceClass == AINPUT_SOURCE_CLASS_POINTER);
-}
-
-/*!
- * This the main entry point for a native activity
- */
 void android_main(struct android_app *pApp)
 {
-	pApp->onAppCmd = handle_cmd;
+	pApp->onAppCmd = handleAppCmd;
 
-	android_app_set_motion_event_filter(pApp, motion_event_filter_func);
+	android_app_set_motion_event_filter(pApp, filterMotionEvents);
 
 	do {
 		ModelerUserData *userData = (ModelerUserData *) pApp->userData;
@@ -167,6 +96,88 @@ void android_main(struct android_app *pApp)
 	} while (!pApp->destroyRequested);
 }
 
+static void handleAppCmd(struct android_app *pApp, int32_t cmd)
+{
+	switch (cmd) {
+	case APP_CMD_INIT_WINDOW:
+		{
+			ModelerUserData *userData = malloc(sizeof(*userData));
+
+			initializeQueue(&userData->inputQueue);
+
+			if (pipe(userData->threadPipe)) {
+				handleFatalError("Failed to create pipe");
+			}
+
+			ALooper_addFd(
+				ALooper_forThread(),
+				userData->threadPipe[0],
+				ALOOPER_POLL_CALLBACK,
+				ALOOPER_EVENT_INPUT,
+				&handleCustomLooperEvent,
+				userData
+			);
+
+			if (!(userData->thread = initVulkanAndroid(pApp->window, &userData->inputQueue, userData->threadPipe[1], &userData->error))) {
+				break;
+			}
+
+			pApp->userData = userData;
+		}
+		break;
+	case APP_CMD_WINDOW_RESIZED:
+#if 0
+		ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+		int width = ANativeWindow_getWidth(pApp->window);
+		int height = ANativeWindow_getHeight(pApp->window);
+		WindowDimensions windowDimensions = {
+			.surfaceArea = {
+				.width = width,
+				.height = height
+			},
+			.activeArea = {
+				.extent = {
+					.width = width,
+					.height = height
+				},
+				.offset = {0, 0}
+			},
+			.cornerRadius = 0,
+			.scale = 1
+		};
+		enqueueResizeEvent(&userData->inputQueue, windowDimensions, pApp->window);
+#endif
+		break;
+	case APP_CMD_START:
+		break;
+	case APP_CMD_RESUME:
+		break;
+	case APP_CMD_PAUSE:
+		break;
+	case APP_CMD_STOP:
+		break;
+	case APP_CMD_DESTROY:
+		break;
+	case APP_CMD_TERM_WINDOW:
+		if (pApp->userData) {
+			ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+			terminateVulkan(&userData->inputQueue, userData->thread);
+			pApp->userData = NULL;
+			free(userData);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
+static bool filterMotionEvents(const GameActivityMotionEvent *motionEvent)
+{
+	int32_t sourceClass = motionEvent->source & AINPUT_SOURCE_CLASS_MASK;
+
+	return (sourceClass == AINPUT_SOURCE_CLASS_POINTER);
+}
+
 static int handleCustomLooperEvent(int fd, int events, void *data)
 {
 	ModelerUserData *userData = (ModelerUserData *) data;
@@ -182,4 +193,18 @@ static void handleFatalError(char *message)
 {
 	fprintf(stderr, "%s\n", message);
 	__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "%s\n", message);
+}
+
+static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, struct ANativeWindow *nativeWindow)
+{
+	AndroidWindow *window = malloc(sizeof(*window));
+	*window = (AndroidWindow) {
+		.nativeWindow = nativeWindow
+	};
+	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
+	*resizeInfo = (ResizeInfo) {
+		.windowDimensions = windowDimensions,
+		.platformWindow = window
+	};
+	enqueueInputEvent(queue, RESIZE, resizeInfo);
 }
