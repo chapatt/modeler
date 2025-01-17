@@ -104,13 +104,19 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			};
 		}
 
-		int width = windowDimensions->activeArea.extent.width;
-		int height = windowDimensions->activeArea.extent.height;
-		bool isLandscape = width >= height;
-		int minorDimension = isLandscape ? height : width;
+		VkExtent2D extent = windowDimensions->surfaceArea;
+
+		if (windowDimensions->orientation == ROTATE_90 || windowDimensions->orientation == ROTATE_270) {
+			uint32_t width = extent.width;
+			extent.width = extent.height;
+			extent.height = width;
+		}
+
+		bool isLandscape = extent.width >= extent.height;
+		int minorDimension = isLandscape ? extent.height : extent.width;
 		VkViewport chessBoardViewport = {
-			.x = isLandscape ? (width - height) / 2 : 0,
-			.y = isLandscape ? 0 : (height - width) / 2,
+			.x = isLandscape ? (extent.width - extent.height) / 2 : 0,
+			.y = isLandscape ? 0 : (extent.height - extent.width) / 2,
 			.width = minorDimension,
 			.height = minorDimension,
 			.minDepth = 0.0f,
@@ -147,16 +153,16 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				int x = pointerPosition.x;
 				switch (windowDimensions->orientation) {
 				case ROTATE_90:
-					pointerPosition.x = windowDimensions->activeArea.extent.width - pointerPosition.y;
+					pointerPosition.x = extent.width - pointerPosition.y;
 					pointerPosition.y = x;
 					break;
 				case ROTATE_180:
-					pointerPosition.x = windowDimensions->activeArea.extent.width - pointerPosition.x;
-					pointerPosition.y = windowDimensions->activeArea.extent.height - pointerPosition.y;
+					pointerPosition.x = extent.width - pointerPosition.x;
+					pointerPosition.y = extent.height - pointerPosition.y;
 					break;
 				case ROTATE_270:
 					pointerPosition.x = pointerPosition.y;
-					pointerPosition.y = windowDimensions->activeArea.extent.height - x;
+					pointerPosition.y = extent.height - x;
 					break;
 				}
 				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), inputEvent, pointerPosition);
@@ -234,10 +240,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 
 		VkRect2D scissor = {
 			.offset = {
-				.x = 0,
-				.y = 0
+				.x = chessBoardViewport.x,
+				.y = chessBoardViewport.y
 			},
-			.extent = windowDimensions->activeArea.extent
+			.extent = (VkExtent2D) {
+				.width = chessBoardViewport.width,
+				.height = chessBoardViewport.height
+			}
 		};
 		vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &chessBoardViewport);
 		vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &scissor);
