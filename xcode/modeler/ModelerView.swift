@@ -37,6 +37,7 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     }
     
     func display(_ layer: CALayer) {
+        print("display")
         let trackingOptions: NSTrackingArea.Options = [.activeAlways, .inVisibleRect, .mouseEnteredAndExited, .mouseMoved]
         trackingArea = NSTrackingArea(rect: bounds, options: trackingOptions, owner: self, userInfo: nil)
         self.addTrackingArea(trackingArea)
