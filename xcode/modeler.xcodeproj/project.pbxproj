@@ -24,20 +24,17 @@
 		AB330EE52BD992AD00FC06CE /* libvulkan.1.3.296.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE72BD993E600FC06CE /* libMoltenVK.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; };
 		AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EEB2BD9D46700FC06CE /* ModelerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */; };
-		AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */; };
 		AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
+		AB4F60E92D3A1A130028842B /* ModelerViewRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F60E82D3A1A130028842B /* ModelerViewRepresentable.swift */; };
+		AB4F60EB2D3A1AD30028842B /* ModelerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F60EA2D3A1AD30028842B /* ModelerApp.swift */; };
 		AB6C10262BA0F9A9004667E0 /* window_border.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */; };
 		AB6C10272BA0F9A9004667E0 /* window_border.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */; };
 		AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */; };
 		AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */; };
 		AB7E0B142D1F42680068EC79 /* pieces.png in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B132D1F42680068EC79 /* pieces.png */; };
-		AB9B603F2D373D9800E0F273 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB9B603E2D373D9800E0F273 /* main.swift */; };
 		ABC0F3052C02C93700771076 /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABC0F3062C05B82B00771076 /* roboto.ttf */; };
-		ABD9E0172B2BA4F8008932DB /* ModelerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */; };
 		ABE1DEF52A3592D600A963A6 /* vulkan in Resources */ = {isa = PBXBuildFile; fileRef = ABE1DEF42A3592D600A963A6 /* vulkan */; };
-		ABE1DF2A2A40C18800A963A6 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE1DF292A40C18800A963A6 /* AppDelegate.swift */; };
 		ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF1623A2A34E3A7007655F7 /* ModelerView.swift */; };
 		ABF1623D2A34E3AC007655F7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABF1623C2A34E3AC007655F7 /* Assets.xcassets */; };
 		ABF162402A34E3AC007655F7 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABF1623F2A34E3AC007655F7 /* Preview Assets.xcassets */; };
@@ -91,21 +88,18 @@
 		AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_screenshot.dylib; path = macOS/lib/libVkLayer_screenshot.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMoltenVK.dylib; path = macOS/lib/libMoltenVK.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE92BD99D3A00FC06CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewController.swift; sourceTree = "<group>"; };
-		AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindow.swift; sourceTree = "<group>"; };
 		AB4D1BE92B384A0200717FEC /* modeler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = modeler.a; path = ../modeler.a; sourceTree = "<group>"; };
 		AB4D1BEB2B384AC500717FEC /* imgui.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = imgui.a; path = ../imgui.a; sourceTree = "<group>"; };
+		AB4F60E82D3A1A130028842B /* ModelerViewRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewRepresentable.swift; sourceTree = "<group>"; };
+		AB4F60EA2D3A1AD30028842B /* ModelerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerApp.swift; sourceTree = "<group>"; };
 		AB6794C52A5E7C5600FF94B9 /* window_border.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.vert.spv; path = ../window_border.vert.spv; sourceTree = "<group>"; };
 		AB6794C62A5E7C5600FF94B9 /* window_border.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = window_border.frag.spv; path = ../window_border.frag.spv; sourceTree = "<group>"; };
 		AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.vert.spv; path = ../chess_board.vert.spv; sourceTree = "<group>"; };
 		AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.frag.spv; path = ../chess_board.frag.spv; sourceTree = "<group>"; };
 		AB7E0B132D1F42680068EC79 /* pieces.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pieces.png; path = ../pieces.png; sourceTree = "<group>"; };
-		AB9B603E2D373D9800E0F273 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		ABC0F3062C05B82B00771076 /* roboto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = roboto.ttf; path = ../roboto.ttf; sourceTree = "<group>"; };
 		ABC4BB9E2D37331D00A9D2CF /* modeler-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "modeler-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerWindowController.swift; sourceTree = "<group>"; };
 		ABE1DEF42A3592D600A963A6 /* vulkan */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vulkan; sourceTree = "<group>"; };
-		ABE1DF292A40C18800A963A6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		ABF162352A34E3A7007655F7 /* modeler.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = modeler.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABF1623A2A34E3A7007655F7 /* ModelerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerView.swift; sourceTree = "<group>"; };
 		ABF1623C2A34E3AC007655F7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -208,12 +202,9 @@
 				ABF162412A34E3AC007655F7 /* modeler.entitlements */,
 				ABF1623E2A34E3AC007655F7 /* Preview Content */,
 				AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */,
-				AB9B603E2D373D9800E0F273 /* main.swift */,
-				ABE1DF292A40C18800A963A6 /* AppDelegate.swift */,
-				AB42D93A2B17BF5E00CAF4C0 /* ModelerWindow.swift */,
-				ABD9E0162B2BA4F8008932DB /* ModelerWindowController.swift */,
+				AB4F60EA2D3A1AD30028842B /* ModelerApp.swift */,
 				ABF1623A2A34E3A7007655F7 /* ModelerView.swift */,
-				AB330EEA2BD9D46700FC06CE /* ModelerViewController.swift */,
+				AB4F60E82D3A1A130028842B /* ModelerViewRepresentable.swift */,
 			);
 			path = modeler;
 			sourceTree = "<group>";
@@ -372,7 +363,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "make -C ../ modeler.a ENABLE_IMGUI=true DEBUG=true\nmake -C ../ imgui.a ENABLE_IMGUI=true DEBUG=true\n";
+			shellScript = "make -C ../ modeler.a DEBUG=true\nmake -C ../ imgui.a DEBUG=true\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -388,12 +379,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ABD9E0172B2BA4F8008932DB /* ModelerWindowController.swift in Sources */,
-				AB330EEB2BD9D46700FC06CE /* ModelerViewController.swift in Sources */,
-				AB9B603F2D373D9800E0F273 /* main.swift in Sources */,
-				AB42D93B2B17BF5E00CAF4C0 /* ModelerWindow.swift in Sources */,
+				AB4F60EB2D3A1AD30028842B /* ModelerApp.swift in Sources */,
 				ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */,
-				ABE1DF2A2A40C18800A963A6 /* AppDelegate.swift in Sources */,
+				AB4F60E92D3A1A130028842B /* ModelerViewRepresentable.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

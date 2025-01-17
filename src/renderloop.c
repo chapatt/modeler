@@ -2,15 +2,17 @@
 #include <string.h>
 #include <time.h>
 
-#include "imgui/cimgui.h"
-#include "imgui/cimgui_impl_vulkan.h"
-#include "imgui/imgui_impl_modeler.h"
-
 #include "pipeline.h"
 #include "utils.h"
 #include "vulkan_utils.h"
 
 #include "renderloop.h"
+
+
+#ifdef ENABLE_IMGUI
+#include "imgui/cimgui.h"
+#include "imgui/cimgui_impl_vulkan.h"
+#include "imgui/imgui_impl_modeler.h"
 
 typedef struct font_t {
 	ImFont *font;
@@ -20,6 +22,7 @@ typedef struct font_t {
 static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale);
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
+#endif /* ENABLE_IMGUI */
 static bool resetChessBoard(ChessBoard chessBoard, char **error);
 
 typedef struct component_t {
@@ -67,9 +70,11 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 
 bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
 {
+#ifdef ENABLE_IMGUI
 	Font *fonts = NULL;
 	size_t fontCount = 0;
 	ImFont *currentFont = NULL;
+#endif /* ENABLE_IMGUI */
 	VkClearValue clearValue = {0.1f, 0.3f, 0.3f, 1.0f};
 	VkClearValue secondClearValue = {0.0f, 0.0f, 0.0f, 0.0f};
 	VkClearValue clearValues[] = {clearValue, secondClearValue};
@@ -81,7 +86,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	long elapsed = 1;
 	PointerPosition pointerPosition;
 
+#ifdef ENABLE_IMGUI
 	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath);
+#endif /* ENABLE_IMGUI */
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
@@ -171,9 +178,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				break;
 			case RESIZE:
 				resizeInfo = (ResizeInfo *) data;
+#ifdef ENABLE_IMGUI
 				if (resizeInfo->windowDimensions.scale != windowDimensions->scale) {
 					rescaleImGui(&fonts, &fontCount, &currentFont, resizeInfo->windowDimensions.scale, resourcePath);
 				}
+#endif /* ENABLE_IMGUI */
 				*windowDimensions = resizeInfo->windowDimensions;
 				if (swapchainInfo->extent.width != windowDimensions->surfaceArea.width || swapchainInfo->extent.height != windowDimensions->surfaceArea.height) {
 					windowResized = true;
@@ -357,7 +366,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		};
 
 		result = vkQueuePresentKHR(presentationQueue, &presentInfo);
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		/*
+			TODO: macOS sends this on every frame
+			if (result == VK_SUBOPTIMAL_KHR) { }
+		*/
+		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
@@ -366,7 +379,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 			continue;
-		} else if (result != VK_SUCCESS) {
+		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			asprintf(error, "Failed to present swapchain image: %s", string_VkResult(result));
 			return false;
 		}
@@ -377,6 +390,7 @@ cancelMainLoop:
 	return true;
 }
 
+#ifdef ENABLE_IMGUI
 static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale)
 {
 	*fonts = realloc(*fonts, sizeof(**fonts) * ++*fontCount);
@@ -399,7 +413,6 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale)
 
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath)
 {
-#ifdef ENABLE_IMGUI
 	if (!(*currentFont = findFontWithScale(*fonts, *fontCount, scale))) {
 		ImGuiIO *io = ImGui_GetIO();
 		char *fontPath;
@@ -410,8 +423,8 @@ static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, 
 		cImGui_ImplVulkan_CreateFontsTexture();
 		*currentFont = font;
 	}
-#endif /* ENABLE_IMGUI */
 }
+#endif /* ENABLE_IMGUI */
 
 static bool resetChessBoard(ChessBoard chessBoard, char **error)
 {

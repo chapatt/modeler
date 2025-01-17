@@ -3,9 +3,11 @@
 #include <math.h>
 #include <pthread.h>
 
+#ifdef ENABLE_IMGUI
 #include "imgui/cimgui.h"
 #include "imgui/cimgui_impl_vulkan.h"
 #include "imgui/imgui_impl_modeler.h"
+#endif /* ENABLE_IMGUI */
 
 #include "vk_mem_alloc.h"
 
@@ -57,9 +59,11 @@ struct swapchain_create_info_t {
 	WindowDimensions *windowDimensions;
 };
 
-void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, char **error);
 static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard);
+#ifdef ENABLE_IMGUI
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, char **error);
 static void imVkCheck(VkResult result);
+#endif /* ENABLE_IMGUI */
 static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
 static bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
 
@@ -303,10 +307,11 @@ void *threadProc(void *arg)
 	return NULL;
 }
 
+#ifdef ENABLE_IMGUI
 static void imVkCheck(VkResult result)
 {
 	if (result != VK_SUCCESS) {
-		printf("IMGUI Vulkan impl failure: %s", string_VkResult(result));
+		fprintf(stderr, "IMGUI Vulkan impl failure: %s", string_VkResult(result));
 	}
 }
 
@@ -328,7 +333,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		asprintf(error, "Failed to create descriptor pool: %s", string_VkResult(result));
 		sendThreadFailureSignal(platformWindow);
 	}
-#ifdef ENABLE_IMGUI
+
 	ImGui_CreateContext(NULL);
 	ImGuiIO *io = ImGui_GetIO();
 	io->IniFilename = NULL;
@@ -350,8 +355,8 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		.CheckVkResultFn = imVkCheck
 	};
 	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
-#endif /* ENABLE_IMGUI */
 }
+#endif /* ENABLE_IMGUI */
 
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
