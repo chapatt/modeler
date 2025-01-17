@@ -68,36 +68,18 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     }
     
     override func mouseDown(with event: NSEvent) {
-        print("mouseDown")
-        if event.type == .leftMouseDown {
-            print("main: mouseDown")
-        }
         enqueueInputEvent(inputQueue, BUTTON_DOWN, nil)
     }
     
     override func mouseUp(with event: NSEvent) {
-        print("mouseUp")
-        if event.type == .leftMouseUp {
-            print("main: mouseUp")
-        }
         enqueueInputEvent(inputQueue, BUTTON_UP, nil)
     }
     
     override func mouseMoved(with event: NSEvent) {
-        print("mouseMoved")
-        if event.type == .mouseMoved {
-            print("mouseMoved")
-        }
-        
         enqueuePositionEventWithWindowCoord(event.locationInWindow)
     }
     
     override func mouseDragged(with event: NSEvent) {
-        print("mouseDragged")
-        if event.type == .leftMouseDragged {
-            print("mouseDragged")
-        }
-        
         enqueuePositionEventWithWindowCoord(event.locationInWindow)
     }
     
@@ -134,7 +116,6 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
     }
     
     @objc func handleFrameDidChange(object: NSView) {
-        print("extentChange")
         if let layer = self.layer {
             let bounds: CGRect = convertToBacking(layer.bounds)
             let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
