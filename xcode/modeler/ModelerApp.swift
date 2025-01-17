@@ -4,7 +4,7 @@ import SwiftUI
 struct ModelerApp: App {
     var body: some Scene {
         WindowGroup {
-            ModelerViewRepresentable()
+            ModelerViewControllerRepresentable()
                 .ignoresSafeArea()
         }.windowStyle(.hiddenTitleBar)
     }

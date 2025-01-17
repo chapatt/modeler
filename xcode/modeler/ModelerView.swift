@@ -1,6 +1,6 @@
 import AppKit
 
-class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
+class ModelerView: NSView, NSViewLayerContentScaleDelegate {
     private var trackingArea: NSTrackingArea!
     private var inputQueue: UnsafeMutablePointer<Queue>
     private var thread: pthread_t?
@@ -13,8 +13,6 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         self.wantsLayer = true
         let layer = CAMetalLayer()
         self.layer = layer
-        layer.delegate = self
-        layer.setNeedsDisplay()
         
         errorPointerPointer = UnsafeMutablePointer.allocate(capacity: 1)
         
@@ -36,15 +34,15 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func display(_ layer: CALayer) {
+    func startVulkanThread() {
         print("display")
         let trackingOptions: NSTrackingArea.Options = [.activeAlways, .inVisibleRect, .mouseEnteredAndExited, .mouseMoved]
         trackingArea = NSTrackingArea(rect: bounds, options: trackingOptions, owner: self, userInfo: nil)
         self.addTrackingArea(trackingArea)
         
-        let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
+        let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer!).toOpaque()
             
-        let bounds: CGRect = convertToBacking(layer.bounds)
+        let bounds: CGRect = convertToBacking(layer!.bounds)
         let width = Int32(bounds.size.width)
         let height = Int32(bounds.size.height)
         let scale = Float(window?.backingScaleFactor ?? 1);
@@ -91,7 +89,7 @@ class ModelerView: NSView, CALayerDelegate, NSViewLayerContentScaleDelegate {
         let y = Int32(-backingPoint.y)
         enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, x, y)
     }
-
+    
     @objc func handleErrorNotification(notification: NSNotification) {
         if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
             if let error: String = String(validatingUTF8: pointer) {
