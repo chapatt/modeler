@@ -111,7 +111,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			};
 		}
 
-		VkExtent2D extent = windowDimensions->surfaceArea;
+		VkExtent2D extent = windowDimensions->activeArea.extent;
 
 		if (windowDimensions->orientation == ROTATE_90 || windowDimensions->orientation == ROTATE_270) {
 			uint32_t width = extent.width;
@@ -122,8 +122,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		bool isLandscape = extent.width >= extent.height;
 		int minorDimension = isLandscape ? extent.height : extent.width;
 		VkViewport chessBoardViewport = {
-			.x = isLandscape ? (extent.width - extent.height) / 2 : 0,
-			.y = isLandscape ? 0 : (extent.height - extent.width) / 2,
+			.x = (isLandscape ? (extent.width - extent.height) / 2 : 0) + windowDimensions->activeArea.offset.x,
+			.y = (isLandscape ? 0 : (extent.height - extent.width) / 2) + windowDimensions->activeArea.offset.y,
 			.width = minorDimension,
 			.height = minorDimension,
 			.minDepth = 0.0f,
