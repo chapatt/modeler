@@ -71,7 +71,6 @@ class ModelerView: UIView {
     }
     
     func handleLayoutChanged() {
-        print("orientation changed\n")
         let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
         let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
         var orientation = ROTATE_0
@@ -99,7 +98,56 @@ class ModelerView: UIView {
             
         enqueueResizeEvent(inputQueue, windowDimensions, layerPointer)
     }
+    
+    func exitApp(_: UIAlertAction) {
+        exit(EXIT_FAILURE)
+    }
 
     func handleFatalError(message: String) {
+        DispatchQueue.main.async {
+            let alert = UIAlertController(title: "Modeler Error", message: message, preferredStyle: UIAlertController.Style.alert)
+            alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: self.exitApp))
+            let windowScenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            let activeScenes = windowScenes.filter { $0.activationState == .foregroundActive }
+            let keyWindow = activeScenes.first?.keyWindow
+            let viewController = keyWindow?.rootViewController
+            viewController?.present(alert, animated: true, completion: nil)
+        }
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let touch = touches.first {
+            enqueuePositionEventWithWindowCoord(touch.location(in: self))
+            enqueueInputEvent(inputQueue, BUTTON_DOWN, nil)
+        }
+    }
+     
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let touch = touches.first {
+            touch.location(in: self)
+            enqueuePositionEventWithWindowCoord(touch.location(in: self))
+        }
+    }
+     
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let touch = touches.first {
+            touch.location(in: self)
+            enqueuePositionEventWithWindowCoord(touch.location(in: self))
+            enqueueInputEvent(inputQueue, BUTTON_UP, nil)
+        }
+    }
+     
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let touch = touches.first {
+            touch.location(in: self)
+            enqueuePositionEventWithWindowCoord(touch.location(in: self))
+            enqueueInputEvent(inputQueue, BUTTON_UP, nil)
+        }
+    }
+    
+    private func enqueuePositionEventWithWindowCoord(_ windowCoord: CGPoint) {
+        let x = Int32(windowCoord.x)
+        let y = Int32(windowCoord.y)
+        enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, x, y)
     }
 }
