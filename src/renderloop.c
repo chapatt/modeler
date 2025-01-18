@@ -75,7 +75,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	size_t fontCount = 0;
 	ImFont *currentFont = NULL;
 #endif /* ENABLE_IMGUI */
-	VkClearValue clearValue = {0.1f, 0.3f, 0.3f, 1.0f};
+	VkClearValue clearValue = {0.008f, 0.008f, 0.008f, 1.0f};
 	VkClearValue secondClearValue = {0.0f, 0.0f, 0.0f, 0.0f};
 	VkClearValue clearValues[] = {clearValue, secondClearValue};
 
