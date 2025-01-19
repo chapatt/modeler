@@ -71,7 +71,7 @@ class ModelerView: UIView {
     }
     
     func handleLayoutChanged() {
-        let extent = VkExtent2D(width: UInt32(bounds.size.width), height: UInt32(bounds.size.height))
+        let extent = VkExtent2D(width: UInt32(bounds.size.width * contentScaleFactor), height: UInt32(bounds.size.height * contentScaleFactor))
         let rect = VkRect2D(offset: VkOffset2D(x: 0, y: 0), extent: extent)
         var orientation = ROTATE_0
         switch UIDevice.current.orientation {
@@ -114,7 +114,7 @@ class ModelerView: UIView {
             viewController?.present(alert, animated: true, completion: nil)
         }
     }
-    
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if let touch = touches.first {
             enqueuePositionEventWithWindowCoord(touch.location(in: self))
@@ -146,8 +146,8 @@ class ModelerView: UIView {
     }
     
     private func enqueuePositionEventWithWindowCoord(_ windowCoord: CGPoint) {
-        let x = Int32(windowCoord.x)
-        let y = Int32(windowCoord.y)
+        let x = Int32(windowCoord.x * contentScaleFactor)
+        let y = Int32(windowCoord.y * contentScaleFactor)
         enqueueInputEventWithPosition(inputQueue, POINTER_MOVE, x, y)
     }
 }
