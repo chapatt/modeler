@@ -79,10 +79,11 @@ Install mingw_w64 (preferrably via msys64).
 Install Vulkan SDK. Paths in `Makefile` may need to be updated for install location and version.
 
 ## Dependencies
-| Name			| License		| Website																		| Notes								|
-|--				|--				|--																				|--									|
-| Dear ImGui	| MIT			| [GitHub](https://github.com/ocornut/imgui)									| 									|
-| lodepng		| zlib			| [GitHub](https://github.com/lvandeve/lodepng)									| 									|
-| MoltenVK		| Apache-2.0	| [GitHub](https://github.com/KhronosGroup/MoltenVK)							| macOS and iOS only				|
-| VMA			| MIT			| [GitHub](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)	| 									|
-| Vulkan Loader	| Apache-2.0	| [GitHub](https://github.com/KhronosGroup/Vulkan-Loader)						| Dynamic linking on some platforms	|
+| Name				| License		| Website																		| Notes								|
+|--					|--				|--																				|--									|
+| Dear ImGui		| MIT			| [GitHub](https://github.com/ocornut/imgui)									| 									|
+| lodepng			| zlib			| [GitHub](https://github.com/lvandeve/lodepng)									| 									|
+| MoltenVK			| Apache-2.0	| [GitHub](https://github.com/KhronosGroup/MoltenVK)							| macOS and iOS only				|
+| tinyobjloader		| MIT			| [GitHub](https://github.com/syoyo/tinyobjloader-c)							| 									|
+| VMA				| MIT			| [GitHub](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)	| 									|
+| Vulkan Loader		| Apache-2.0	| [GitHub](https://github.com/KhronosGroup/Vulkan-Loader)						| Dynamic linking on some platforms	|
