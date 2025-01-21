@@ -67,13 +67,22 @@ vulkan-validationlayers
 ### Vulkan SDK
 Set up locations of Vulkan libraries to which to link: Xcode > Settings > Locations > Custom Paths
 
-| Name			| Display Name		| Path							|
-|--			|--			|--							|
-| VULKAN_SDK		| Vulkan SDK		| <path_to_vulkan_sdk_including_version>		|
+| Name				| Display Name		| Path													|
+|--					|--					|--														|
+| VULKAN_SDK		| Vulkan SDK		| <path_to_vulkan_sdk_including_version>				|
 | VULKAN_HEADERS	| Vulkan Headers	| <path_to_vulkan_sdk_including_version>/macOS/include	|
-| VULKAN_LIB		| Vulkan Libraries	| <path_to_vulkan_sdk_including_version>/macOS/lib	|
+| VULKAN_LIB		| Vulkan Libraries	| <path_to_vulkan_sdk_including_version>/macOS/lib		|
 
 ## Windows
 Install mingw_w64 (preferrably via msys64).
 
 Install Vulkan SDK. Paths in `Makefile` may need to be updated for install location and version.
+
+## Dependencies
+| Name			| License		| Website																		| Notes								|
+|--				|--				|--																				|--									|
+| Dear ImGui	| MIT			| [GitHub](https://github.com/ocornut/imgui)									| 									|
+| lodepng		| zlib			| [GitHub](https://github.com/lvandeve/lodepng)									| 									|
+| MoltenVK		| Apache-2.0	| [GitHub](https://github.com/KhronosGroup/MoltenVK)							| macOS and iOS only				|
+| VMA			| MIT			| [GitHub](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator)	| 									|
+| Vulkan Loader	| Apache-2.0	| [GitHub](https://github.com/KhronosGroup/Vulkan-Loader)						| Dynamic linking on some platforms	|
