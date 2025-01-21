@@ -116,9 +116,6 @@ modeler_android.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_android.o surf
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
 	$(CC) $(CFLAGS) -c src/main_wayland.c
 
-modeler.o: src/modeler.c
-	$(CC) $(CFLAGS) -c src/modeler.c
-
 %.vert.spv: src/shaders/%.vert.glsl
 	$(GLSLC) -fshader-stage=vert $< -o $@
 
