@@ -75,7 +75,7 @@ PNG_TEXTURES=pieces.png
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h
 HEADER_TEXTURES=texture_pieces.h
 MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o
-VENDOR_LIBS=vma_implementation.o lodepng.o
+VENDOR_LIBS=vma_implementation.o lodepng.o tinyobj_implementation.o
 
 ifdef DEBUG
 	CFLAGS+=-DDEBUG -g
@@ -166,6 +166,9 @@ xdg-shell-client-protocol.h:
 
 vma_implementation.o: src/vk_mem_alloc.h
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/vma_implementation.cpp
+
+tinyobj_implementation.o: src/tinyobj_loader.h
+	$(CXX) $(CFLAGS) -c src/tinyobj_implementation.c
 
 .PHONY: clean clean-app clean-vendor
 clean: clean-app clean-vendor
