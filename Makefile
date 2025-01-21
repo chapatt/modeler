@@ -167,7 +167,7 @@ xdg-shell-client-protocol.h:
 vma_implementation.o: src/vk_mem_alloc.h
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/vma_implementation.cpp
 
-tinyobj_implementation.o: src/tinyobj_loader.h
+tinyobj_implementation.o: src/tinyobj_loader_c.h
 	$(CXX) $(CFLAGS) -c src/tinyobj_implementation.c
 
 .PHONY: clean clean-app clean-vendor
