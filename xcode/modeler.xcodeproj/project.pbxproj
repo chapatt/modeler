@@ -24,7 +24,9 @@
 		AB330EE52BD992AD00FC06CE /* libvulkan.1.3.296.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE72BD993E600FC06CE /* libMoltenVK.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; };
 		AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB37D7482D4054F8006A6613 /* model.obj in Resources */ = {isa = PBXBuildFile; fileRef = AB37D7472D4054F8006A6613 /* model.obj */; };
+		AB37D74A2D415FC1006A6613 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = AB37D7492D415FC1006A6613 /* teapot.obj */; };
+		AB37D74D2D41602F006A6613 /* phong.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB37D74B2D41602F006A6613 /* phong.frag.spv */; };
+		AB37D74E2D41602F006A6613 /* phong.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB37D74C2D41602F006A6613 /* phong.vert.spv */; };
 		AB4D1BEA2B384A0200717FEC /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
 		AB4F60EB2D3A1AD30028842B /* ModelerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F60EA2D3A1AD30028842B /* ModelerApp.swift */; };
 		AB4F60ED2D3B08530028842B /* ModelerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB4F60EC2D3B08530028842B /* ModelerViewController.swift */; };
@@ -90,7 +92,9 @@
 		AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_screenshot.dylib; path = macOS/lib/libVkLayer_screenshot.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libMoltenVK.dylib; path = macOS/lib/libMoltenVK.dylib; sourceTree = VULKAN_SDK; };
 		AB330EE92BD99D3A00FC06CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		AB37D7472D4054F8006A6613 /* model.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = model.obj; path = ../model.obj; sourceTree = "<group>"; };
+		AB37D7492D415FC1006A6613 /* teapot.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = teapot.obj; path = ../teapot.obj; sourceTree = "<group>"; };
+		AB37D74B2D41602F006A6613 /* phong.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = phong.frag.spv; path = ../phong.frag.spv; sourceTree = "<group>"; };
+		AB37D74C2D41602F006A6613 /* phong.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = phong.vert.spv; path = ../phong.vert.spv; sourceTree = "<group>"; };
 		AB4D1BE92B384A0200717FEC /* modeler.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = modeler.a; path = ../modeler.a; sourceTree = "<group>"; };
 		AB4D1BEB2B384AC500717FEC /* imgui.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = imgui.a; path = ../imgui.a; sourceTree = "<group>"; };
 		AB4F60EA2D3A1AD30028842B /* ModelerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerApp.swift; sourceTree = "<group>"; };
@@ -175,7 +179,9 @@
 		ABF1622C2A34E3A6007655F7 = {
 			isa = PBXGroup;
 			children = (
-				AB37D7472D4054F8006A6613 /* model.obj */,
+				AB37D74B2D41602F006A6613 /* phong.frag.spv */,
+				AB37D74C2D41602F006A6613 /* phong.vert.spv */,
+				AB37D7492D415FC1006A6613 /* teapot.obj */,
 				AB7E0B132D1F42680068EC79 /* pieces.png */,
 				AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */,
 				AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */,
@@ -319,7 +325,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AB37D7482D4054F8006A6613 /* model.obj in Resources */,
+				AB37D74D2D41602F006A6613 /* phong.frag.spv in Resources */,
+				AB37D74E2D41602F006A6613 /* phong.vert.spv in Resources */,
+				AB37D74A2D415FC1006A6613 /* teapot.obj in Resources */,
 				AB7E0B142D1F42680068EC79 /* pieces.png in Resources */,
 				AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */,
 				AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */,

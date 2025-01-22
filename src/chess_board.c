@@ -730,9 +730,9 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 	tinyobj_material_t *materials = NULL;
 	size_t materialCount;
 	char *piecesMeshPath;
-	asprintf(&piecesMeshPath, "%s/%s", self->resourcePath, "model.obj");
+	asprintf(&piecesMeshPath, "%s/%s", self->resourcePath, "teapot.obj");
 
-        if (tinyobj_parse_obj(&attrib, &shapes, &shapeCount, &materials, &materialCount, piecesMeshPath, readObj, NULL, TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS) {
+	if (tinyobj_parse_obj(&attrib, &shapes, &shapeCount, &materials, &materialCount, piecesMeshPath, readObj, NULL, TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS) {
 		asprintf(error, "Failed to load mesh.\n");
 		return false;
 	}
