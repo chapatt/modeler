@@ -21,6 +21,13 @@
 #include "../texture_pieces.h"
 #endif /* EMBED_TEXTURES */
 
+typedef struct vertex_t {
+	float pos[3];
+	float color[3];
+	float texCoord[2];
+	float texCoord2[2];
+} Vertex;
+
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
 #define PIECES_TEXTURE_MIP_LEVELS 7
@@ -65,14 +72,14 @@ struct chess_board_t {
 	Orientation orientation;
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
-	Vertex vertices[CHESS_VERTEX_COUNT];
-	void *stagingVertexBufferMappedMemory;
-	VkBuffer stagingVertexBuffer;
-	VmaAllocation stagingVertexBufferAllocation;
-	VkBuffer vertexBuffer;
-	VmaAllocation vertexBufferAllocation;
-	VkBuffer indexBuffer;
-	VmaAllocation indexBufferAllocation;
+	Vertex boardVertices[CHESS_VERTEX_COUNT];
+	void *boardStagingVertexBufferMappedMemory;
+	VkBuffer boardStagingVertexBuffer;
+	VmaAllocation boardStagingVertexBufferAllocation;
+	VkBuffer boardVertexBuffer;
+	VmaAllocation boardVertexBufferAllocation;
+	VkBuffer boardIndexBuffer;
+	VmaAllocation boardIndexBufferAllocation;
 	VkImage textureImage;
 	VmaAllocation textureImageAllocation;
 	VkImageView textureImageView;
@@ -295,7 +302,7 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
-	if (!createMutableVertexBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, &self->stagingVertexBufferMappedMemory, &self->stagingVertexBuffer, &self->stagingVertexBufferAllocation, &self->vertexBuffer, &self->vertexBufferAllocation, self->vertices, CHESS_VERTEX_COUNT, error)) {
+	if (!createMutableVertexBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, &self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardStagingVertexBufferAllocation, &self->boardVertexBuffer, &self->boardVertexBufferAllocation, self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
 		return false;
 	}
 
@@ -318,7 +325,7 @@ static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
 		triangleIndices[indicesOffset + 5] = verticesOffset + 0;
 	}
 
-	if (!createIndexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->indexBuffer, &self->indexBufferAllocation, triangleIndices, CHESS_INDEX_COUNT, error)) {
+	if (!createIndexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, triangleIndices, CHESS_INDEX_COUNT, error)) {
 		return false;
 	}
 
@@ -504,16 +511,16 @@ static void updateVertices(ChessBoard self)
 			((offsetX % 2) ? thisLight : thisDark) :
 			(offsetX % 2) ? thisDark : thisLight;
 
-		self->vertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
-		self->vertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
-		self->vertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
-		self->vertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1] + 0.25f}};
+		self->boardVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY, 0.0f}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
+		self->boardVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY, 0.0f}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
+		self->boardVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight, 0.0f}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
+		self->boardVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight, 0.0f}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1] + 0.25f}};
 	}
 }
 
 bool updateChessBoard(ChessBoard self, char **error)
 {
-	if (!updateMutableVertexBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, self->stagingVertexBufferMappedMemory, &self->stagingVertexBuffer, &self->vertexBuffer, self->vertices, CHESS_VERTEX_COUNT, error)) {
+	if (!updateMutableVertexBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardVertexBuffer, self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
 		return false;
 	}
 
@@ -523,8 +530,8 @@ bool updateChessBoard(ChessBoard self, char **error)
 bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error)
 {
 	VkDeviceSize offsets[] = {0};
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->vertexBuffer, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, self->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->boardVertexBuffer, offsets);
+	vkCmdBindIndexBuffer(commandBuffer, self->boardIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
 	float rotation;
@@ -596,10 +603,10 @@ void destroyChessBoard(ChessBoard self)
 	destroyPipelineLayout(self->device, self->pipelineLayout);
 	destroyDescriptorPool(self->device, self->textureDescriptorPool);
 	destroySampler(self->device, self->sampler);
-	vmaUnmapMemory(self->allocator, self->stagingVertexBufferAllocation);
-	destroyBuffer(self->allocator, self->stagingVertexBuffer, self->stagingVertexBufferAllocation);
-	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
-	destroyBuffer(self->allocator, self->indexBuffer, self->indexBufferAllocation);
+	vmaUnmapMemory(self->allocator, self->boardStagingVertexBufferAllocation);
+	destroyBuffer(self->allocator, self->boardStagingVertexBuffer, self->boardStagingVertexBufferAllocation);
+	destroyBuffer(self->allocator, self->boardVertexBuffer, self->boardVertexBufferAllocation);
+	destroyBuffer(self->allocator, self->boardIndexBuffer, self->boardIndexBufferAllocation);
 	destroyImageView(self->device, self->textureImageView);
 	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
 	free(self);

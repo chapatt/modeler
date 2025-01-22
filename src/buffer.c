@@ -30,11 +30,11 @@ bool createBuffer(VkDevice device, VmaAllocator allocator, VkDeviceSize size, Vk
 	return true;
 }
 
-bool createMutableVertexBufferWithStaging(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, void **stagingMappedMemory, VkBuffer *stagingBuffer, VmaAllocation *stagingAllocation, VkBuffer *buffer, VmaAllocation *allocation, const Vertex *vertices, size_t vertexCount, char **error)
+bool createMutableVertexBufferWithStaging(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, void **stagingMappedMemory, VkBuffer *stagingBuffer, VmaAllocation *stagingAllocation, VkBuffer *buffer, VmaAllocation *allocation, const void *vertices, size_t vertexCount, size_t vertexSize, char **error)
 {
 	VkResult result;
 
-	VkDeviceSize bufferSize = sizeof(*vertices) * vertexCount;
+	VkDeviceSize bufferSize = vertexSize * vertexCount;
 
 	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, stagingBuffer, stagingAllocation, error)) {
 		return false;
@@ -57,9 +57,9 @@ bool createMutableVertexBufferWithStaging(VkDevice device, VmaAllocator allocato
 	return true;
 }
 
-bool updateMutableVertexBufferWithStaging(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, void *stagingMappedMemory, VkBuffer *stagingBuffer, VkBuffer *buffer, const Vertex *vertices, size_t vertexCount, char **error)
+bool updateMutableVertexBufferWithStaging(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, void *stagingMappedMemory, VkBuffer *stagingBuffer, VkBuffer *buffer, const void *vertices, size_t vertexCount, size_t vertexSize, char **error)
 {
-	VkDeviceSize bufferSize = sizeof(Vertex) * vertexCount;
+	VkDeviceSize bufferSize = vertexSize * vertexCount;
 
 	memcpy(stagingMappedMemory, vertices, bufferSize);
 
@@ -70,11 +70,11 @@ bool updateMutableVertexBufferWithStaging(VkDevice device, VmaAllocator allocato
 	return true;
 }
 
-bool createStaticVertexBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkBuffer *buffer, VmaAllocation *allocation, const Vertex *vertices, size_t vertexCount, char **error)
+bool createStaticVertexBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkBuffer *buffer, VmaAllocation *allocation, const void *vertices, size_t vertexCount, size_t vertexSize, char **error)
 {
 	VkResult result;
 
-	VkDeviceSize bufferSize = sizeof(*vertices) * vertexCount;
+	VkDeviceSize bufferSize = vertexSize * vertexCount;
 
 	VkBuffer stagingBuffer;
 	VmaAllocation stagingBufferAllocation;
