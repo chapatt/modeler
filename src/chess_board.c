@@ -289,7 +289,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 
 	destroyBuffer(self->allocator, stagingBuffer, stagingBufferAllocation);
 
-	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, PIECES_TEXTURE_MIP_LEVELS, &self->textureImageView, error)) {
+	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, PIECES_TEXTURE_MIP_LEVELS, &self->textureImageView, error)) {
 		return false;
 	}
 
@@ -407,6 +407,19 @@ static bool createPiecesPipeline(ChessBoard self, char **error)
 		.size = sizeof(ChessBoardPushConstants)
 	};
 
+	VkPipelineDepthStencilStateCreateInfo depthStencilState = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+		.depthTestEnable = VK_TRUE,
+		.depthWriteEnable = VK_TRUE,
+		.depthCompareOp = VK_COMPARE_OP_LESS,
+		.depthBoundsTestEnable = VK_FALSE,
+		.minDepthBounds = 0.0f,
+		.maxDepthBounds = 1.0f,
+		.stencilTestEnable = VK_FALSE,
+		.front = {},
+		.back = {}
+	};
+
 	PipelineCreateInfo pipelineCreateInfo = {
 		.device = self->device,
 		.renderPass = self->renderPass,
@@ -421,7 +434,8 @@ static bool createPiecesPipeline(ChessBoard self, char **error)
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
 		.descriptorSetLayouts = self->textureDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
-		.pushConstantRange = pushConstantRange
+		.pushConstantRange = pushConstantRange,
+		.depthStencilState = depthStencilState
 	};
 	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->piecesPipelineLayout, &self->piecesPipeline, error);
 #ifndef EMBED_SHADERS
@@ -493,6 +507,19 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 		.size = sizeof(ChessBoardPushConstants)
 	};
 
+	VkPipelineDepthStencilStateCreateInfo depthStencilState = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+		.depthTestEnable = VK_TRUE,
+		.depthWriteEnable = VK_TRUE,
+		.depthCompareOp = VK_COMPARE_OP_LESS,
+		.depthBoundsTestEnable = VK_FALSE,
+		.minDepthBounds = 0.0f,
+		.maxDepthBounds = 1.0f,
+		.stencilTestEnable = VK_FALSE,
+		.front = {},
+		.back = {}
+	};
+
 	PipelineCreateInfo pipelineCreateInfo = {
 		.device = self->device,
 		.renderPass = self->renderPass,
@@ -507,7 +534,8 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
 		.descriptorSetLayouts = self->textureDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
-		.pushConstantRange = pushConstantRange
+		.pushConstantRange = pushConstantRange,
+		.depthStencilState = depthStencilState
 	};
 	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->boardPipelineLayout, &self->boardPipeline, error);
 #ifndef EMBED_SHADERS

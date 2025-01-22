@@ -28,6 +28,7 @@ typedef struct physical_device_surface_characteristics_t {
 } PhysicalDeviceSurfaceCharacteristics;
 
 bool findQueueFamilyWithFlags(VkQueueFamilyProperties *queueFamilies, uint32_t queueFamilyCount, VkQueueFlags queueFlags, uint32_t *queueFamilyIndex);
+VkFormat findSupportedFormat(VkPhysicalDevice physicalDevice, VkFormat *formats, size_t formatCount, VkImageTiling tiling, VkFormatFeatureFlags features);
 SuitabilityResult findQueueFamilyWithSurfaceSupport(uint32_t queueFamilyCount, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t *queueFamilyIndex, char **error);
 bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface,
 	VkPhysicalDevice *physicalDevice, PhysicalDeviceCharacteristics *characteristics,

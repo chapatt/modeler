@@ -175,7 +175,7 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.pViewportState = &viewportStateCreateInfo,
 		.pRasterizationState = &rasterizationStateCreateInfo,
 		.pMultisampleState = &multisampleStateCreateInfo,
-		.pDepthStencilState = NULL,
+		.pDepthStencilState = &pipelineCreateInfo.depthStencilState,
 		.pColorBlendState = &colorBlendStateCreateInfo,
 		.pDynamicState = &pipelineDynamicStateCreateInfo,
 		.layout = *pipelineLayout,

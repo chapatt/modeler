@@ -76,8 +76,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	ImFont *currentFont = NULL;
 #endif /* ENABLE_IMGUI */
 	VkClearValue clearValue = {0.008f, 0.008f, 0.008f, 1.0f};
+	VkClearValue stencilClearValue = {1.0f, 0.0f};
 	VkClearValue secondClearValue = {0.0f, 0.0f, 0.0f, 0.0f};
-	VkClearValue clearValues[] = {clearValue, secondClearValue};
+#ifdef DRAW_WINDOW_DECORATION
+	VkClearValue clearValues[] = {clearValue, stencilClearValue, secondClearValue};
+#else
+	VkClearValue clearValues[] = {clearValue, stencilClearValue};
+#endif /* DRAW_WINDOW_DECORATION */
 
 	struct timespec previousTime = {};
 	const size_t queueLength = 10;
@@ -106,7 +111,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			renderPassBeginInfos[i] = (VkRenderPassBeginInfo) {
 				.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
 				.pNext = NULL,
-				.clearValueCount = 2,
+				.clearValueCount = sizeof(clearValues),
 				.pClearValues = clearValues
 			};
 		}

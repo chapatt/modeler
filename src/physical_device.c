@@ -168,6 +168,30 @@ bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurface
 	return true;
 }
 
+VkFormat findSupportedFormat(VkPhysicalDevice physicalDevice, VkFormat *formats, size_t formatCount, VkImageTiling tiling, VkFormatFeatureFlags features)
+{
+	for (size_t i = 0; i < formatCount; ++i) {
+		VkFormatProperties formatProperties;
+		vkGetPhysicalDeviceFormatProperties(physicalDevice, formats[i], &formatProperties);
+
+		VkFormatFeatureFlags featuresForTiling;
+		switch (tiling) {
+		case VK_IMAGE_TILING_OPTIMAL:
+			featuresForTiling = formatProperties.optimalTilingFeatures;
+			break;
+		case VK_IMAGE_TILING_LINEAR:
+			featuresForTiling = formatProperties.linearTilingFeatures;
+			break;
+		default:
+			return VK_FORMAT_UNDEFINED;
+		}
+
+		if ((featuresForTiling & features) == features) {
+			return formats[i];
+		}
+	}
+}
+
 void freePhysicalDeviceCharacteristics(PhysicalDeviceCharacteristics *characteristics)
 {
 	if (characteristics->queueFamilies) {

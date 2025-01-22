@@ -25,6 +25,7 @@ typedef struct pipeline_create_info_t {
 	VkDescriptorSetLayout *descriptorSetLayouts;
 	uint32_t descriptorSetLayoutCount;
 	VkPushConstantRange pushConstantRange;
+	VkPipelineDepthStencilStateCreateInfo depthStencilState;
 } PipelineCreateInfo;
 
 bool createPipeline(PipelineCreateInfo createPipelineInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error);
