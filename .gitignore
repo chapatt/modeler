@@ -12,5 +12,6 @@ xcuserdata/
 /texture_*.h
 /*.rgba
 /*.png
+/*.obj
 /modeler
 /android/.idea/deploymentTargetSelector.xml

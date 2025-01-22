@@ -11,22 +11,30 @@
 #include "pipeline.h"
 #include "sampler.h"
 #include "utils.h"
+#include "tinyobj_loader_c.h"
 
 #ifdef EMBED_SHADERS
 #include "../shader_chess_board.vert.h"
 #include "../shader_chess_board.frag.h"
+#include "../shader_phong.vert.h"
+#include "../shader_phong.frag.h"
 #endif /* EMBED_SHADERS */
 
 #ifdef EMBED_TEXTURES
 #include "../texture_pieces.h"
 #endif /* EMBED_TEXTURES */
 
-typedef struct vertex_t {
-	float pos[3];
+typedef struct board_vertex_t {
+	float pos[2];
 	float color[3];
 	float texCoord[2];
 	float texCoord2[2];
-} Vertex;
+} BoardVertex;
+
+typedef struct mesh_vertex_t {
+	float pos[3];
+	float normal[3];
+} MeshVertex;
 
 #define CHESS_VERTEX_COUNT CHESS_SQUARE_COUNT * 4
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
@@ -70,9 +78,9 @@ struct chess_board_t {
 	float originX;
 	float originY;
 	Orientation orientation;
-	VkPipelineLayout pipelineLayout;
-	VkPipeline pipeline;
-	Vertex boardVertices[CHESS_VERTEX_COUNT];
+	VkPipelineLayout boardPipelineLayout;
+	VkPipeline boardPipeline;
+	BoardVertex boardVertices[CHESS_VERTEX_COUNT];
 	void *boardStagingVertexBufferMappedMemory;
 	VkBuffer boardStagingVertexBuffer;
 	VmaAllocation boardStagingVertexBufferAllocation;
@@ -80,6 +88,13 @@ struct chess_board_t {
 	VmaAllocation boardVertexBufferAllocation;
 	VkBuffer boardIndexBuffer;
 	VmaAllocation boardIndexBufferAllocation;
+	size_t piecesVertexCount;
+	VkBuffer piecesVertexBuffer;
+	VmaAllocation piecesVertexBufferAllocation;
+	VkBuffer piecesIndexBuffer;
+	VmaAllocation piecesIndexBufferAllocation;
+	VkPipelineLayout piecesPipelineLayout;
+	VkPipeline piecesPipeline;
 	VkImage textureImage;
 	VmaAllocation textureImageAllocation;
 	VkImageView textureImageView;
@@ -99,12 +114,15 @@ static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
 static void basicSetBoard(ChessBoard self, Board8x8 board);
 static void initializePieces(ChessBoard self);
 static void initializeMove(ChessBoard self);
+static void readObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
 static bool createChessBoardTexture(ChessBoard self, char **error);
 static bool createChessBoardSampler(ChessBoard self, char **error);
 static bool createChessBoardDescriptors(ChessBoard self, char **error);
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error);
 static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
 static bool createChessBoardPipeline(ChessBoard self, char **error);
+static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error);
+static bool createPiecesPipeline(ChessBoard self, char **error);
 static void updateVertices(ChessBoard self);
 static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition, Orientation orientation);
 
@@ -157,6 +175,14 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	}
 
 	if (!createChessBoardPipeline(self, error)) {
+		return false;
+	}
+
+	if (!chessBoardLoadPieceMeshes(self, error)) {
+		return false;
+	}
+
+	if (!createPiecesPipeline(self, error)) {
 		return false;
 	}
 
@@ -332,11 +358,11 @@ static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
 	return true;
 }
 
-static bool createChessBoardPipeline(ChessBoard self, char **error)
+static bool createPiecesPipeline(ChessBoard self, char **error)
 {
 	VkVertexInputBindingDescription vertexBindingDescription = {
 		.binding = 0,
-		.stride = sizeof(Vertex),
+		.stride = sizeof(MeshVertex),
 		.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 	};
 
@@ -345,22 +371,99 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 			.binding = 0,
 			.location = 0,
 			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = offsetof(Vertex, pos),
+			.offset = offsetof(MeshVertex, pos),
+		},
+		{
+			.binding = 0,
+			.location = 1,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(MeshVertex, normal),
+		}
+	};
+
+#ifndef EMBED_SHADERS
+	char *phongVertShaderPath;
+	char *phongFragShaderPath;
+	asprintf(&phongVertShaderPath, "%s/%s", self->resourcePath, "phong.vert.spv");
+	asprintf(&phongFragShaderPath, "%s/%s", self->resourcePath, "phong.frag.spv");
+	char *phongVertShaderBytes;
+	char *phongFragShaderBytes;
+	uint32_t phongVertShaderSize = 0;
+	uint32_t phongFragShaderSize = 0;
+
+	if ((phongVertShaderSize = readFileToString(phongVertShaderPath, &phongVertShaderBytes)) == -1) {
+		asprintf(error, "Failed to open phong vertex shader for reading.\n");
+		return false;
+	}
+	if ((phongFragShaderSize = readFileToString(phongFragShaderPath, &phongFragShaderBytes)) == -1) {
+		asprintf(error, "Failed to open phong fragment shader for reading.\n");
+		return false;
+	}
+#endif /* EMBED_SHADERS */
+
+	VkPushConstantRange pushConstantRange = {
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+		.offset = 0,
+		.size = sizeof(ChessBoardPushConstants)
+	};
+
+	PipelineCreateInfo pipelineCreateInfo = {
+		.device = self->device,
+		.renderPass = self->renderPass,
+		.subpassIndex = self->subpass,
+		.vertexShaderBytes = phongVertShaderBytes,
+		.vertexShaderSize = phongVertShaderSize,
+		.fragmentShaderBytes = phongFragShaderBytes,
+		.fragmentShaderSize = phongFragShaderSize,
+		.vertexBindingDescriptionCount = 1,
+		.vertexBindingDescriptions = &vertexBindingDescription,
+		.vertexAttributeDescriptionCount = sizeof(vertexAttributeDescriptions) / sizeof(*vertexAttributeDescriptions),
+		.VertexAttributeDescriptions = vertexAttributeDescriptions,
+		.descriptorSetLayouts = self->textureDescriptorSetLayouts,
+		.descriptorSetLayoutCount = 1,
+		.pushConstantRange = pushConstantRange
+	};
+	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->piecesPipelineLayout, &self->piecesPipeline, error);
+#ifndef EMBED_SHADERS
+	free(phongFragShaderBytes);
+	free(phongVertShaderBytes);
+#endif /* EMBED_SHADERS */
+	if (!pipelineCreateSuccess) {
+		return false;
+	}
+
+	return true;
+}
+
+static bool createChessBoardPipeline(ChessBoard self, char **error)
+{
+	VkVertexInputBindingDescription vertexBindingDescription = {
+		.binding = 0,
+		.stride = sizeof(BoardVertex),
+		.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+	};
+
+	VkVertexInputAttributeDescription vertexAttributeDescriptions[] = {
+		{
+			.binding = 0,
+			.location = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(BoardVertex, pos),
 		}, {
 			.binding = 0,
 			.location = 1,
 			.format = VK_FORMAT_R32G32B32_SFLOAT,
-			.offset = offsetof(Vertex, color),
+			.offset = offsetof(BoardVertex, color),
 		}, {
 			.binding = 0,
 			.location = 2,
 			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = offsetof(Vertex, texCoord),
+			.offset = offsetof(BoardVertex, texCoord),
 		}, {
 			.binding = 0,
 			.location = 3,
 			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = offsetof(Vertex, texCoord2),
+			.offset = offsetof(BoardVertex, texCoord2),
 		}
 	};
 
@@ -406,7 +509,7 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 		.descriptorSetLayoutCount = 1,
 		.pushConstantRange = pushConstantRange
 	};
-	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->pipelineLayout, &self->pipeline, error);
+	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->boardPipelineLayout, &self->boardPipeline, error);
 #ifndef EMBED_SHADERS
 	free(chessBoardFragShaderBytes);
 	free(chessBoardVertShaderBytes);
@@ -511,10 +614,10 @@ static void updateVertices(ChessBoard self)
 			((offsetX % 2) ? thisLight : thisDark) :
 			(offsetX % 2) ? thisDark : thisLight;
 
-		self->boardVertices[verticesOffset] = (Vertex) {{squareOriginX, squareOriginY, 0.0f}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
-		self->boardVertices[verticesOffset + 1] = (Vertex) {{squareOriginX + squareWidth, squareOriginY, 0.0f}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
-		self->boardVertices[verticesOffset + 2] = (Vertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight, 0.0f}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
-		self->boardVertices[verticesOffset + 3] = (Vertex) {{squareOriginX, squareOriginY + squareHeight, 0.0f}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1] + 0.25f}};
+		self->boardVertices[verticesOffset] = (BoardVertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
+		self->boardVertices[verticesOffset + 1] = (BoardVertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
+		self->boardVertices[verticesOffset + 2] = (BoardVertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
+		self->boardVertices[verticesOffset + 3] = (BoardVertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1] + 0.25f}};
 	}
 }
 
@@ -532,8 +635,8 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->boardVertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, self->boardIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipeline);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipelineLayout, 0, 1, self->textureDescriptorSets, 0, NULL);
 	float rotation;
 	switch (self->orientation) {
 		case ROTATE_0:
@@ -557,8 +660,22 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 			0, 0, 0, 1
 		}
 	};
-	vkCmdPushConstants(commandBuffer, self->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
+	vkCmdPushConstants(commandBuffer, self->boardPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
+
+	pushConstants = (ChessBoardPushConstants) {
+		.mvp = {
+			0.2, 0, 0, 0,
+			0, 0.2, 0, 0,
+			0, 0, 0.2, 0,
+			0, 0, 0, 1
+		}
+	};
+	vkCmdPushConstants(commandBuffer, self->boardPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
+	vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
+	vkCmdDrawIndexed(commandBuffer, self->piecesVertexCount, 1, 0, 0, 0);
 
 	return true;
 }
@@ -597,16 +714,115 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 	}
 }
 
+static void readObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
+{
+	if ((*len = readFileToString(obj_filename, data)) == -1) {
+    		*data = NULL;
+    		*len = 0;
+	}
+}
+
+static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
+{
+	tinyobj_attrib_t attrib;
+	tinyobj_shape_t *shapes = NULL;
+	size_t shapeCount;
+	tinyobj_material_t *materials = NULL;
+	size_t materialCount;
+	char *piecesMeshPath;
+	asprintf(&piecesMeshPath, "%s/%s", self->resourcePath, "model.obj");
+
+        if (tinyobj_parse_obj(&attrib, &shapes, &shapeCount, &materials, &materialCount, piecesMeshPath, readObj, NULL, TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS) {
+		asprintf(error, "Failed to load mesh.\n");
+		return false;
+	}
+
+	self->piecesVertexCount = attrib.num_face_num_verts * 3;
+	MeshVertex *vertices = malloc(sizeof(*vertices) * self->piecesVertexCount);
+
+	size_t faceOffset = 0;
+
+	for (size_t i = 0; i < attrib.num_face_num_verts; i++) {
+		for (size_t f = 0; f < (size_t) attrib.face_num_verts[i] / 3; f++) {
+			tinyobj_vertex_index_t idx0 = attrib.faces[faceOffset + 3 * f + 0];
+			tinyobj_vertex_index_t idx1 = attrib.faces[faceOffset + 3 * f + 1];
+			tinyobj_vertex_index_t idx2 = attrib.faces[faceOffset + 3 * f + 2];
+
+			float v[3][3];
+
+			for (size_t k = 0; k < 3; k++) {
+				int f0 = idx0.v_idx;
+				int f1 = idx1.v_idx;
+				int f2 = idx2.v_idx;
+
+				v[0][k] = attrib.vertices[3 * (size_t) f0 + k];
+				v[1][k] = attrib.vertices[3 * (size_t) f1 + k];
+				v[2][k] = attrib.vertices[3 * (size_t) f2 + k];
+			}
+
+			float n[3][3];
+
+			if (attrib.num_normals > 0) {
+				int f0 = idx0.vn_idx;
+				int f1 = idx1.vn_idx;
+				int f2 = idx2.vn_idx;
+
+				if (f0 >= 0 && f1 >= 0 && f2 >= 0) {
+ 					for (size_t k = 0; k < 3; k++) {
+						n[0][k] = attrib.normals[3 * (size_t)f0 + k];
+						n[1][k] = attrib.normals[3 * (size_t)f1 + k];
+						n[2][k] = attrib.normals[3 * (size_t)f2 + k];
+					}
+				}
+			}
+
+			for (size_t j = 0; j < 3; ++j) {
+				vertices[faceOffset + (f * 3) + j] = (MeshVertex) {
+					.pos = {v[j][0], v[j][1], v[j][2]},
+					.normal = {n[j][0], n[j][1], n[j][2]}
+				};
+			}
+		}
+
+		faceOffset += (size_t) attrib.face_num_verts[i];
+	}
+
+	if (!createStaticVertexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->piecesVertexBuffer, &self->piecesVertexBufferAllocation, vertices, self->piecesVertexCount, sizeof(*vertices), error)) {
+		return false;
+	}
+
+	uint16_t *indices = malloc(sizeof(*indices) * self->piecesVertexCount);
+
+	for (size_t i = 0; i < self->piecesVertexCount; ++i) {
+		indices[i] = i;
+	}
+
+	if (!createIndexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, self->piecesVertexCount, error)) {
+		return false;
+	}
+
+	free(indices);
+
+	return true;
+}
+
 void destroyChessBoard(ChessBoard self)
 {
-	destroyPipeline(self->device, self->pipeline);
-	destroyPipelineLayout(self->device, self->pipelineLayout);
+#ifndef EMBED_TEXTURES
+	/* TODO: free textures and meshes */
+#endif /* EMBED_TEXTURES */
+	destroyPipeline(self->device, self->boardPipeline);
+	destroyPipelineLayout(self->device, self->boardPipelineLayout);
+	destroyPipeline(self->device, self->piecesPipeline);
+	destroyPipelineLayout(self->device, self->piecesPipelineLayout);
 	destroyDescriptorPool(self->device, self->textureDescriptorPool);
 	destroySampler(self->device, self->sampler);
 	vmaUnmapMemory(self->allocator, self->boardStagingVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->boardStagingVertexBuffer, self->boardStagingVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->boardVertexBuffer, self->boardVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->boardIndexBuffer, self->boardIndexBufferAllocation);
+	destroyBuffer(self->allocator, self->piecesVertexBuffer, self->piecesVertexBufferAllocation);
+	destroyBuffer(self->allocator, self->piecesIndexBuffer, self->piecesIndexBufferAllocation);
 	destroyImageView(self->device, self->textureImageView);
 	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
 	free(self);

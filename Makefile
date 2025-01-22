@@ -70,13 +70,15 @@ ifdef ENABLE_VSYNC
 	CFLAGS+=-DENABLE_VSYNC
 endif
 
-SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv
+SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv phong.vert.spv phong.frag.spv
 PNG_TEXTURES=pieces.png
-HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h
+OBJ_MESHES=model.obj
+HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h shader_phong.vert.h shader_phong.frag.h
 HEADER_TEXTURES=texture_pieces.h
 MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o
 VENDOR_LIBS=vma_implementation.o lodepng.o tinyobj_implementation.o
 
+MESHES=$(OBJ_MESHES)
 ifdef DEBUG
 	CFLAGS+=-DDEBUG -g
 	SHADERS=$(SPIRV_SHADERS)
@@ -107,7 +109,7 @@ modeler: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_wayland.o modeler_wayland.o
 modeler.exe: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS) $(IMGUI_LIBS)
+modeler.a: $(SHADERS) $(TEXTURES) $(MESHES) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS)
 
 modeler_android.a: $(SHADERS) $(TEXTURES) $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS) $(IMGUI_LIBS)
@@ -126,6 +128,9 @@ main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
 	./imgtorgba.sh $< $@
 
 %.png: src/textures/%.png
+	$(CP) $< $@
+
+%.obj: src/meshes/%.obj
 	$(CP) $< $@
 
 $(HEADER_SHADERS): shader_%.h: %.spv
@@ -178,7 +183,7 @@ clean-app:
 		modeler_win32.o modeler_wayland.o modeler_metal.o modeler_android.o \
 		surface_win32.o surface_wayland.o surface_metal.o surface_android.o \
 		utils_win32.o \
-		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(PNG_TEXTURES) $(HEADER_TEXTURES)
+		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(PNG_TEXTURES) $(HEADER_TEXTURES) $(OBJ_MESHES)
 
 clean-vendor:
 	$(RM) -rf $(VENDOR_LIBS) \
