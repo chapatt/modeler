@@ -71,6 +71,7 @@ static void imVkCheck(VkResult result);
 static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
 static bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
 static bool createDepthBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkImage *image, VmaAllocation *imageAllocation, VkFormat *format, VkImageView *imageView, char **error);
+static void destroyDepthBuffer(VkDevice device, VmaAllocator allocator, VkImage image, VmaAllocation imageAllocation, VkImageView imageView);
 
 static inline Orientation negateRotation(Orientation orientation)
 {
@@ -400,6 +401,7 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 	destroyImageViews(swapchainCreateInfo->device, swapchainCreateInfo->offscreenImageView, 1);
 	destroyImage(swapchainCreateInfo->allocator, *swapchainCreateInfo->offscreenImage, *swapchainCreateInfo->offscreenImageAllocation);
 #endif
+	destroyDepthBuffer(swapchainCreateInfo->device, swapchainCreateInfo->allocator, *swapchainCreateInfo->depthImage, *swapchainCreateInfo->depthImageAllocation, *swapchainCreateInfo->depthImageView);
 	destroyImageViews(swapchainCreateInfo->device, *swapchainCreateInfo->imageViews, swapchainCreateInfo->swapchainInfo->imageCount);
 	free(*swapchainCreateInfo->imageViews);
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo->surfaceCharacteristics);
@@ -463,7 +465,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	}
 #endif /* DRAW_WINDOW_DECORATION */
 
-	if (!createDepthBuffer(swapchainCreateInfo->physicalDevice, swapchainCreateInfo->device, swapchainCreateInfo->allocator, swapchainCreateInfo->windowDimensions->surfaceArea, swapchainCreateInfo->depthImage, swapchainCreateInfo->depthImageAllocation, swapchainCreateInfo->depthImageFormat, swapchainCreateInfo->depthImageView, error)) {
+	if (!createDepthBuffer(swapchainCreateInfo->physicalDevice, swapchainCreateInfo->device, swapchainCreateInfo->allocator, extent, swapchainCreateInfo->depthImage, swapchainCreateInfo->depthImageAllocation, swapchainCreateInfo->depthImageFormat, swapchainCreateInfo->depthImageView, error)) {
 		return false;
 	}
 
@@ -513,6 +515,12 @@ static bool createDepthBuffer(VkPhysicalDevice physicalDevice, VkDevice device, 
 	}
 
 	return true;
+}
+
+static void destroyDepthBuffer(VkDevice device, VmaAllocator allocator, VkImage image, VmaAllocation imageAllocation, VkImageView imageView)
+{
+	destroyImage(allocator, image, imageAllocation);
+	destroyImageView(device, imageView);
 }
 
 static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard, VkImage depthImage, VmaAllocation depthImageAllocation, VkImageView depthImageView)
