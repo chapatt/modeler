@@ -7,15 +7,18 @@ layout(location = 0) out vec3 fragPosition;
 layout(location = 1) out vec3 fragNormal;
 
 layout (push_constant) uniform _push_constants {
-	mat4 mvp;
+	mat4 MV;
+	mat4 P;
+	mat4 normalMatrix;
 } PushConstants;
 
-mat4 mvp = PushConstants.mvp;
+mat4 MV = PushConstants.MV;
+mat4 P = PushConstants.P;
+mat4 normalMatrix = PushConstants.normalMatrix;
 
 void main(){
-	mat4 normalMat = transpose(inverse(mvp));
-	vec4 vertPos4 = mvp * vec4(inPosition, 1.0);
+	vec4 vertPos4 = MV * vec4(inPosition, 1.0);
 	fragPosition = vec3(vertPos4) / vertPos4.w;
-	fragNormal = vec3(normalMat * vec4(inNormal, 0.0));
-	gl_Position = vertPos4;
+	fragNormal = vec3(normalMatrix * vec4(inNormal, 0.0));
+	gl_Position = P * vertPos4;
 }

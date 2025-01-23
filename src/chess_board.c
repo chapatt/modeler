@@ -11,6 +11,7 @@
 #include "pipeline.h"
 #include "sampler.h"
 #include "utils.h"
+#include "matrix_utils.h"
 #include "tinyobj_loader_c.h"
 
 #ifdef EMBED_SHADERS
@@ -41,7 +42,9 @@ typedef struct mesh_vertex_t {
 #define PIECES_TEXTURE_MIP_LEVELS 7
 
 typedef struct chess_board_push_constants_t {
-	float mvp[16];
+	float MV[16];
+	float P[16];
+	float normalMatrix[16];
 } ChessBoardPushConstants;
 
 float pieceSpriteOriginMap[13][2] = {
@@ -680,25 +683,38 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 			rotation = -M_PI_2;
 			break;
 	}
-	ChessBoardPushConstants pushConstants = {
-		.mvp = {
-			cos(rotation), sin(rotation), 0, 0,
-			-sin(rotation), cos(rotation), 0, 0,
-			0, 0, 1, 0,
-			0, 0, 0, 1
-		}
+
+	float preRotation[4 * 4];
+	transformRotation(preRotation, rotation);
+	float projection[] = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
 	};
+	float modelView[4 * 4];
+	mat4Copy(preRotation, modelView);
+	float modelViewInverse[4 * 4];
+	float normalMatrix[4 * 4];
+	mat4Inverse(modelView, modelViewInverse);
+	mat4Transpose(modelViewInverse, normalMatrix);
+
+	ChessBoardPushConstants pushConstants;
+	mat4Copy(modelView, pushConstants.MV);
+	mat4Copy(projection, pushConstants.P);
+	mat4Copy(normalMatrix, pushConstants.normalMatrix);
 	vkCmdPushConstants(commandBuffer, self->boardPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
-	pushConstants = (ChessBoardPushConstants) {
-		.mvp = {
-			0.2, 0, 0, 0,
-			0, 0.2, 0, 0,
-			0, 0, 0.2, 0,
-			0, 0, 0, 1
-		}
-	};
+	float scale[4 * 4];
+	transformScale(scale, 0.2);
+	mat4Multiply(preRotation, scale, modelView);
+	mat4Inverse(modelView, modelViewInverse);
+	mat4Transpose(modelViewInverse, normalMatrix);
+
+	mat4Copy(modelView, pushConstants.MV);
+	mat4Copy(projection, pushConstants.P);
+	mat4Copy(normalMatrix, pushConstants.normalMatrix);
 	vkCmdPushConstants(commandBuffer, self->boardPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
