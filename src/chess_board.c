@@ -682,8 +682,8 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	}
 	ChessBoardPushConstants pushConstants = {
 		.mvp = {
-			cos(rotation), -sin(rotation), 0, 0,
-			sin(rotation), cos(rotation), 0, 0,
+			cos(rotation), sin(rotation), 0, 0,
+			-sin(rotation), cos(rotation), 0, 0,
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		}
