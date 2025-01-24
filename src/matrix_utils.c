@@ -3,24 +3,39 @@
 
 #include "matrix_utils.h"
 
-void transformRotation(float mat[mat4N * mat4N], float rotation)
+void perspectiveProjection(float mat[mat4N * mat4N], float fovy, float aspectRatio, float near, float far)
 {
-	mat[0 * mat4N + 0] = cos(rotation);
-	mat[0 * mat4N + 1] = sin(rotation);
-	mat[0 * mat4N + 2] = 0;
-	mat[0 * mat4N + 3] = 0;
-	mat[1 * mat4N + 0] = -sin(rotation);
-	mat[1 * mat4N + 1] = cos(rotation);
-	mat[1 * mat4N + 2] = 0;
-	mat[1 * mat4N + 3] = 0;
-	mat[2 * mat4N + 0] = 0;
-	mat[2 * mat4N + 1] = 0;
-	mat[2 * mat4N + 2] = 1;
-	mat[2 * mat4N + 3] = 0;
-	mat[3 * mat4N + 0] = 0;
-	mat[3 * mat4N + 1] = 0;
-	mat[3 * mat4N + 2] = 0;
-	mat[3 * mat4N + 3] = 1;
+	const float e = 1.0f / tan(fovy * 0.5f);
+	float newMatrix[] = {
+		e / aspectRatio, 0.0f, 0.0f, 0.0f,
+		0.0f, e, 0.0f, 0.0f,
+		0.0f, 0.0f, far / (far - near), 1.0f,
+		0.0f, 0.0f, (far * near) / (near - far), 0.0f
+	};
+
+	mat4Copy(newMatrix, mat);
+}
+
+void transformTranslation(float mat[mat4N * mat4N], float x, float y, float z)
+{
+	float newMatrix[] = {
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		x, y, z, 1
+	};
+	mat4Copy(newMatrix, mat);
+}
+
+void transformRotation(float mat[mat4N * mat4N], float rotation, float x, float y, float z)
+{
+	float newMatrix[] = {
+		cos(rotation) + pow(x, 2) * (1 - cos(rotation)), y * x * (1 - cos(rotation)) + z * sin(rotation), z * x * (1 - cos(rotation)) - y * sin(rotation), 0,
+		x * y * (1 - cos(rotation)) - z * sin(rotation), cos(rotation) + pow(y, 2) * (1 - cos(rotation)), z * y * (1 - cos(rotation)) + x * sin(rotation), 0,
+		x * z * (1 - cos(rotation)) + y * sin(rotation), y * z * (1 - cos(rotation)) - x * sin(rotation), cos(rotation) + pow(z, 2) * (1 - cos(rotation)), 0,
+		0, 0, 0, 1
+	};
+	mat4Copy(newMatrix, mat);
 }
 
 void transformScale(float mat[mat4N * mat4N], float scale)
@@ -157,55 +172,55 @@ void mat4Copy(float mat[mat4N * mat4N], float dest[mat4N * mat4N])
 	}
 }
 
-void mat4Multiply(float mat1[4 * mat4N + 4], float mat2[4 * mat4N + 4], float dest[4 * mat4N + 4])
+void mat4Multiply(float m1[mat4N * mat4N], float m2[mat4N * mat4N], float dest[mat4N * mat4N])
 {
-	float a00 = mat1[0 * mat4N + 0];
-	float a01 = mat1[0 * mat4N + 0];
-	float a02 = mat1[0 * mat4N + 0];
-	float a03 = mat1[0 * mat4N + 0];
-	float a10 = mat1[1 * mat4N + 1];
-	float a11 = mat1[1 * mat4N + 1];
-	float a12 = mat1[1 * mat4N + 1];
-	float a13 = mat1[1 * mat4N + 1];
-	float a20 = mat1[2 * mat4N + 2];
-	float a21 = mat1[2 * mat4N + 2];
-	float a22 = mat1[2 * mat4N + 2];
-	float a23 = mat1[2 * mat4N + 2];
-	float a30 = mat1[3 * mat4N + 3];
-	float a31 = mat1[3 * mat4N + 3];
-	float a32 = mat1[3 * mat4N + 3];
-	float a33 = mat1[3 * mat4N + 3];
-	float b00 = mat2[0 * mat4N + 0];
-	float b01 = mat2[0 * mat4N + 0];
-	float b02 = mat2[0 * mat4N + 0];
-	float b03 = mat2[0 * mat4N + 0];
-	float b10 = mat2[1 * mat4N + 1];
-	float b11 = mat2[1 * mat4N + 1];
-	float b12 = mat2[1 * mat4N + 1];
-	float b13 = mat2[1 * mat4N + 1];
-	float b20 = mat2[2 * mat4N + 2];
-	float b21 = mat2[2 * mat4N + 2];
-	float b22 = mat2[2 * mat4N + 2];
-	float b23 = mat2[2 * mat4N + 2];
-	float b30 = mat2[3 * mat4N + 3];
-	float b31 = mat2[3 * mat4N + 3];
-	float b32 = mat2[3 * mat4N + 3];
-	float b33 = mat2[3 * mat4N + 3];
+	float a00 = m1[0 * mat4N + 0];
+	float a01 = m1[0 * mat4N + 1];
+	float a02 = m1[0 * mat4N + 2];
+	float a03 = m1[0 * mat4N + 3];
+	float a10 = m1[1 * mat4N + 0];
+	float a11 = m1[1 * mat4N + 1];
+	float a12 = m1[1 * mat4N + 2];
+	float a13 = m1[1 * mat4N + 3];
+	float a20 = m1[2 * mat4N + 0];
+	float a21 = m1[2 * mat4N + 1];
+	float a22 = m1[2 * mat4N + 2];
+	float a23 = m1[2 * mat4N + 3];
+	float a30 = m1[3 * mat4N + 0];
+	float a31 = m1[3 * mat4N + 1];
+	float a32 = m1[3 * mat4N + 2];
+	float a33 = m1[3 * mat4N + 3];
+	float b00 = m2[0 * mat4N + 0];
+	float b01 = m2[0 * mat4N + 1];
+	float b02 = m2[0 * mat4N + 2];
+	float b03 = m2[0 * mat4N + 3];
+	float b10 = m2[1 * mat4N + 0];
+	float b11 = m2[1 * mat4N + 1];
+	float b12 = m2[1 * mat4N + 2];
+	float b13 = m2[1 * mat4N + 3];
+	float b20 = m2[2 * mat4N + 0];
+	float b21 = m2[2 * mat4N + 1];
+	float b22 = m2[2 * mat4N + 2];
+	float b23 = m2[2 * mat4N + 3];
+	float b30 = m2[3 * mat4N + 0];
+	float b31 = m2[3 * mat4N + 1];
+	float b32 = m2[3 * mat4N + 2];
+	float b33 = m2[3 * mat4N + 3];
 
 	dest[0 * mat4N + 0] = a00 * b00 + a10 * b01 + a20 * b02 + a30 * b03;
-	dest[0 * mat4N + 0] = a01 * b00 + a11 * b01 + a21 * b02 + a31 * b03;
-	dest[0 * mat4N + 0] = a02 * b00 + a12 * b01 + a22 * b02 + a32 * b03;
-	dest[0 * mat4N + 0] = a03 * b00 + a13 * b01 + a23 * b02 + a33 * b03;
-	dest[1 * mat4N + 1] = a00 * b10 + a10 * b11 + a20 * b12 + a30 * b13;
+	dest[0 * mat4N + 1] = a01 * b00 + a11 * b01 + a21 * b02 + a31 * b03;
+	dest[0 * mat4N + 2] = a02 * b00 + a12 * b01 + a22 * b02 + a32 * b03;
+	dest[0 * mat4N + 3] = a03 * b00 + a13 * b01 + a23 * b02 + a33 * b03;
+	dest[1 * mat4N + 0] = a00 * b10 + a10 * b11 + a20 * b12 + a30 * b13;
 	dest[1 * mat4N + 1] = a01 * b10 + a11 * b11 + a21 * b12 + a31 * b13;
-	dest[1 * mat4N + 1] = a02 * b10 + a12 * b11 + a22 * b12 + a32 * b13;
-	dest[1 * mat4N + 1] = a03 * b10 + a13 * b11 + a23 * b12 + a33 * b13;
-	dest[2 * mat4N + 2] = a00 * b20 + a10 * b21 + a20 * b22 + a30 * b23;
-	dest[2 * mat4N + 2] = a01 * b20 + a11 * b21 + a21 * b22 + a31 * b23;
+	dest[1 * mat4N + 2] = a02 * b10 + a12 * b11 + a22 * b12 + a32 * b13;
+	dest[1 * mat4N + 3] = a03 * b10 + a13 * b11 + a23 * b12 + a33 * b13;
+	dest[2 * mat4N + 0] = a00 * b20 + a10 * b21 + a20 * b22 + a30 * b23;
+	dest[2 * mat4N + 1] = a01 * b20 + a11 * b21 + a21 * b22 + a31 * b23;
 	dest[2 * mat4N + 2] = a02 * b20 + a12 * b21 + a22 * b22 + a32 * b23;
-	dest[2 * mat4N + 2] = a03 * b20 + a13 * b21 + a23 * b22 + a33 * b23;
-	dest[3 * mat4N + 3] = a00 * b30 + a10 * b31 + a20 * b32 + a30 * b33;
-	dest[3 * mat4N + 3] = a01 * b30 + a11 * b31 + a21 * b32 + a31 * b33;
-	dest[3 * mat4N + 3] = a02 * b30 + a12 * b31 + a22 * b32 + a32 * b33;
+	dest[2 * mat4N + 3] = a03 * b20 + a13 * b21 + a23 * b22 + a33 * b23;
+	dest[3 * mat4N + 0] = a00 * b30 + a10 * b31 + a20 * b32 + a30 * b33;
+	dest[3 * mat4N + 1] = a01 * b30 + a11 * b31 + a21 * b32 + a31 * b33;
+	dest[3 * mat4N + 2] = a02 * b30 + a12 * b31 + a22 * b32 + a32 * b33;
 	dest[3 * mat4N + 3] = a03 * b30 + a13 * b31 + a23 * b32 + a33 * b33;
-}
+ }
