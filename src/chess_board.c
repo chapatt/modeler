@@ -692,25 +692,31 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	};
 
 	float model[4 * 4];
-	mat4Copy(identity, model);
 	float preRotation[4 * 4];
-	transformRotation(preRotation, rotation, 0, 0, 1);
 	float cameraTilt[4 * 4];
-	transformRotation(cameraTilt, M_PI_4, -1, 0, 0);
 	float cameraTranslation[4 * 4];
-	transformTranslation(cameraTranslation, 0, 0, 2);
 	float cameraTransform[4 * 4];
-	mat4Multiply(cameraTranslation, cameraTilt, cameraTransform);
 	float view[4 * 4];
-	mat4Multiply(preRotation, cameraTransform, view);
 	float modelView[4 * 4];
-	mat4Multiply(view, model, modelView);
 	float modelViewInverse[4 * 4];
-	mat4Inverse(modelView, modelViewInverse);
 	float normalMatrix[4 * 4];
-	mat4Transpose(modelViewInverse, normalMatrix);
 	float projection[4 * 4];
-	perspectiveProjection(projection, M_PI_2, 1, 0.1, 1000);
+
+	/* View matrix */
+	transformRotation(preRotation, rotation, 0, 0, 1);
+	transformRotation(cameraTilt, M_PI_4, -1, 0, 0);
+	transformTranslation(cameraTranslation, 0, 0, 2);
+	mat4Multiply(cameraTranslation, cameraTilt, cameraTransform);
+	mat4Multiply(preRotation, cameraTransform, view);
+
+	/* Projection matrix */
+	perspectiveProjection(projection, M_PI_2, 1, 0.1, 10);
+	
+	/* Draw board */
+	mat4Copy(identity, model);
+	mat4Multiply(view, model, modelView);
+	mat4Inverse(modelView, modelViewInverse);
+	mat4Transpose(modelViewInverse, normalMatrix);
 
 	ChessBoardPushConstants pushConstants;
 	mat4Copy(modelView, pushConstants.MV);
@@ -722,8 +728,8 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 
 	/* Draw mesh */
 	float modelScale[4 * 4];
-	transformScale(modelScale, 0.4);
 	float modelTranslate[4 * 4];
+	transformScale(modelScale, 0.3);
 	transformTranslation(modelTranslate, 0, 0, -0.1);
 	mat4Multiply(modelScale, modelTranslate, model);
 	mat4Multiply(view, model, modelView);
@@ -793,7 +799,7 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 	tinyobj_material_t *materials = NULL;
 	size_t materialCount;
 	char *piecesMeshPath;
-	asprintf(&piecesMeshPath, "%s/%s", self->resourcePath, "teapot.obj");
+	asprintf(&piecesMeshPath, "%s/%s", self->resourcePath, "pawn.obj");
 
 	if (tinyobj_parse_obj(&attrib, &shapes, &shapeCount, &materials, &materialCount, piecesMeshPath, readObj, NULL, TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS) {
 		asprintf(error, "Failed to load mesh.\n");

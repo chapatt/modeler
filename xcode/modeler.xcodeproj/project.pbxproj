@@ -36,6 +36,7 @@
 		AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */; };
 		AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */; };
 		AB7E0B142D1F42680068EC79 /* pieces.png in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B132D1F42680068EC79 /* pieces.png */; };
+		ABA366AB2D432C3B004921D7 /* pawn.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA366AA2D432C3A004921D7 /* pawn.obj */; };
 		ABC0F3052C02C93700771076 /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABC0F3062C05B82B00771076 /* roboto.ttf */; };
 		ABE1DEF52A3592D600A963A6 /* vulkan in Resources */ = {isa = PBXBuildFile; fileRef = ABE1DEF42A3592D600A963A6 /* vulkan */; };
@@ -105,6 +106,7 @@
 		AB7E0B0F2D1B66F80068EC79 /* chess_board.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.vert.spv; path = ../chess_board.vert.spv; sourceTree = "<group>"; };
 		AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.frag.spv; path = ../chess_board.frag.spv; sourceTree = "<group>"; };
 		AB7E0B132D1F42680068EC79 /* pieces.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pieces.png; path = ../pieces.png; sourceTree = "<group>"; };
+		ABA366AA2D432C3A004921D7 /* pawn.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = pawn.obj; path = ../pawn.obj; sourceTree = "<group>"; };
 		ABC0F3062C05B82B00771076 /* roboto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = roboto.ttf; path = ../roboto.ttf; sourceTree = "<group>"; };
 		ABC4BB9E2D37331D00A9D2CF /* modeler-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "modeler-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABE1DEF42A3592D600A963A6 /* vulkan */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vulkan; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 		ABF1622C2A34E3A6007655F7 = {
 			isa = PBXGroup;
 			children = (
+				ABA366AA2D432C3A004921D7 /* pawn.obj */,
 				AB37D74B2D41602F006A6613 /* phong.frag.spv */,
 				AB37D74C2D41602F006A6613 /* phong.vert.spv */,
 				AB37D7492D415FC1006A6613 /* teapot.obj */,
@@ -325,6 +328,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ABA366AB2D432C3B004921D7 /* pawn.obj in Resources */,
 				AB37D74D2D41602F006A6613 /* phong.frag.spv in Resources */,
 				AB37D74E2D41602F006A6613 /* phong.vert.spv in Resources */,
 				AB37D74A2D415FC1006A6613 /* teapot.obj in Resources */,

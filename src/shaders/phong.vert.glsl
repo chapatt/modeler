@@ -16,7 +16,7 @@ mat4 MV = PushConstants.MV;
 mat4 P = PushConstants.P;
 mat4 normalMatrix = PushConstants.normalMatrix;
 
-void main(){
+void main() {
 	vec4 vertPos4 = MV * vec4(inPosition, 1.0);
 	fragPosition = vec3(vertPos4) / vertPos4.w;
 	fragNormal = vec3(normalMatrix * vec4(inNormal, 0.0));
