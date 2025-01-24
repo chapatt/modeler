@@ -12,7 +12,7 @@ float shininessVal = 0.9;
 vec3 ambientColor = vec3(0.03, 0.03, 0.03);
 vec3 diffuseColor = vec3(0.5, 0.5, 0.5);
 vec3 specularColor = vec3(1.0, 1.0, 1.0);
-vec3 lightPos = vec3(10.0, -5.0, 10.0);
+vec3 lightPos = vec3(10.0, -5.0, -10.0);
 
 void main() {
 	vec3 N = normalize(fragNormal);
@@ -22,7 +22,7 @@ void main() {
 	float specular = 0.0;
 	if (lambertian > 0.0) {
 		vec3 R = reflect(-L, N);
-		vec3 V = normalize(fragPosition);
+		vec3 V = normalize(-fragPosition);
 		float specAngle = max(dot(R, V), 0.0);
 		specular = pow(specAngle, shininessVal);
 	}
