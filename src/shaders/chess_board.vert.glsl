@@ -20,7 +20,7 @@ mat4 P = PushConstants.P;
 mat4 normalMatrix = PushConstants.normalMatrix;
 
 void main() {
-	gl_Position = MV * P * vec4(inPosition, 0.2, 1.0);
+	gl_Position = P * MV * vec4(inPosition, 0.0, 1.0);
 	fragColor = inColor;
 	fragTexCoord = inTexCoord;
 	fragTexCoord2 = inTexCoord2;
