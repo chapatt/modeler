@@ -684,31 +684,49 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 			break;
 	}
 
-	float preRotation[4 * 4];
-	transformRotation(preRotation, rotation);
-	float projection[] = {
+	float identity[] = {
 		1, 0, 0, 0,
 		0, 1, 0, 0,
 		0, 0, 1, 0,
 		0, 0, 0, 1
 	};
+
+	float model[4 * 4];
+	mat4Copy(identity, model);
+	float preRotation[4 * 4];
+	transformRotation(preRotation, rotation, 0, 0, 1);
+	float cameraTilt[4 * 4];
+	transformRotation(cameraTilt, M_PI_4, -1, 0, 0);
+	float cameraTranslation[4 * 4];
+	transformTranslation(cameraTranslation, 0, 0, 2);
+	float cameraTransform[4 * 4];
+	mat4Multiply(cameraTranslation, cameraTilt, cameraTransform);
+	float view[4 * 4];
+	mat4Multiply(preRotation, cameraTransform, view);
 	float modelView[4 * 4];
-	mat4Copy(preRotation, modelView);
+	mat4Multiply(view, model, modelView);
 	float modelViewInverse[4 * 4];
-	float normalMatrix[4 * 4];
 	mat4Inverse(modelView, modelViewInverse);
+	float normalMatrix[4 * 4];
 	mat4Transpose(modelViewInverse, normalMatrix);
+	float projection[4 * 4];
+	perspectiveProjection(projection, M_PI_2, 1, 0.1, 1000);
 
 	ChessBoardPushConstants pushConstants;
 	mat4Copy(modelView, pushConstants.MV);
 	mat4Copy(projection, pushConstants.P);
 	mat4Copy(normalMatrix, pushConstants.normalMatrix);
 	vkCmdPushConstants(commandBuffer, self->boardPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
+
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
-	float scale[4 * 4];
-	transformScale(scale, 0.2);
-	mat4Multiply(preRotation, scale, modelView);
+	/* Draw mesh */
+	float modelScale[4 * 4];
+	transformScale(modelScale, 0.4);
+	float modelTranslate[4 * 4];
+	transformTranslation(modelTranslate, 0, 0, -0.1);
+	mat4Multiply(modelScale, modelTranslate, model);
+	mat4Multiply(view, model, modelView);
 	mat4Inverse(modelView, modelViewInverse);
 	mat4Transpose(modelViewInverse, normalMatrix);
 
@@ -716,6 +734,7 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	mat4Copy(projection, pushConstants.P);
 	mat4Copy(normalMatrix, pushConstants.normalMatrix);
 	vkCmdPushConstants(commandBuffer, self->boardPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
+
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
