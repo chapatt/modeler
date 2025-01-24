@@ -879,6 +879,7 @@ void destroyChessBoard(ChessBoard self)
 	destroyPipeline(self->device, self->piecesPipeline);
 	destroyPipelineLayout(self->device, self->piecesPipelineLayout);
 	destroyDescriptorPool(self->device, self->textureDescriptorPool);
+	destroyDescriptorSetLayout(self->device, self->textureDescriptorSetLayouts[0]);
 	destroySampler(self->device, self->sampler);
 	vmaUnmapMemory(self->allocator, self->boardStagingVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->boardStagingVertexBuffer, self->boardStagingVertexBufferAllocation);
