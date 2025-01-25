@@ -177,7 +177,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 #endif /* ENABLE_IMGUI */
 #else /* DRAW_WINDOW_DECORATION */
 #if ENABLE_IMGUI
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachementDescription, imAttachmentDescription};
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, imAttachmentDescription};
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency};
 #else
