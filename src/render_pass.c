@@ -117,7 +117,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	};
 
 	VkAttachmentReference windowDecorationAttachmentReference = {
-		.attachment = 1,
+		.attachment = 2,
 		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 	};
 
@@ -149,22 +149,20 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.dependencyFlags = 0
 	};
 
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, windowDecorationAttachmentDescription};
 #if ENABLE_IMGUI
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachementDescription, imAttachmentDescription, windowDecorationAttachmentDescription};
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, windowDecorationSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, windowDecorationSubpassDependency};
 #else /* ENABLE_IMGUI */
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachementDescription, windowDecorationAttachmentDescription};
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, windowDecorationSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, windowDecorationSubpassDependency};
 #endif /* ENABLE_IMGUI */
 #else /* DRAW_WINDOW_DECORATION */
-#if ENABLE_IMGUI
 	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription};
+#if ENABLE_IMGUI
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency};
-#else
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription};
+#else /* ENABLE_IMGUI */
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency};
 #endif /* ENABLE_IMGUI */
