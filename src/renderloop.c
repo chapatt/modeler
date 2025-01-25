@@ -355,7 +355,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		};
 
 		if ((result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, synchronizationInfo.frameInFlightFences[currentFrame])) != VK_SUCCESS) {
-			asprintf(error, "Failed to submit queue: %s", string_VkResult(result));
+			asprintf(error, "Failed to submit render queue: %s", string_VkResult(result));
 			return false;
 		}
 
