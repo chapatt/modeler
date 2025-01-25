@@ -519,8 +519,8 @@ static bool createDepthBuffer(VkPhysicalDevice physicalDevice, VkDevice device, 
 
 static void destroyDepthBuffer(VkDevice device, VmaAllocator allocator, VkImage image, VmaAllocation imageAllocation, VkImageView imageView)
 {
-	destroyImage(allocator, image, imageAllocation);
 	destroyImageView(device, imageView);
+	destroyImage(allocator, image, imageAllocation);
 }
 
 static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *characteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard, VkImage depthImage, VmaAllocation depthImageAllocation, VkImageView depthImageView)
@@ -537,8 +537,8 @@ static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCal
 		destroyPipelineLayout(device, pipelineLayouts[i]);
 	}
 	destroyRenderPass(device, renderPass);
-	destroyImage(allocator, depthImage, depthImageAllocation);
 	destroyImageView(device, depthImageView);
+	destroyImage(allocator, depthImage, depthImageAllocation);
 	destroyFramebuffers(device, framebuffers, framebufferCount);
 #ifdef DRAW_WINDOW_DECORATION
 	for (size_t i = 0; i < offscreenImageCount; ++i) {
