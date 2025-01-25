@@ -69,23 +69,6 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	};
 
 #ifdef ENABLE_IMGUI
- 	VkAttachmentDescription imAttachmentDescription = {
-		.flags = 0,
-		.format = swapchainInfo.surfaceFormat.format,
-		.samples = VK_SAMPLE_COUNT_1_BIT,
-		.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
-		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
-		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-#ifdef DRAW_WINDOW_DECORATION
-		.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-#else
-		.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-#endif
-	};
-
 	VkAttachmentReference imAttachmentReference = {
 		.attachment = 0,
 		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
@@ -177,7 +160,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 #endif /* ENABLE_IMGUI */
 #else /* DRAW_WINDOW_DECORATION */
 #if ENABLE_IMGUI
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, imAttachmentDescription};
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription};
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency};
 #else
