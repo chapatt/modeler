@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
-bool createImage(VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkFormat format, VkImageUsageFlagBits usage, uint32_t mipLevels, VkImage *image, VmaAllocation *allocation, char **error)
+bool createImage(VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkFormat format, VkImageUsageFlagBits usage, uint32_t mipLevels, VkSampleCountFlagBits sampleCount, VkImage *image, VmaAllocation *allocation, char **error)
 {
 	VkImageCreateInfo imageCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -18,7 +18,7 @@ bool createImage(VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkF
 		.extent.depth = 1,
 		.mipLevels = mipLevels,
 		.arrayLayers = 1,
-		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.samples = sampleCount,
 		.tiling = VK_IMAGE_TILING_OPTIMAL,
 		.usage = usage,
 		.sharingMode = VK_SHARING_MODE_EXCLUSIVE,

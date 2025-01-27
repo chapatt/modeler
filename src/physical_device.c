@@ -168,6 +168,25 @@ bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurface
 	return true;
 }
 
+VkSampleCountFlagBits getMaxSampleCount(VkPhysicalDeviceProperties physicalDeviceProperties) {
+	VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+	if (counts & VK_SAMPLE_COUNT_64_BIT) {
+		return VK_SAMPLE_COUNT_64_BIT;
+	} else if (counts & VK_SAMPLE_COUNT_32_BIT) {
+		return VK_SAMPLE_COUNT_32_BIT;
+	} else if (counts & VK_SAMPLE_COUNT_16_BIT) {
+		return VK_SAMPLE_COUNT_16_BIT;
+	} else if (counts & VK_SAMPLE_COUNT_8_BIT) {
+		return VK_SAMPLE_COUNT_8_BIT;
+	} else if (counts & VK_SAMPLE_COUNT_4_BIT) {
+		return VK_SAMPLE_COUNT_4_BIT;
+	} else if (counts & VK_SAMPLE_COUNT_2_BIT) {
+		return VK_SAMPLE_COUNT_2_BIT;
+	} else {
+		return VK_SAMPLE_COUNT_1_BIT;
+	}
+}
+
 VkFormat findSupportedFormat(VkPhysicalDevice physicalDevice, VkFormat *formats, size_t formatCount, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
 	for (size_t i = 0; i < formatCount; ++i) {

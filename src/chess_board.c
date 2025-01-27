@@ -274,7 +274,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 	free(piecesTextureDecodedBytes);
 	vmaUnmapMemory(self->allocator, stagingBufferAllocation);
 
-	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, PIECES_TEXTURE_MIP_LEVELS, &self->textureImage, &self->textureImageAllocation, error)) {
+	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, PIECES_TEXTURE_MIP_LEVELS, VK_SAMPLE_COUNT_1_BIT, &self->textureImage, &self->textureImageAllocation, error)) {
 		return false;
 	}
 

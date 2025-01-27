@@ -440,7 +440,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	}
 
 #ifdef DRAW_WINDOW_DECORATION
-	if (!createImage(swapchainCreateInfo->device, swapchainCreateInfo->allocator, swapchainCreateInfo->swapchainInfo->extent, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, 1, swapchainCreateInfo->offscreenImage, swapchainCreateInfo->offscreenImageAllocation, error)) {
+	if (!createImage(swapchainCreateInfo->device, swapchainCreateInfo->allocator, swapchainCreateInfo->swapchainInfo->extent, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, 1, VK_SAMPLE_COUNT_1_BIT, swapchainCreateInfo->offscreenImage, swapchainCreateInfo->offscreenImageAllocation, error)) {
 		return false;
 	}
 
@@ -506,7 +506,7 @@ static bool createDepthBuffer(VkPhysicalDevice physicalDevice, VkDevice device, 
 		return false;
 	}
 
-	if (!createImage(device, allocator, extent, *format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 1, image, imageAllocation, error)) {
+	if (!createImage(device, allocator, extent, *format, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 1, VK_SAMPLE_COUNT_1_BIT, image, imageAllocation, error)) {
 		return false;
 	}
 
