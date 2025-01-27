@@ -34,6 +34,7 @@ bool choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface,
 	VkPhysicalDevice *physicalDevice, PhysicalDeviceCharacteristics *characteristics,
 	PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, char **error);
 bool getPhysicalDeviceSurfaceCharacteristics(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, PhysicalDeviceSurfaceCharacteristics *characteristics, char **error);
+VkSampleCountFlagBits getMaxSampleCount(VkPhysicalDeviceProperties physicalDeviceProperties);
 void freePhysicalDeviceCharacteristics(PhysicalDeviceCharacteristics *characteristics);
 void freePhysicalDeviceSurfaceCharacteristics(PhysicalDeviceSurfaceCharacteristics *characteristics);
 

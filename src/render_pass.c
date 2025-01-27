@@ -5,22 +5,18 @@
 
  #include "render_pass.h"
 
-bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat depthImageFormat, VkRenderPass *renderPass, char **error)
+bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat depthImageFormat, VkSampleCountFlagBits sampleCount, VkRenderPass *renderPass, char **error)
 {
 	VkAttachmentDescription attachmentDescription = {
 		.flags = 0,
 		.format = swapchainInfo.surfaceFormat.format,
-		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.samples = sampleCount,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
 		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-#ifdef DRAW_WINDOW_DECORATION
-		.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-#else
-		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-#endif
+		.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 	};
 
 	VkAttachmentReference attachmentReference = {
@@ -31,7 +27,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	VkAttachmentDescription depthAttachmentDescription = {
 		.flags = 0,
 		.format = depthImageFormat,
-		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.samples = sampleCount,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 		.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -45,6 +41,23 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
 	};
 
+	VkAttachmentDescription resolveAttachmentDescription = {
+		.flags = 0,
+		.format = swapchainInfo.surfaceFormat.format,
+		.samples = VK_SAMPLE_COUNT_1_BIT,
+		.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+	};
+
+	VkAttachmentReference resolveAttachmentReference = {
+		.attachment = 2,
+		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+	};
+
 	VkSubpassDescription subpassDescription = {
 		.flags = 0,
 		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -52,7 +65,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.pInputAttachments = NULL,
 		.colorAttachmentCount = 1,
 		.pColorAttachments = &attachmentReference,
-		.pResolveAttachments = NULL,
+		.pResolveAttachments = &resolveAttachmentReference,
 		.pDepthStencilAttachment = &depthAttachmentReference,
 		.preserveAttachmentCount = 0,
 		.pPreserveAttachments = NULL
@@ -117,7 +130,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	};
 
 	VkAttachmentReference windowDecorationAttachmentReference = {
-		.attachment = 2,
+		.attachment = 3,
 		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 	};
 
@@ -149,7 +162,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.dependencyFlags = 0
 	};
 
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, windowDecorationAttachmentDescription};
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, resolveAttachmentDescription, windowDecorationAttachmentDescription};
 #if ENABLE_IMGUI
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, windowDecorationSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, windowDecorationSubpassDependency};
@@ -158,7 +171,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, windowDecorationSubpassDependency};
 #endif /* ENABLE_IMGUI */
 #else /* DRAW_WINDOW_DECORATION */
-	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription};
+	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, resolveAttachmentDescription};
 #if ENABLE_IMGUI
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency};
@@ -172,11 +185,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
 		.pNext = NULL,
 		.flags = 0,
-#if DRAW_WINDOW_DECORATION
-		.attachmentCount = 3,
-#else /* DRAW_WINDOW_DECORATION */
-		.attachmentCount = 2,
-#endif /* DRAW_WINDOW_DECORATION */
+		.attachmentCount = sizeof(attachmentDescriptions) / sizeof(attachmentDescriptions[0]),
 		.pAttachments = attachmentDescriptions,
 #if DRAW_WINDOW_DECORATION
 #if ENABLE_IMGUI

@@ -76,6 +76,7 @@ struct chess_board_t {
 	VkQueue queue;
 	VkRenderPass renderPass;
 	uint32_t subpass;
+	VkSampleCountFlagBits sampleCount;
 	const char *resourcePath;
 	float width;
 	float originX;
@@ -129,7 +130,7 @@ static bool createPiecesPipeline(ChessBoard self, char **error);
 static void updateVertices(ChessBoard self);
 static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition, Orientation orientation);
 
-bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, const char *resourcePath, float width, float originX, float originY, Orientation orientation, char **error)
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -142,6 +143,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	self->queue = queue;
 	self->renderPass = renderPass;
 	self->subpass = subpass;
+	self->sampleCount = sampleCount;
 	self->resourcePath = resourcePath;
 	self->width = width;
 	self->originX = originX;
@@ -438,7 +440,8 @@ static bool createPiecesPipeline(ChessBoard self, char **error)
 		.descriptorSetLayouts = self->textureDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
 		.pushConstantRange = pushConstantRange,
-		.depthStencilState = depthStencilState
+		.depthStencilState = depthStencilState,
+		.sampleCount = self->sampleCount
 	};
 	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->piecesPipelineLayout, &self->piecesPipeline, error);
 #ifndef EMBED_SHADERS
@@ -538,7 +541,8 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 		.descriptorSetLayouts = self->textureDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
 		.pushConstantRange = pushConstantRange,
-		.depthStencilState = depthStencilState
+		.depthStencilState = depthStencilState,
+		.sampleCount = self->sampleCount
 	};
 	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->boardPipelineLayout, &self->boardPipeline, error);
 #ifndef EMBED_SHADERS

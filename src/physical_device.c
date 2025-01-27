@@ -168,7 +168,8 @@ bool getPhysicalDeviceCharacteristics(VkPhysicalDevice physicalDevice, VkSurface
 	return true;
 }
 
-VkSampleCountFlagBits getMaxSampleCount(VkPhysicalDeviceProperties physicalDeviceProperties) {
+VkSampleCountFlagBits getMaxSampleCount(VkPhysicalDeviceProperties physicalDeviceProperties)
+{
 	VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
 	if (counts & VK_SAMPLE_COUNT_64_BIT) {
 		return VK_SAMPLE_COUNT_64_BIT;
