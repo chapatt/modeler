@@ -13,17 +13,7 @@
 #include "imgui/cimgui.h"
 #include "imgui/cimgui_impl_vulkan.h"
 #include "imgui/imgui_impl_modeler.h"
-
-typedef struct font_t {
-	ImFont *font;
-	float scale;
-} Font;
-
-static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale);
-static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
-static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 #endif /* ENABLE_IMGUI */
-static bool resetChessBoard(ChessBoard chessBoard, char **error);
 
 typedef struct component_t {
 	void *object;
@@ -31,42 +21,21 @@ typedef struct component_t {
 	void (*handleInputEvent)(void *, InputEvent *);
 } Component;
 
-static inline Orientation negateRotation(Orientation orientation)
-{
-	switch (orientation) {
-	case ROTATE_90:
-		return ROTATE_270;
-	case ROTATE_270:
-		return ROTATE_90;
-	case ROTATE_0: case ROTATE_180: default:
-		return orientation;
-	}
-}
+#ifdef ENABLE_IMGUI
+typedef struct font_t {
+	ImFont *font;
+	float scale;
+} Font;
+#endif /* ENABLE_IMGUI */
 
-static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, PointerPosition pointerPosition)
-{
-	InputEvent newInputEvent;
-
-	for (size_t i = 0; i < componentCount; ++i) {
-		if (isPointerOnViewport(components[i].viewport, pointerPosition)) {
-			NormalizedPointerPosition normalizedPointerPosition;
-
-			switch(inputEvent->type) {
-			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
-				newInputEvent.type = inputEvent->type;
-				break;
-			case POINTER_MOVE:
-				normalizedPointerPosition = normalizePointerPosition(components[i].viewport, pointerPosition);
-				newInputEvent.data = &normalizedPointerPosition;
-				newInputEvent.type = NORMALIZED_POINTER_MOVE;
-				break;
-			}
-
-			components[i].handleInputEvent(components[i].object, &newInputEvent);
-			break;
-		}
-	}
-}
+static bool resetChessBoard(ChessBoard chessBoard, char **error);
+static inline Orientation negateRotation(Orientation orientation);
+static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, PointerPosition pointerPosition);
+#ifdef ENABLE_IMGUI
+static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale);
+static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
+static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
+#endif /* ENABLE_IMGUI */
 
 bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
 {
@@ -393,6 +362,43 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 cancelMainLoop:
 	vkDeviceWaitIdle(device);
 	return true;
+}
+
+static inline Orientation negateRotation(Orientation orientation)
+{
+	switch (orientation) {
+	case ROTATE_90:
+		return ROTATE_270;
+	case ROTATE_270:
+		return ROTATE_90;
+	case ROTATE_0: case ROTATE_180: default:
+		return orientation;
+	}
+}
+
+static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, PointerPosition pointerPosition)
+{
+	InputEvent newInputEvent;
+
+	for (size_t i = 0; i < componentCount; ++i) {
+		if (isPointerOnViewport(components[i].viewport, pointerPosition)) {
+			NormalizedPointerPosition normalizedPointerPosition;
+
+			switch(inputEvent->type) {
+			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
+				newInputEvent.type = inputEvent->type;
+				break;
+			case POINTER_MOVE:
+				normalizedPointerPosition = normalizePointerPosition(components[i].viewport, pointerPosition);
+				newInputEvent.data = &normalizedPointerPosition;
+				newInputEvent.type = NORMALIZED_POINTER_MOVE;
+				break;
+			}
+
+			components[i].handleInputEvent(components[i].object, &newInputEvent);
+			break;
+		}
+	}
 }
 
 #ifdef ENABLE_IMGUI
