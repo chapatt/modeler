@@ -342,21 +342,21 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 
 static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
 {
-	uint16_t triangleIndices[CHESS_INDEX_COUNT];
+	uint16_t indices[CHESS_INDEX_COUNT];
 
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		size_t verticesOffset = i * 4;
 		size_t indicesOffset = i * 6;
 
-		triangleIndices[indicesOffset] = verticesOffset + 0;
-		triangleIndices[indicesOffset + 1] = verticesOffset + 1;
-		triangleIndices[indicesOffset + 2] = verticesOffset + 2;
-		triangleIndices[indicesOffset + 3] = verticesOffset + 2;
-		triangleIndices[indicesOffset + 4] = verticesOffset + 3;
-		triangleIndices[indicesOffset + 5] = verticesOffset + 0;
+		indices[indicesOffset] = verticesOffset + 0;
+		indices[indicesOffset + 1] = verticesOffset + 1;
+		indices[indicesOffset + 2] = verticesOffset + 2;
+		indices[indicesOffset + 3] = verticesOffset + 2;
+		indices[indicesOffset + 4] = verticesOffset + 3;
+		indices[indicesOffset + 5] = verticesOffset + 0;
 	}
 
-	if (!createIndexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, triangleIndices, CHESS_INDEX_COUNT, error)) {
+	if (!createStaticVertexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, indices, sizeof(indices[0]), CHESS_INDEX_COUNT, error)) {
 		return false;
 	}
 
@@ -870,7 +870,7 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 		indices[i] = i;
 	}
 
-	if (!createIndexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, self->piecesVertexCount, error)) {
+	if (!createStaticVertexBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, self->piecesVertexCount, sizeof(indices[0]), error)) {
 		return false;
 	}
 
