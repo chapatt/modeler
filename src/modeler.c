@@ -133,7 +133,6 @@ void *threadProc(void *arg)
 	windowDimensions.activeArea.extent.height = height;
 #endif /* ANDROID */
 
-
 	VkDevice device;
 	QueueInfo queueInfo = {};
 	if (!createDevice(physicalDevice, surface, physicalDeviceCharacteristics, &device, &queueInfo, error)) {
@@ -422,14 +421,14 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 
 bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
-	VkExtent2D extent = swapchainCreateInfo->windowDimensions->surfaceArea;
+	VkExtent2D requestedExtent = swapchainCreateInfo->windowDimensions->surfaceArea;
 
 	if (swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
 		swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
 	) {
-		uint32_t width = extent.width;
-		extent.width = extent.height;
-		extent.height = width;
+		uint32_t width = requestedExtent.width;
+		requestedExtent.width = requestedExtent.height;
+		requestedExtent.height = width;
 	}
 
 	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
@@ -443,9 +442,17 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		swapchainCreateInfo->windowDimensions->orientation = ROTATE_0;
 	}
 
-	if (!createSwapchain(swapchainCreateInfo->device, swapchainCreateInfo->surface, *swapchainCreateInfo->surfaceCharacteristics, swapchainCreateInfo->queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo->queueInfo.presentationQueueFamilyIndex, extent, swapchainCreateInfo->swapchainInfo->swapchain, swapchainCreateInfo->swapchainInfo, error)) {
+	if (!createSwapchain(swapchainCreateInfo->device, swapchainCreateInfo->surface, *swapchainCreateInfo->surfaceCharacteristics, swapchainCreateInfo->queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo->queueInfo.presentationQueueFamilyIndex, requestedExtent, swapchainCreateInfo->swapchainInfo->swapchain, swapchainCreateInfo->swapchainInfo, error)) {
 		return false;
 	}
+
+	swapchainCreateInfo->windowDimensions->surfaceArea = swapchainCreateInfo->swapchainInfo->extent;
+	swapchainCreateInfo->windowDimensions->activeArea.extent = (VkExtent2D) {
+		/* TODO: subtract margins from dimensions */
+		.width = swapchainCreateInfo->swapchainInfo->extent.width,
+		.height = swapchainCreateInfo->swapchainInfo->extent.height
+	};
+
 
 	*swapchainCreateInfo->imageViews = malloc(sizeof(*swapchainCreateInfo->imageViews) * swapchainCreateInfo->swapchainInfo->imageCount);
 	if (!createImageViews(swapchainCreateInfo->device, swapchainCreateInfo->swapchainInfo->images, swapchainCreateInfo->swapchainInfo->imageCount, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, *swapchainCreateInfo->imageViews, error)) {
@@ -487,7 +494,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		return false;
 	}
 
-	if (!createDepthBuffer(swapchainCreateInfo->physicalDevice, swapchainCreateInfo->device, swapchainCreateInfo->allocator, extent, sampleCount, swapchainCreateInfo->depthImage, swapchainCreateInfo->depthImageAllocation, swapchainCreateInfo->depthImageFormat, swapchainCreateInfo->depthImageView, error)) {
+	if (!createDepthBuffer(swapchainCreateInfo->physicalDevice, swapchainCreateInfo->device, swapchainCreateInfo->allocator, swapchainCreateInfo->swapchainInfo->extent, sampleCount, swapchainCreateInfo->depthImage, swapchainCreateInfo->depthImageAllocation, swapchainCreateInfo->depthImageFormat, swapchainCreateInfo->depthImageView, error)) {
 		return false;
 	}
 
