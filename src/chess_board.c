@@ -333,7 +333,7 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
-	if (!createMutableBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, &self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardStagingVertexBufferAllocation, &self->boardVertexBuffer, &self->boardVertexBufferAllocation, self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
+	if (!createMutableBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardStagingVertexBufferAllocation, &self->boardVertexBuffer, &self->boardVertexBufferAllocation, self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
 		return false;
 	}
 
@@ -356,7 +356,7 @@ static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
 		indices[indicesOffset + 5] = verticesOffset + 0;
 	}
 
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, indices, sizeof(indices[0]), CHESS_INDEX_COUNT, error)) {
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, indices, sizeof(indices[0]), CHESS_INDEX_COUNT, error)) {
 		return false;
 	}
 
@@ -860,7 +860,7 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 		faceOffset += (size_t) attrib.face_num_verts[i];
 	}
 
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->piecesVertexBuffer, &self->piecesVertexBufferAllocation, vertices, self->piecesVertexCount, sizeof(*vertices), error)) {
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->piecesVertexBuffer, &self->piecesVertexBufferAllocation, vertices, self->piecesVertexCount, sizeof(*vertices), error)) {
 		return false;
 	}
 
@@ -870,7 +870,7 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 		indices[i] = i;
 	}
 
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, self->piecesVertexCount, sizeof(indices[0]), error)) {
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, self->piecesVertexCount, sizeof(indices[0]), error)) {
 		return false;
 	}
 
