@@ -8,10 +8,10 @@ void transformTranslation(float mat[mat4N * mat4N], float x, float y, float z);
 void transformRotation(float mat[mat4N * mat4N], float rotation, float x, float y, float z);
 void transformRotateZ(float mat[mat4N * mat4N], float rotation);
 void transformScale(float mat[mat4N * mat4N], float scale);
-void mat4Transpose(float mat[mat4N * mat4N], float dest[4 * 4]);
+void mat4Transpose(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
 void mat4Scale(float mat[mat4N * mat4N], float scale);
-void mat4Inverse(float mat[mat4N * mat4N], float dest[4 * 4]);
-void mat4Copy(float mat[mat4N * mat4N], float dest[4 * 4]);
-void mat4Multiply(float mat1[4 * mat4N + 4], float mat2[4 * mat4N + 4], float dest[4 * mat4N + 4]);
+void mat4Inverse(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
+void mat4Copy(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
+void mat4Multiply(float m1[mat4N * mat4N], float m2[mat4N * mat4N], float dest[mat4N * mat4N]);
 
 #endif /* MODELER_MATRIX_UTILS_H */

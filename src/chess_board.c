@@ -48,11 +48,11 @@ typedef struct chess_board_push_constants_t {
 	float normalMatrix[16];
 } ChessBoardPushConstants;
 
-typedef struct piece_uniform_buffer_object_t {
+typedef struct pieces_uniform_t {
 	float MV[16];
 	float P[16];
 	float normalMatrix[16];
-} PieceUniformBufferObject;
+} PiecesUniform;
 
 float pieceSpriteOriginMap[13][2] = {
 	{0.75f, 0.75f},
@@ -116,6 +116,7 @@ struct chess_board_t {
 	VkBuffer piecesUniformBuffers[MAX_FRAMES_IN_FLIGHT];
 	VmaAllocation piecesUniformBufferAllocations[MAX_FRAMES_IN_FLIGHT];
 	void *piecesUniformBufferMappedMemories[MAX_FRAMES_IN_FLIGHT];
+	PiecesUniform piecesUniform;
 	Board8x8 board;
 	MoveBoard8x8 move;
 	ChessSquare selected;
@@ -128,6 +129,7 @@ static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
 static void basicSetBoard(ChessBoard self, Board8x8 board);
 static void initializePieces(ChessBoard self);
 static void initializeMove(ChessBoard self);
+static void initializePiecesUniform(ChessBoard self);
 static void readObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
 static bool createChessBoardTexture(ChessBoard self, char **error);
 static bool createChessBoardSampler(ChessBoard self, char **error);
@@ -137,6 +139,7 @@ static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
 static bool createChessBoardPipeline(ChessBoard self, char **error);
 static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error);
 static bool createPiecesPipeline(ChessBoard self, char **error);
+static bool createPiecesUniformBuffer(ChessBoard self, char **error);
 static void updateVertices(ChessBoard self);
 static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition, Orientation orientation);
 
@@ -168,6 +171,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	initializePieces(self);
 	initializeMove(self);
 	updateVertices(self);
+	initializePiecesUniform(self);
 
 	if (!createChessBoardVertexBuffer(self, error)) {
 		return false;
@@ -182,6 +186,10 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	}
 
 	if (!createChessBoardSampler(self, error)) {
+		return false;
+	}
+
+	if (!createPiecesUniformBuffer(self, error)) {
 		return false;
 	}
 
@@ -202,6 +210,46 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	}
 
 	return true;
+}
+
+static void initializePiecesUniform(ChessBoard self)
+{
+	float model[mat4N * mat4N];
+	float preRotation[mat4N * mat4N];
+	float cameraTilt[mat4N * mat4N];
+	float cameraTranslation[mat4N * mat4N];
+	float cameraTransform[mat4N * mat4N];
+	float view[mat4N * mat4N];
+	float modelView[mat4N * mat4N];
+	float modelViewInverse[mat4N * mat4N];
+	float normalMatrix[mat4N * mat4N];
+	float projection[mat4N * mat4N];
+
+	float rotation = 0;
+
+	/* View matrix */
+	transformRotation(preRotation, rotation, 0, 0, 1);
+	transformRotation(cameraTilt, M_PI_4, -1, 0, 0);
+	transformTranslation(cameraTranslation, 0, 0, 2);
+	mat4Multiply(cameraTranslation, cameraTilt, cameraTransform);
+	mat4Multiply(preRotation, cameraTransform, view);
+
+	/* Projection matrix */
+	perspectiveProjection(projection, M_PI_2, 1, 0.1, 10);
+	
+	/* Model matrix */
+	float modelScale[mat4N * mat4N];
+	float modelTranslate[mat4N * mat4N];
+	transformScale(modelScale, 0.3);
+	transformTranslation(modelTranslate, 0, 0, -0.1);
+	mat4Multiply(modelScale, modelTranslate, model);
+	mat4Multiply(view, model, modelView);
+	mat4Inverse(modelView, modelViewInverse);
+	mat4Transpose(modelViewInverse, normalMatrix);
+
+	mat4Copy(modelView, self->piecesUniform.MV);
+	mat4Copy(projection, self->piecesUniform.P);
+	mat4Copy(normalMatrix, self->piecesUniform.normalMatrix);
 }
 
 static void initializePieces(ChessBoard self)
@@ -749,16 +797,16 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 		0, 0, 0, 1
 	};
 
-	float model[4 * 4];
-	float preRotation[4 * 4];
-	float cameraTilt[4 * 4];
-	float cameraTranslation[4 * 4];
-	float cameraTransform[4 * 4];
-	float view[4 * 4];
-	float modelView[4 * 4];
-	float modelViewInverse[4 * 4];
-	float normalMatrix[4 * 4];
-	float projection[4 * 4];
+	float model[mat4N * mat4N];
+	float preRotation[mat4N * mat4N];
+	float cameraTilt[mat4N * mat4N];
+	float cameraTranslation[mat4N * mat4N];
+	float cameraTransform[mat4N * mat4N];
+	float view[mat4N * mat4N];
+	float modelView[mat4N * mat4N];
+	float modelViewInverse[mat4N * mat4N];
+	float normalMatrix[mat4N * mat4N];
+	float projection[mat4N * mat4N];
 
 	/* View matrix */
 	transformRotation(preRotation, rotation, 0, 0, 1);
@@ -785,8 +833,8 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
 	/* Draw mesh */
-	float modelScale[4 * 4];
-	float modelTranslate[4 * 4];
+	float modelScale[mat4N * mat4N];
+	float modelTranslate[mat4N * mat4N];
 	transformScale(modelScale, 0.3);
 	transformTranslation(modelTranslate, 0, 0, -0.1);
 	mat4Multiply(modelScale, modelTranslate, model);
