@@ -10,6 +10,7 @@
 #include "image_view.h"
 #include "pipeline.h"
 #include "sampler.h"
+#include "synchronization.h"
 #include "utils.h"
 #include "matrix_utils.h"
 #include "tinyobj_loader_c.h"
@@ -46,6 +47,12 @@ typedef struct chess_board_push_constants_t {
 	float P[16];
 	float normalMatrix[16];
 } ChessBoardPushConstants;
+
+typedef struct piece_uniform_buffer_object_t {
+	float MV[16];
+	float P[16];
+	float normalMatrix[16];
+} PieceUniformBufferObject;
 
 float pieceSpriteOriginMap[13][2] = {
 	{0.75f, 0.75f},
@@ -106,6 +113,9 @@ struct chess_board_t {
 	VkDescriptorPool textureDescriptorPool;
 	VkDescriptorSet textureDescriptorSets[1];
 	VkDescriptorSetLayout textureDescriptorSetLayouts[1];
+	VkBuffer piecesUniformBuffers[MAX_FRAMES_IN_FLIGHT];
+	VmaAllocation piecesUniformBufferAllocations[MAX_FRAMES_IN_FLIGHT];
+	void *piecesUniformBufferMappedMemories[MAX_FRAMES_IN_FLIGHT];
 	Board8x8 board;
 	MoveBoard8x8 move;
 	ChessSquare selected;
@@ -312,25 +322,48 @@ static bool createChessBoardSampler(ChessBoard self, char **error)
 
 static bool createChessBoardDescriptors(ChessBoard self, char **error)
 {
-	VkDescriptorImageInfo descriptorInfo = {
-					.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					.imageView = self->textureImageView,
-					.sampler = self->sampler
-				};
-	VkDescriptorSetLayoutBinding binding = {
-					.binding = 0,
-					.descriptorCount = 1,
-					.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-					.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-					.pImmutableSamplers = NULL
-				};
+	VkDescriptorImageInfo imageDescriptorInfo = {
+		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		.imageView = self->textureImageView,
+		.sampler = self->sampler
+	};
+
+	VkDescriptorBufferInfo bufferDescriptorInfo = {
+		.buffer = self->piecesUniformBuffers[0],
+		.offset = 0,
+		.range = VK_WHOLE_SIZE
+	};
+
+	VkDescriptorSetLayoutBinding imageBinding = {
+		.binding = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.pImmutableSamplers = NULL
+	};
+
+	VkDescriptorSetLayoutBinding bufferBinding = {
+		.binding = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+		.pImmutableSamplers = NULL
+	};
+
 	CreateDescriptorSetInfo createDescriptorSetInfos[] = {
 		{
 			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.descriptorInfos = &descriptorInfo,
+			.descriptorInfos = &imageDescriptorInfo,
 			.descriptorCount = 1,
-			.bindings = &binding,
+			.bindings = &imageBinding,
+			.bindingCount = 1
+		}, {
+			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+			.descriptorInfos = &bufferDescriptorInfo,
+			.descriptorCount = 1,
+			.bindings = &bufferBinding,
 			.bindingCount = 1
 		}
 	};
@@ -345,6 +378,17 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
 	if (!createMutableBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardStagingVertexBufferAllocation, &self->boardVertexBuffer, &self->boardVertexBufferAllocation, self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
 		return false;
+	}
+
+	return true;
+}
+
+static bool createPiecesUniformBuffer(ChessBoard self, char **error)
+{
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		if (!createHostVisibleMutableBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->piecesUniformBufferMappedMemories[i], &self->piecesUniformBuffers[i], &self->piecesUniformBufferAllocations[i], self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
+			return false;
+		}
 	}
 
 	return true;

@@ -104,6 +104,34 @@ bool createStaticBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool c
 	return true;
 }
 
+bool createHostVisibleMutableBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkBufferUsageFlagBits usage, void **mappedMemory, VkBuffer *buffer, VmaAllocation *allocation, const void *vertices, size_t vertexCount, size_t vertexSize, char **error)
+{
+	VkResult result;
+
+	VkDeviceSize bufferSize = vertexSize * vertexCount;
+
+	if (!createBuffer(device, allocator, bufferSize, usage, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, buffer, allocation, error)) {
+		return false;
+	}
+
+	if ((result = vmaMapMemory(allocator, *allocation, mappedMemory)) != VK_SUCCESS) {
+		asprintf(error, "Failed to map memory: %s", string_VkResult(result));
+		return false;
+	}
+	memcpy(*mappedMemory, vertices, bufferSize);
+
+	return true;
+}
+
+bool updateHostVisibleMutableBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, void *mappedMemory, VkBuffer *buffer, const void *vertices, size_t vertexCount, size_t vertexSize, char **error)
+{
+	VkDeviceSize bufferSize = vertexSize * vertexCount;
+
+	memcpy(mappedMemory, vertices, bufferSize);
+
+	return true;
+}
+
 bool copyBuffer(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, char **error)
 {
 	VkResult result;
