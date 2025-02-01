@@ -5,41 +5,38 @@
 
 #include "descriptor.h"
 
-static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, VkDescriptorType type, char **error);
+static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, VkDescriptorPoolSize *descriptorPoolSizes, size_t descriptorPoolSizeCount, size_t descriptorSetCount, char **error);
 
 bool createDescriptorSets(
 	VkDevice device,
-	CreateDescriptorSetInfo info,
+	CreateDescriptorSetInfo *infos,
+	size_t descriptorSetCount,
 	VkDescriptorPool *descriptorPool,
-	VkDescriptorType type,
-	VkDescriptorSet **imageDescriptorSets,
-	VkDescriptorSetLayout **imageDescriptorSetLayouts,
-	VkDescriptorSet **bufferDescriptorSets,
-	VkDescriptorSetLayout **bufferDescriptorSetLayouts,
+	VkDescriptorSet *descriptorSets,
+	VkDescriptorSetLayout *descriptorSetLayouts,
 	char **error
 ) {
-	if (!createDescriptorPool(device, descriptorPool, type, error)) {
+	VkDescriptorPoolSize descriptorPoolSizes[descriptorSetCount];
+	for (uint32_t i = 0; i < descriptorSetCount; ++i) {
+		descriptorPoolSizes[i] = (VkDescriptorPoolSize) {
+			.type = infos[i].type,
+			.descriptorCount = infos[i].descriptorCount
+		};
+	}
+
+	if (!createDescriptorPool(device, descriptorPool, descriptorPoolSizes, descriptorSetCount, descriptorSetCount, error)) {
 		return false;
 	}
 
-	*imageDescriptorSetLayouts = malloc(sizeof(**imageDescriptorSetLayouts) * info.imageCount);
-	for (size_t i = 0; i < info.imageCount; ++i) {
-		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {
-			.binding = 0,
-			.descriptorCount = 1,
-			.descriptorType = type,
-			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.pImmutableSamplers = NULL
-		};
-
+	for (size_t i = 0; i < descriptorSetCount; ++i) {
 		VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.bindingCount = 1,
-			.pBindings = &descriptorSetLayoutBinding,
+			.bindingCount = infos[i].bindingCount,
+			.pBindings = infos[i].bindings,
 		};
 
 		VkResult result;
-		if ((result = vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, NULL, imageDescriptorSetLayouts[i])) != VK_SUCCESS) {
+		if ((result = vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, NULL, descriptorSetLayouts + i)) != VK_SUCCESS) {
 			asprintf(error, "Failed to create descriptor set layout: %s", string_VkResult(result));
 		}
 	}
@@ -47,28 +44,21 @@ bool createDescriptorSets(
 	VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
 		.descriptorPool = *descriptorPool,
-		.descriptorSetCount = info.imageCount,
-		.pSetLayouts = *imageDescriptorSetLayouts
+		.descriptorSetCount = descriptorSetCount,
+		.pSetLayouts = descriptorSetLayouts
 	};
 
-	*imageDescriptorSets = malloc(sizeof(**imageDescriptorSets) * info.imageCount);
-	vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, *imageDescriptorSets);
+	vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, descriptorSets);
 
-	VkWriteDescriptorSet *writeDescriptorSets = malloc(sizeof(*writeDescriptorSets) * info.imageCount);
-	for (size_t i = 0; i < info.imageCount; ++i) {
-		VkDescriptorImageInfo descriptorImageInfo = {
-			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-			.imageView = info.imageViews[i],
-			.sampler = info.imageSamplers[i]
-		};
-
+	VkWriteDescriptorSet *writeDescriptorSets = malloc(sizeof(*writeDescriptorSets) * descriptorSetCount);
+	for (size_t i = 0; i < descriptorSetCount; ++i) {
 		writeDescriptorSets[i] = (VkWriteDescriptorSet) {
 			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.dstSet = *imageDescriptorSets[i],
-			.descriptorType = type,
-			.descriptorCount = 1,
+			.dstSet = descriptorSets[i],
+			.descriptorType = infos[i].type,
+			.descriptorCount = infos[i].descriptorCount,
 			.dstBinding = 0,
-			.pImageInfo = &descriptorImageInfo
+			.pImageInfo = infos[i].descriptorInfos
 		};
 	}
 
@@ -87,17 +77,13 @@ void destroyDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool)
 	vkDestroyDescriptorPool(device, descriptorPool, NULL);
 }
 
-static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, VkDescriptorType type, char **error) {
-	VkDescriptorPoolSize descriptorPoolSize = {
-		.type = type,
-		.descriptorCount = 1
-	};
-
+static bool createDescriptorPool(VkDevice device, VkDescriptorPool *descriptorPool, VkDescriptorPoolSize *descriptorPoolSizes, size_t descriptorPoolSizeCount, size_t descriptorSetCount, char **error)
+{
 	VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-		.poolSizeCount = 1,
-		.pPoolSizes = &descriptorPoolSize,
-		.maxSets = 1
+		.poolSizeCount = descriptorPoolSizeCount,
+		.pPoolSizes = descriptorPoolSizes,
+		.maxSets = descriptorSetCount
 	};
 
 	VkResult result;

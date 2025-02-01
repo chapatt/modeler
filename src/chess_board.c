@@ -104,8 +104,8 @@ struct chess_board_t {
 	VkImageView textureImageView;
 	VkSampler sampler;
 	VkDescriptorPool textureDescriptorPool;
-	VkDescriptorSet *textureDescriptorSets;
-	VkDescriptorSetLayout *textureDescriptorSetLayouts;
+	VkDescriptorSet textureDescriptorSets[1];
+	VkDescriptorSetLayout textureDescriptorSetLayouts[1];
 	Board8x8 board;
 	MoveBoard8x8 move;
 	ChessSquare selected;
@@ -312,19 +312,29 @@ static bool createChessBoardSampler(ChessBoard self, char **error)
 
 static bool createChessBoardDescriptors(ChessBoard self, char **error)
 {
-	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
-	VkSampler samplers[] = {VK_NULL_HANDLE};
-	CreateDescriptorSetInfo createDescriptorSetInfo = {
-		.imageViews = &self->textureImageView,
-		.imageLayouts = imageLayouts,
-		.imageSamplers = &self->sampler,
-		.imageCount = 1,
-		.buffers = NULL,
-		.bufferOffsets = NULL,
-		.bufferRanges = NULL,
-		.bufferCount = 0
+	VkDescriptorImageInfo descriptorInfo = {
+					.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					.imageView = self->textureImageView,
+					.sampler = self->sampler
+				};
+	VkDescriptorSetLayoutBinding binding = {
+					.binding = 0,
+					.descriptorCount = 1,
+					.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+					.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+					.pImmutableSamplers = NULL
+				};
+	CreateDescriptorSetInfo createDescriptorSetInfos[] = {
+		{
+			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+			.descriptorInfos = &descriptorInfo,
+			.descriptorCount = 1,
+			.bindings = &binding,
+			.bindingCount = 1
+		}
 	};
-	if (!createDescriptorSets(self->device, createDescriptorSetInfo, &self->textureDescriptorPool, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, &self->textureDescriptorSets, &self->textureDescriptorSetLayouts, NULL, NULL, error)) {
+	if (!createDescriptorSets(self->device, createDescriptorSetInfos, 1, &self->textureDescriptorPool, self->textureDescriptorSets, self->textureDescriptorSetLayouts, error)) {
 		return false;
 	}
 

@@ -5,25 +5,21 @@
 #include <vulkan/vulkan.h>
 
 typedef struct createDescriptorSetInfo_t {
-	VkImageView *imageViews;
-	VkImageLayout *imageLayouts;
-	VkSampler *imageSamplers;
-	size_t imageCount;
-	VkBuffer *buffers;
-	VkDeviceSize *bufferOffsets;
-	VkDeviceSize *bufferRanges;
-	size_t bufferCount;
+	VkDescriptorType type;
+	VkShaderStageFlags stageFlags;
+	void *descriptorInfos;
+	size_t descriptorCount;
+	VkDescriptorSetLayoutBinding *bindings;
+	size_t bindingCount;
 } CreateDescriptorSetInfo;
 
 bool createDescriptorSets(
 	VkDevice device,
-	CreateDescriptorSetInfo info,
+	CreateDescriptorSetInfo *infos,
+	size_t descriptorSetCount,
 	VkDescriptorPool *descriptorPool,
-	VkDescriptorType type,
-	VkDescriptorSet **imageDescriptorSets,
-	VkDescriptorSetLayout **imageDescriptorSetLayouts,
-	VkDescriptorSet **bufferDescriptorSets,
-	VkDescriptorSetLayout **bufferDescriptorSetLayouts,
+	VkDescriptorSet *descriptorSets,
+	VkDescriptorSetLayout *descriptorSetLayouts,
 	char **error
 );
 
