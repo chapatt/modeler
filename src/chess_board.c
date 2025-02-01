@@ -990,9 +990,14 @@ void destroyChessBoard(ChessBoard self)
 	destroyPipelineLayout(self->device, self->boardPipelineLayout);
 	destroyPipeline(self->device, self->piecesPipeline);
 	destroyPipelineLayout(self->device, self->piecesPipelineLayout);
-	destroyDescriptorPool(self->device, self->textureDescriptorPool);
-	destroyDescriptorSetLayout(self->device, self->textureDescriptorSetLayouts[0]);
+	destroyDescriptorPool(self->device, self->descriptorPool);
+	destroyDescriptorSetLayout(self->device, self->boardTextureDescriptorSetLayout);
 	destroySampler(self->device, self->sampler);
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		destroyDescriptorSetLayout(self->device, self->pieceUniformDescriptorSetLayouts[i]);
+		vmaUnmapMemory(self->allocator, self->piecesUniformBufferAllocations[i]);
+		destroyBuffer(self->allocator, self->piecesUniformBuffers[i], self->piecesUniformBufferAllocations[i]);
+	}
 	vmaUnmapMemory(self->allocator, self->boardStagingVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->boardStagingVertexBuffer, self->boardStagingVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->boardVertexBuffer, self->boardVertexBufferAllocation);
