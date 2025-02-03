@@ -36,7 +36,7 @@ int vasprintf(char **strp, const char *fmt, va_list ap)
 	return vsnprintf(*strp, expstrlen + 1, fmt, ap);
 }
 
-long readFileToString(char *path, char **bytes)
+long readFileToString(const char *path, char **bytes)
 {
 	FILE *fp = NULL;
 
