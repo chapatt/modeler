@@ -6,15 +6,15 @@ layout(location = 1) in vec3 inNormal;
 layout(location = 0) out vec3 fragPosition;
 layout(location = 1) out vec3 fragNormal;
 
-layout (push_constant) uniform _push_constants {
+layout (binding = 0) uniform _transform_uniform {
 	mat4 MV;
 	mat4 P;
 	mat4 normalMatrix;
-} PushConstants;
+} TransformUniform;
 
-mat4 MV = PushConstants.MV;
-mat4 P = PushConstants.P;
-mat4 normalMatrix = PushConstants.normalMatrix;
+mat4 MV = TransformUniform.MV;
+mat4 P = TransformUniform.P;
+mat4 normalMatrix = TransformUniform.normalMatrix;
 
 void main() {
 	vec4 vertPos4 = MV * vec4(inPosition, 1.0);
