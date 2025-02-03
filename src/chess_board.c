@@ -111,12 +111,10 @@ struct chess_board_t {
 	VkImageView textureImageView;
 	VkSampler sampler;
 	VkDescriptorPool descriptorPool;
-	VkDescriptorSet boardTextureDescriptorSet;
-	VkDescriptorSetLayout boardTextureDescriptorSetLayout;
-	VkDescriptorSet boardUniformDescriptorSets[MAX_FRAMES_IN_FLIGHT];
-	VkDescriptorSetLayout boardUniformDescriptorSetLayouts[MAX_FRAMES_IN_FLIGHT];
-	VkDescriptorSet piecesUniformDescriptorSets[MAX_FRAMES_IN_FLIGHT];
-	VkDescriptorSetLayout piecesUniformDescriptorSetLayouts[MAX_FRAMES_IN_FLIGHT];
+	VkDescriptorSet boardDescriptorSets[MAX_FRAMES_IN_FLIGHT];
+	VkDescriptorSetLayout boardDescriptorSetLayouts[MAX_FRAMES_IN_FLIGHT];
+	VkDescriptorSet piecesDescriptorSets[MAX_FRAMES_IN_FLIGHT];
+	VkDescriptorSetLayout piecesDescriptorSetLayouts[MAX_FRAMES_IN_FLIGHT];
 	VkBuffer piecesUniformBuffers[MAX_FRAMES_IN_FLIGHT];
 	VmaAllocation piecesUniformBufferAllocations[MAX_FRAMES_IN_FLIGHT];
 	void *piecesUniformBufferMappedMemories[MAX_FRAMES_IN_FLIGHT];
@@ -425,10 +423,10 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 	if (!createDescriptorSets(self->device, createDescriptorSetInfos, 2, &self->descriptorPool, descriptorSets, descriptorSetLayouts, error)) {
 		return false;
 	}
-	self->boardTextureDescriptorSet = descriptorSets[0];
-	self->piecesUniformDescriptorSets[0] = descriptorSets[1];
-	self->boardTextureDescriptorSetLayout = descriptorSetLayouts[0];
-	self->piecesUniformDescriptorSetLayouts[0] = descriptorSetLayouts[1];
+	self->boardDescriptorSets[0] = descriptorSets[0];
+	self->piecesDescriptorSets[0] = descriptorSets[1];
+	self->boardDescriptorSetLayouts[0] = descriptorSetLayouts[0];
+	self->piecesDescriptorSetLayouts[0] = descriptorSetLayouts[1];
 
 	return true;
 }
@@ -550,7 +548,7 @@ static bool createPiecesPipeline(ChessBoard self, char **error)
 		.vertexBindingDescriptions = &vertexBindingDescription,
 		.vertexAttributeDescriptionCount = sizeof(vertexAttributeDescriptions) / sizeof(*vertexAttributeDescriptions),
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
-		.descriptorSetLayouts = self->piecesUniformDescriptorSetLayouts,
+		.descriptorSetLayouts = self->piecesDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
 		.pushConstantRange = pushConstantRange,
 		.depthStencilState = depthStencilState,
@@ -651,7 +649,7 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 		.vertexBindingDescriptions = &vertexBindingDescription,
 		.vertexAttributeDescriptionCount = sizeof(vertexAttributeDescriptions) / sizeof(*vertexAttributeDescriptions),
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
-		.descriptorSetLayouts = &self->boardTextureDescriptorSetLayout,
+		.descriptorSetLayouts = self->boardDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
 		.pushConstantRange = pushConstantRange,
 		.depthStencilState = depthStencilState,
@@ -840,14 +838,14 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->boardVertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, self->boardIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipeline);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipelineLayout, 0, 1, &self->boardTextureDescriptorSet, 0, NULL);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipelineLayout, 0, 1, self->boardDescriptorSets, 0, NULL);
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
 	/* Draw Mesh */
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesUniformDescriptorSets[0], 0, NULL);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 0, NULL);
 	vkCmdDrawIndexed(commandBuffer, self->piecesVertexCount, 1, 0, 0, 0);
 
 	return true;
@@ -989,13 +987,13 @@ void destroyChessBoard(ChessBoard self)
 	destroyPipeline(self->device, self->piecesPipeline);
 	destroyPipelineLayout(self->device, self->piecesPipelineLayout);
 	destroyDescriptorPool(self->device, self->descriptorPool);
-	destroyDescriptorSetLayout(self->device, self->boardTextureDescriptorSetLayout);
-	destroySampler(self->device, self->sampler);
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		destroyDescriptorSetLayout(self->device, self->piecesUniformDescriptorSetLayouts[i]);
+		destroyDescriptorSetLayout(self->device, self->boardDescriptorSetLayouts[i]);
+		destroyDescriptorSetLayout(self->device, self->piecesDescriptorSetLayouts[i]);
 		vmaUnmapMemory(self->allocator, self->piecesUniformBufferAllocations[i]);
 		destroyBuffer(self->allocator, self->piecesUniformBuffers[i], self->piecesUniformBufferAllocations[i]);
 	}
+	destroySampler(self->device, self->sampler);
 	vmaUnmapMemory(self->allocator, self->boardStagingVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->boardStagingVertexBuffer, self->boardStagingVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->boardVertexBuffer, self->boardVertexBufferAllocation);
