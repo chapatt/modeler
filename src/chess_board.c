@@ -374,24 +374,16 @@ static bool createChessBoardSampler(ChessBoard self, char **error)
 
 static bool createChessBoardDescriptors(ChessBoard self, char **error)
 {
-	VkDescriptorImageInfo imageDescriptorInfo = {
-		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-		.imageView = self->textureImageView,
-		.sampler = self->sampler
-	};
-
 	VkDescriptorBufferInfo bufferDescriptorInfo = {
 		.buffer = self->piecesUniformBuffers[0],
 		.offset = 0,
 		.range = VK_WHOLE_SIZE
 	};
 
-	VkDescriptorSetLayoutBinding imageBinding = {
-		.binding = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-		.pImmutableSamplers = NULL
+	VkDescriptorImageInfo imageDescriptorInfo = {
+		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		.imageView = self->textureImageView,
+		.sampler = self->sampler
 	};
 
 	VkDescriptorSetLayoutBinding bufferBinding = {
@@ -402,14 +394,24 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 		.pImmutableSamplers = NULL
 	};
 
+	VkDescriptorSetLayoutBinding imageBinding = {
+		.binding = 1,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.pImmutableSamplers = NULL
+	};
+
+	void *boardDescriptorSetDescriptorInfos[] = {&bufferDescriptorInfo, &imageDescriptorInfo};
+	VkDescriptorSetLayoutBinding boardDescriptorSetBindings[] = {bufferBinding, imageBinding};
 	CreateDescriptorSetInfo createDescriptorSetInfos[] = {
 		{
 			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.descriptorInfos = &imageDescriptorInfo,
-			.descriptorCount = 1,
-			.bindings = &imageBinding,
-			.bindingCount = 1
+			.descriptorInfos = boardDescriptorSetDescriptorInfos,
+			.descriptorCount = 2,
+			.bindings = boardDescriptorSetBindings,
+			.bindingCount = 2
 		}, {
 			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
