@@ -5,7 +5,6 @@
 #include <vulkan/vulkan.h>
 
 typedef struct createDescriptorSetInfo_t {
-	VkDescriptorType type;
 	VkShaderStageFlags stageFlags;
 	void *descriptorInfos;
 	size_t descriptorCount;
