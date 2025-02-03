@@ -16,12 +16,19 @@ bool createDescriptorSets(
 	VkDescriptorSetLayout *descriptorSetLayouts,
 	char **error
 ) {
-	VkDescriptorPoolSize descriptorPoolSizes[descriptorSetCount];
-	for (uint32_t i = 0; i < descriptorSetCount; ++i) {
-		descriptorPoolSizes[i] = (VkDescriptorPoolSize) {
-			.type = infos[i].type,
-			.descriptorCount = infos[i].descriptorCount
-		};
+	size_t bindingCount = 0;
+	for (size_t i = 0; i < descriptorSetCount; ++i) {
+		bindingCount += infos[i].bindingCount;
+	}
+
+	VkDescriptorPoolSize descriptorPoolSizes[bindingCount];
+	for (size_t i = 0; i < descriptorSetCount; ++i) {
+		for (size_t j = 0; j < infos[i].bindingCount; ++j) {
+			descriptorPoolSizes[i] = (VkDescriptorPoolSize) {
+				.type = infos[i].bindings[j].descriptorType,
+				.descriptorCount = infos[i].bindings[j].descriptorCount
+			};
+		}
 	}
 
 	if (!createDescriptorPool(device, descriptorPool, descriptorPoolSizes, descriptorSetCount, descriptorSetCount, error)) {
@@ -50,19 +57,32 @@ bool createDescriptorSets(
 
 	vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, descriptorSets);
 
-	VkWriteDescriptorSet *writeDescriptorSets = malloc(sizeof(*writeDescriptorSets) * descriptorSetCount);
+	VkWriteDescriptorSet writeDescriptorSets[bindingCount];
+	size_t k = 0;
 	for (size_t i = 0; i < descriptorSetCount; ++i) {
-		writeDescriptorSets[i] = (VkWriteDescriptorSet) {
-			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-			.dstSet = descriptorSets[i],
-			.descriptorType = infos[i].type,
-			.descriptorCount = infos[i].descriptorCount,
-			.dstBinding = 0,
-			.pImageInfo = infos[i].descriptorInfos
-		};
+		for (size_t j = 0; j < infos[i].bindingCount; ++j) {
+			writeDescriptorSets[k] = (VkWriteDescriptorSet) {
+				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+				.dstSet = descriptorSets[i],
+				.descriptorType = infos[i].bindings[j].descriptorType,
+				.descriptorCount = infos[i].bindings[j].descriptorCount,
+				.dstBinding = j,
+			};
+
+			switch (infos[i].bindings[j].descriptorType) {
+			case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+				writeDescriptorSets[i].pImageInfo = ((VkDescriptorImageInfo *) infos[i].descriptorInfos) + j;
+				break;
+			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+				writeDescriptorSets[i].pBufferInfo = ((VkDescriptorBufferInfo *) infos[i].descriptorInfos) + j;
+				break;
+			}
+
+			++k;
+		}
 	}
 
-	vkUpdateDescriptorSets(device, 1, writeDescriptorSets, 0, NULL);
+	vkUpdateDescriptorSets(device, bindingCount, writeDescriptorSets, 0, NULL);
 
 	return true;
 }
