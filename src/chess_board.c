@@ -404,34 +404,31 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 
 	void *boardDescriptorSetDescriptorInfos[] = {&bufferDescriptorInfo, &imageDescriptorInfo};
 	VkDescriptorSetLayoutBinding boardDescriptorSetBindings[] = {bufferBinding, imageBinding};
+	void *pieceDescriptorSetDescriptorInfos[] = {&bufferDescriptorInfo};
 	CreateDescriptorSetInfo createDescriptorSetInfos[] = {
 		{
-			.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 			.descriptorInfos = boardDescriptorSetDescriptorInfos,
 			.descriptorCount = 2,
 			.bindings = boardDescriptorSetBindings,
 			.bindingCount = 2
 		}, {
-			.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-			.descriptorInfos = &bufferDescriptorInfo,
+			.descriptorInfos = pieceDescriptorSetDescriptorInfos,
 			.descriptorCount = 1,
 			.bindings = &bufferBinding,
 			.bindingCount = 1
 		}
 	};
-	VkDescriptorSet descriptorSets[] = {
-		self->boardTextureDescriptorSet,
-		self->pieceUniformDescriptorSets[0]
-	};
-	VkDescriptorSetLayout descriptorSetLayouts[] = {
-		self->boardTextureDescriptorSetLayout,
-		self->pieceUniformDescriptorSetLayouts[0]
-	};
-	if (!createDescriptorSets(self->device, createDescriptorSetInfos, 1, &self->descriptorPool, descriptorSets, descriptorSetLayouts, error)) {
+	VkDescriptorSet descriptorSets[2];
+	VkDescriptorSetLayout descriptorSetLayouts[2];
+	if (!createDescriptorSets(self->device, createDescriptorSetInfos, 2, &self->descriptorPool, descriptorSets, descriptorSetLayouts, error)) {
 		return false;
 	}
+	self->boardTextureDescriptorSet = descriptorSets[0];
+	self->pieceUniformDescriptorSets[0] = descriptorSets[1];
+	self->boardTextureDescriptorSetLayout = descriptorSetLayouts[0];
+	self->pieceUniformDescriptorSetLayouts[0] = descriptorSetLayouts[1];
 
 	return true;
 }
@@ -448,7 +445,7 @@ static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 static bool createPiecesUniformBuffer(ChessBoard self, char **error)
 {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		if (!createHostVisibleMutableBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->piecesUniformBufferMappedMemories[i], &self->piecesUniformBuffers[i], &self->piecesUniformBufferAllocations[i], self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
+		if (!createHostVisibleMutableBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &self->piecesUniformBufferMappedMemories[i], &self->piecesUniformBuffers[i], &self->piecesUniformBufferAllocations[i], &self->piecesUniform, 1, sizeof(self->piecesUniform), error)) {
 			return false;
 		}
 	}

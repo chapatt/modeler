@@ -22,13 +22,16 @@ bool createDescriptorSets(
 	}
 
 	VkDescriptorPoolSize descriptorPoolSizes[bindingCount];
+	size_t descriptorPoolSizeOffset = 0;
 	for (size_t i = 0; i < descriptorSetCount; ++i) {
 		for (size_t j = 0; j < infos[i].bindingCount; ++j) {
-			descriptorPoolSizes[i] = (VkDescriptorPoolSize) {
+			descriptorPoolSizes[descriptorPoolSizeOffset] = (VkDescriptorPoolSize) {
 				.type = infos[i].bindings[j].descriptorType,
 				.descriptorCount = infos[i].bindings[j].descriptorCount
 			};
 		}
+
+		++descriptorPoolSizeOffset;
 	}
 
 	if (!createDescriptorPool(device, descriptorPool, descriptorPoolSizes, descriptorSetCount, descriptorSetCount, error)) {
@@ -58,10 +61,10 @@ bool createDescriptorSets(
 	vkAllocateDescriptorSets(device, &descriptorSetAllocateInfo, descriptorSets);
 
 	VkWriteDescriptorSet writeDescriptorSets[bindingCount];
-	size_t k = 0;
+	size_t writeDescriptorSetOffset = 0;
 	for (size_t i = 0; i < descriptorSetCount; ++i) {
 		for (size_t j = 0; j < infos[i].bindingCount; ++j) {
-			writeDescriptorSets[k] = (VkWriteDescriptorSet) {
+			writeDescriptorSets[writeDescriptorSetOffset] = (VkWriteDescriptorSet) {
 				.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 				.dstSet = descriptorSets[i],
 				.descriptorType = infos[i].bindings[j].descriptorType,
@@ -71,14 +74,14 @@ bool createDescriptorSets(
 
 			switch (infos[i].bindings[j].descriptorType) {
 			case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
-				writeDescriptorSets[i].pImageInfo = ((VkDescriptorImageInfo *) infos[i].descriptorInfos) + j;
+				writeDescriptorSets[writeDescriptorSetOffset].pImageInfo = ((VkDescriptorImageInfo **) infos[i].descriptorInfos)[j];
 				break;
 			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
-				writeDescriptorSets[i].pBufferInfo = ((VkDescriptorBufferInfo *) infos[i].descriptorInfos) + j;
+				writeDescriptorSets[writeDescriptorSetOffset].pBufferInfo = ((VkDescriptorBufferInfo **) infos[i].descriptorInfos)[j];
 				break;
 			}
 
-			++k;
+			++writeDescriptorSetOffset;
 		}
 	}
 
