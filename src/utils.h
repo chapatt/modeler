@@ -7,7 +7,7 @@
 
 int asprintf(char **strp, const char *fmt, ...);
 int vasprintf(char **strp, const char *fmt, va_list ap);
-long readFileToString(char *path, char **bytes);
+long readFileToString(const char *path, char **bytes);
 VkExtent2D getWindowExtent(void *platformWindow);
 float getWindowScale(void *platformWindow);
 void srgbToLinear(float vector[3]);
