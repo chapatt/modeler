@@ -9,15 +9,15 @@ layout(location = 0) out vec3 fragColor;
 layout(location = 1) out vec2 fragTexCoord;
 layout(location = 2) out vec2 fragTexCoord2;
 
-layout (push_constant) uniform _push_constants {
+layout (binding = 0) uniform _transform_uniform {
 	mat4 MV;
 	mat4 P;
 	mat4 normalMatrix;
-} PushConstants;
+} TransformUniform;
 
-mat4 MV = PushConstants.MV;
-mat4 P = PushConstants.P;
-mat4 normalMatrix = PushConstants.normalMatrix;
+mat4 MV = TransformUniform.MV;
+mat4 P = TransformUniform.P;
+mat4 normalMatrix = TransformUniform.normalMatrix;
 
 void main() {
 	gl_Position = P * MV * vec4(inPosition, 0.0, 1.0);
