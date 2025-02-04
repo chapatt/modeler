@@ -29,12 +29,12 @@ bool createDescriptorSets(
 				.type = infos[i].bindings[j].descriptorType,
 				.descriptorCount = infos[i].bindings[j].descriptorCount
 			};
-		}
 
-		++descriptorPoolSizeOffset;
+			++descriptorPoolSizeOffset;
+		}
 	}
 
-	if (!createDescriptorPool(device, descriptorPool, descriptorPoolSizes, descriptorSetCount, descriptorSetCount, error)) {
+	if (!createDescriptorPool(device, descriptorPool, descriptorPoolSizes, bindingCount, descriptorSetCount, error)) {
 		return false;
 	}
 
@@ -48,6 +48,7 @@ bool createDescriptorSets(
 		VkResult result;
 		if ((result = vkCreateDescriptorSetLayout(device, &descriptorSetLayoutCreateInfo, NULL, descriptorSetLayouts + i)) != VK_SUCCESS) {
 			asprintf(error, "Failed to create descriptor set layout: %s", string_VkResult(result));
+			return false;
 		}
 	}
 
@@ -77,6 +78,7 @@ bool createDescriptorSets(
 				writeDescriptorSets[writeDescriptorSetOffset].pImageInfo = ((VkDescriptorImageInfo **) infos[i].descriptorInfos)[j];
 				break;
 			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+			case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
 				writeDescriptorSets[writeDescriptorSetOffset].pBufferInfo = ((VkDescriptorBufferInfo **) infos[i].descriptorInfos)[j];
 				break;
 			}
