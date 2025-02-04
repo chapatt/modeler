@@ -75,19 +75,22 @@ PNG_TEXTURES=pieces.png
 OBJ_MESHES=teapot.obj pawn.obj
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h shader_phong.vert.h shader_phong.frag.h
 HEADER_TEXTURES=texture_pieces.h
+HEADER_MESHES=mesh_pawn.h
 MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o matrix_utils.o
 VENDOR_LIBS=vma_implementation.o lodepng.o tinyobj_implementation.o
 
-MESHES=$(OBJ_MESHES)
 ifdef DEBUG
 	CFLAGS+=-DDEBUG -g
 	SHADERS=$(SPIRV_SHADERS)
 	TEXTURES=$(PNG_TEXTURES)
+	MESHES=$(OBJ_MESHES)
 else
 	CFLAGS+=-DEMBED_SHADERS
 	SHADERS=$(HEADER_SHADERS)
 	CFLAGS+=-DEMBED_TEXTURES
 	TEXTURES=$(HEADER_TEXTURES)
+	CFLAGS+=-DEMBED_MESHES
+	MESHES=$(HEADER_MESHES)
 	ifeq ($(OS),Windows_NT)
 		LDFLAGS+=-static
 	endif
@@ -138,6 +141,9 @@ $(HEADER_SHADERS): shader_%.h: %.spv
 
 $(HEADER_TEXTURES): texture_%.h: %.png
 	./hexdump_include.sh "`echo $(basename $<)TextureBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)TextureSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
+
+$(HEADER_MESHES): mesh_%.h: %.obj
+	./hexdump_include.sh "`echo $(basename $<)MeshBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)MeshSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 
 imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
 	$(AR) rvs $@ cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o

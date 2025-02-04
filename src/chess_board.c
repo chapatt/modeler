@@ -26,6 +26,10 @@
 #include "../texture_pieces.h"
 #endif /* EMBED_TEXTURES */
 
+#ifdef EMBED_MESHES
+#include "../mesh_pawn.h"
+#endif /* EMBED_MESHES */
+
 typedef struct board_vertex_t {
 	float pos[2];
 	float color[3];
@@ -903,10 +907,15 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 
 static void readObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
 {
+#ifndef EMBED_TEXTURES
 	if ((*len = readFileToString(obj_filename, data)) == -1) {
     		*data = NULL;
     		*len = 0;
 	}
+#else /* EMBED_MESHES */
+	*data = pawnMeshBytes;
+	*len = pawnMeshSize;
+#endif /* EMBED_MESHES */
 }
 
 static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)

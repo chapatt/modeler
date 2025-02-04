@@ -10,6 +10,7 @@ xcuserdata/
 /*.vert.h
 /*.frag.h
 /texture_*.h
+/mesh_*.h
 /*.rgba
 /*.png
 /*.obj
