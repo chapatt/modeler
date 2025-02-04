@@ -446,13 +446,18 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		return false;
 	}
 
-	swapchainCreateInfo->windowDimensions->surfaceArea = swapchainCreateInfo->swapchainInfo->extent;
-	swapchainCreateInfo->windowDimensions->activeArea.extent = (VkExtent2D) {
-		/* TODO: subtract margins from dimensions */
-		.width = swapchainCreateInfo->swapchainInfo->extent.width,
-		.height = swapchainCreateInfo->swapchainInfo->extent.height
-	};
+	VkExtent2D savedExtent = swapchainCreateInfo->swapchainInfo->extent;
 
+	if (swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
+		swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
+	) {
+		uint32_t width = savedExtent.width;
+		savedExtent.width = savedExtent.height;
+		savedExtent.height = width;
+	}
+
+	swapchainCreateInfo->windowDimensions->surfaceArea = savedExtent;
+	swapchainCreateInfo->windowDimensions->activeArea.extent = savedExtent;
 
 	*swapchainCreateInfo->imageViews = malloc(sizeof(*swapchainCreateInfo->imageViews) * swapchainCreateInfo->swapchainInfo->imageCount);
 	if (!createImageViews(swapchainCreateInfo->device, swapchainCreateInfo->swapchainInfo->images, swapchainCreateInfo->swapchainInfo->imageCount, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, *swapchainCreateInfo->imageViews, error)) {
