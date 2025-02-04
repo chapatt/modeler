@@ -10,7 +10,7 @@ bool createMutableBufferWithStaging(VkDevice device, VmaAllocator allocator, VkC
 bool updateMutableBufferWithStaging(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, void *stagingMappedMemory, VkBuffer *stagingBuffer, VkBuffer *buffer, const void *vertices, size_t vertexCount, size_t vertexSize, char **error);
 bool createStaticBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkBufferUsageFlagBits usage, VkBuffer *buffer, VmaAllocation *allocation, const void *vertices, size_t vertexCount, size_t vertexSize, char **error);
 bool createHostVisibleMutableBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkBufferUsageFlagBits usage, void **mappedMemory, VkBuffer *buffer, VmaAllocation *allocation, const void *vertices, size_t vertexCount, size_t vertexSize, char **error);
-bool updateHostVisibleMutableBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, void *mappedMemory, VkBuffer *buffer, const void *vertices, size_t vertexCount, size_t vertexSize, char **error);
+void updateHostVisibleMutableBuffer(VkDevice device, void *mappedMemory, const void *vertices, size_t vertexCount, size_t vertexSize);
 bool copyBuffer(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, char **error);
 void destroyBuffer(VmaAllocator allocator, VkBuffer buffer, VmaAllocation allocation);
 

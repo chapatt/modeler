@@ -123,13 +123,11 @@ bool createHostVisibleMutableBuffer(VkDevice device, VmaAllocator allocator, VkC
 	return true;
 }
 
-bool updateHostVisibleMutableBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, void *mappedMemory, VkBuffer *buffer, const void *vertices, size_t vertexCount, size_t vertexSize, char **error)
+void updateHostVisibleMutableBuffer(VkDevice device, void *mappedMemory, const void *vertices, size_t vertexCount, size_t vertexSize)
 {
 	VkDeviceSize bufferSize = vertexSize * vertexCount;
 
 	memcpy(mappedMemory, vertices, bufferSize);
-
-	return true;
 }
 
 bool copyBuffer(VkDevice device, VkCommandPool commandPool, VkQueue queue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size, char **error)

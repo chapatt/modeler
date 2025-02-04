@@ -93,6 +93,7 @@ struct chess_board_t {
 	float originX;
 	float originY;
 	Orientation orientation;
+	bool enable3d;
 	VkPipelineLayout boardPipelineLayout;
 	VkPipeline boardPipeline;
 	BoardVertex boardVertices[CHESS_VERTEX_COUNT];
@@ -139,7 +140,7 @@ static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
 static void basicSetBoard(ChessBoard self, Board8x8 board);
 static void initializePieces(ChessBoard self);
 static void initializeMove(ChessBoard self);
-static void initializeUniformBuffers(ChessBoard self);
+static void updateUniformBuffers(ChessBoard self);
 static void readObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
 static bool createChessBoardTexture(ChessBoard self, char **error);
 static bool createChessBoardSampler(ChessBoard self, char **error);
@@ -151,11 +152,13 @@ static bool createPiecesPipeline(ChessBoard self, char **error);
 static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error);
 static bool createBoardUniformBuffer(ChessBoard self, char **error);
 static bool createPiecesUniformBuffer(ChessBoard self, char **error);
+static void updateBoardUniformBuffer(ChessBoard self);
+static void updatePiecesUniformBuffer(ChessBoard self);
 static void updateVertices(ChessBoard self);
 static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition, Orientation orientation);
 static float getRotationRadians(ChessBoard self);
 
-bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, char **error)
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -174,6 +177,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	self->originX = originX;
 	self->originY = originY;
 	self->orientation = orientation;
+	self->enable3d = enable3d;
 
 	self->selected = CHESS_SQUARE_COUNT;
 	self->lastMove = (LastMove) {
@@ -183,7 +187,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	initializePieces(self);
 	initializeMove(self);
 	updateVertices(self);
-	initializeUniformBuffers(self);
+	updateUniformBuffers(self);
 
 	if (!createChessBoardVertexBuffer(self, error)) {
 		return false;
@@ -244,14 +248,14 @@ static float getRotationRadians(ChessBoard self)
 	}
 }
 
-static void initializeUniformBuffers(ChessBoard self)
+static void updateUniformBuffers(ChessBoard self)
 {
 	float model[mat4N * mat4N];
-	float preRotation[mat4N * mat4N];
 	float cameraTilt[mat4N * mat4N];
 	float cameraTranslation[mat4N * mat4N];
-	float cameraTransform[mat4N * mat4N];
 	float view[mat4N * mat4N];
+	float preRotation[mat4N * mat4N];
+	float perspective[mat4N * mat4N];
 	float modelView[mat4N * mat4N];
 	float modelViewInverse[mat4N * mat4N];
 	float normalMatrix[mat4N * mat4N];
@@ -266,15 +270,20 @@ static void initializeUniformBuffers(ChessBoard self)
 		0, 0, 0, 1
 	};
 
-	/* View matrix */
-	transformRotation(preRotation, rotation, 0, 0, 1);
-	transformRotation(cameraTilt, M_PI_4, -1, 0, 0);
-	transformTranslation(cameraTranslation, 0, 0, 2);
-	mat4Multiply(cameraTranslation, cameraTilt, cameraTransform);
-	mat4Multiply(preRotation, cameraTransform, view);
+	transformRotation(preRotation, -rotation, 0, 0, 1);
+	if (self->enable3d) {
+		/* View matrix */
+		transformRotation(cameraTilt, M_PI_4, -1, 0, 0);
+		transformTranslation(cameraTranslation, 0, 0, 2);
+		mat4Multiply(cameraTranslation, cameraTilt, view);
 
-	/* Projection matrix */
-	perspectiveProjection(projection, M_PI_2, 1, 0.1, 10);
+		/* Projection matrix */
+		perspectiveProjection(perspective, M_PI_2, 1, 0.1, 10);
+		mat4Multiply(perspective, preRotation, projection);
+	} else {
+		mat4Copy(identity, view);
+		mat4Copy(preRotation, projection);
+	}
 	
 	/* Board */
 	mat4Inverse(view, modelViewInverse);
@@ -524,6 +533,20 @@ static bool createPiecesUniformBuffer(ChessBoard self, char **error)
 	return true;
 }
 
+static void updateBoardUniformBuffer(ChessBoard self)
+{
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		updateHostVisibleMutableBuffer(self->device, &self->boardUniformBufferMappedMemories[i], &self->boardUniform, 1, sizeof(self->boardUniform));
+	}
+}
+
+static void updatePiecesUniformBuffer(ChessBoard self)
+{
+	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		updateHostVisibleMutableBuffer(self->device, &self->piecesUniformBufferMappedMemories[i], self->piecesUniforms, CHESS_SQUARE_COUNT, sizeof(self->piecesUniforms[0]));
+	}
+}
+
 static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
 {
 	uint16_t indices[CHESS_INDEX_COUNT];
@@ -747,6 +770,9 @@ void setDimensions(ChessBoard self, float width, float originX, float originY, O
 	self->originY = originY;
 	self->orientation = orientation;
 
+	updateUniformBuffers(self);
+	updateBoardUniformBuffer(self);
+	updatePiecesUniformBuffer(self);
 	updateVertices(self);
 }
 
@@ -858,14 +884,16 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipelineLayout, 0, 1, self->boardDescriptorSets, 0, NULL);
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
-	/* Draw Mesh */
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
-	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
-		uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
-		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 1, &piecesUniformBufferOffset);
-		vkCmdDrawIndexed(commandBuffer, self->piecesVertexCount, 1, 0, 0, 0);
+	if (self->enable3d) {
+		/* Draw Mesh */
+		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
+		vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
+		for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+			uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 1, &piecesUniformBufferOffset);
+			vkCmdDrawIndexed(commandBuffer, self->piecesVertexCount, 1, 0, 0, 0);
+		}
 	}
 
 	return true;
