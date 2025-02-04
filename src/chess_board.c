@@ -122,7 +122,7 @@ struct chess_board_t {
 	VmaAllocation piecesUniformBufferAllocations[MAX_FRAMES_IN_FLIGHT];
 	void *piecesUniformBufferMappedMemories[MAX_FRAMES_IN_FLIGHT];
 	TransformUniform boardUniform;
-	TransformUniform piecesUniforms[2];
+	TransformUniform piecesUniforms[CHESS_SQUARE_COUNT];
 	Board8x8 board;
 	MoveBoard8x8 move;
 	ChessSquare selected;
@@ -281,9 +281,12 @@ static void initializeUniformBuffers(ChessBoard self)
 
 	/* Piece */
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+		size_t offsetX = i % 8;
+		size_t offsetY = i / 8;
+
 		float modelScale[mat4N * mat4N];
 		float modelTranslate[mat4N * mat4N];
-		transformTranslation(modelTranslate, (-7 / 8.0f) + (i / 4.0f), 0, 0);
+		transformTranslation(modelTranslate, (-7 / 8.0f) + (offsetX / 4.0f), (-7 / 8.0f) + (offsetY / 4.0f), 0);
 		transformScale(modelScale, 1 / 8.0f);
 		mat4Multiply(modelTranslate, modelScale, model);
 		mat4Multiply(view, model, modelView);
@@ -509,7 +512,7 @@ static bool createBoardUniformBuffer(ChessBoard self, char **error)
 static bool createPiecesUniformBuffer(ChessBoard self, char **error)
 {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		if (!createHostVisibleMutableBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &self->piecesUniformBufferMappedMemories[i], &self->piecesUniformBuffers[i], &self->piecesUniformBufferAllocations[i], self->piecesUniforms, 2, sizeof(self->piecesUniforms[0]), error)) {
+		if (!createHostVisibleMutableBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, &self->piecesUniformBufferMappedMemories[i], &self->piecesUniformBuffers[i], &self->piecesUniformBufferAllocations[i], self->piecesUniforms, CHESS_SQUARE_COUNT, sizeof(self->piecesUniforms[0]), error)) {
 			return false;
 		}
 	}
@@ -855,7 +858,7 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
 	vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
-	for (size_t i = 0; i < 2; ++i) {
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
 		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 1, &piecesUniformBufferOffset);
 		vkCmdDrawIndexed(commandBuffer, self->piecesVertexCount, 1, 0, 0, 0);
