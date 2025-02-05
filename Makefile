@@ -189,7 +189,7 @@ clean-app:
 		modeler_win32.o modeler_wayland.o modeler_metal.o modeler_android.o \
 		surface_win32.o surface_wayland.o surface_metal.o surface_android.o \
 		utils_win32.o \
-		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(PNG_TEXTURES) $(HEADER_TEXTURES) $(OBJ_MESHES)
+		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(PNG_TEXTURES) $(HEADER_TEXTURES) $(OBJ_MESHES) $(HEADER_MESHES)
 
 clean-vendor:
 	$(RM) -rf $(VENDOR_LIBS) \
