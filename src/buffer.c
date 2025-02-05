@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "vulkan_utils.h"
 
-bool createBuffer(VkDevice device, VmaAllocator allocator, VkDeviceSize size, VkBufferUsageFlags bufferUsage, VkMemoryPropertyFlags memoryUsage, VkMemoryPropertyFlags memoryFlags, VkBuffer *buffer, VmaAllocation *allocation, char **error)
+bool createBuffer(VkDevice device, VmaAllocator allocator, VkDeviceSize size, VkBufferUsageFlags bufferUsage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags memoryFlags, VkMemoryPropertyFlags memoryRequiredFlags, VkBuffer *buffer, VmaAllocation *allocation, char **error)
 {
 	VkResult result;
 
@@ -20,6 +20,7 @@ bool createBuffer(VkDevice device, VmaAllocator allocator, VkDeviceSize size, Vk
 	VmaAllocationCreateInfo allocationCreateInfo = {
 		.usage = memoryUsage,
 		.flags = memoryFlags,
+		.requiredFlags = memoryRequiredFlags
 	};
 
 	if ((result = vmaCreateBuffer(allocator, &bufferCreateInfo, &allocationCreateInfo, buffer, allocation, NULL)) != VK_SUCCESS) {
@@ -36,7 +37,7 @@ bool createMutableBufferWithStaging(VkDevice device, VmaAllocator allocator, VkC
 
 	VkDeviceSize bufferSize = vertexSize * vertexCount;
 
-	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, stagingBuffer, stagingAllocation, error)) {
+	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, 0, stagingBuffer, stagingAllocation, error)) {
 		return false;
 	}
 
@@ -46,7 +47,7 @@ bool createMutableBufferWithStaging(VkDevice device, VmaAllocator allocator, VkC
 	}
 	memcpy(*stagingMappedMemory, vertices, bufferSize);
 
-	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, VMA_MEMORY_USAGE_AUTO, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, allocation, error)) {
+	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, VMA_MEMORY_USAGE_AUTO, 0, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, allocation, error)) {
 		return false;
 	}
 
@@ -79,7 +80,7 @@ bool createStaticBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool c
 	VkBuffer stagingBuffer;
 	VmaAllocation stagingBufferAllocation;
 
-	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, &stagingBuffer, &stagingBufferAllocation, error)) {
+	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, 0, &stagingBuffer, &stagingBufferAllocation, error)) {
 		return false;
 	}
 
@@ -91,7 +92,7 @@ bool createStaticBuffer(VkDevice device, VmaAllocator allocator, VkCommandPool c
 	memcpy(data, vertices, bufferSize);
 	vmaUnmapMemory(allocator, stagingBufferAllocation);
 
-	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, VMA_MEMORY_USAGE_AUTO, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, allocation, error)) {
+	if (!createBuffer(device, allocator, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | usage, VMA_MEMORY_USAGE_AUTO, 0, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer, allocation, error)) {
 		return false;
 	}
 
@@ -110,7 +111,7 @@ bool createHostVisibleMutableBuffer(VkDevice device, VmaAllocator allocator, VkC
 
 	VkDeviceSize bufferSize = vertexSize * vertexCount;
 
-	if (!createBuffer(device, allocator, bufferSize, usage, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT, buffer, allocation, error)) {
+	if (!createBuffer(device, allocator, bufferSize, usage, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer, allocation, error)) {
 		return false;
 	}
 
