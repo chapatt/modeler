@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -134,6 +135,7 @@ struct chess_board_t {
 	LastMove lastMove;
 	NormalizedPointerPosition pointerPosition;
 	ChessEngine engine;
+	float mvpInverse[mat4N * mat4N];
 };
 
 static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
@@ -260,6 +262,8 @@ static void updateUniformBuffers(ChessBoard self)
 	float modelViewInverse[mat4N * mat4N];
 	float normalMatrix[mat4N * mat4N];
 	float projection[mat4N * mat4N];
+	float mvp[mat4N * mat4N];
+	float mvpInverse[mat4N * mat4N];
 
 	float rotation = getRotationRadians(self);
 
@@ -291,6 +295,9 @@ static void updateUniformBuffers(ChessBoard self)
 	mat4Copy(view, self->boardUniform.MV);
 	mat4Copy(projection, self->boardUniform.P);
 	mat4Copy(normalMatrix, self->boardUniform.normalMatrix);
+	mat4Multiply(projection, view, mvp);
+	mat4Inverse(mvp, mvpInverse);
+	mat4Copy(mvpInverse, self->mvpInverse);
 
 	/* Piece */
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
@@ -884,7 +891,8 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipelineLayout, 0, 1, self->boardDescriptorSets, 0, NULL);
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
-	if (self->enable3d) {
+	if (false) {
+	// if (self->enable3d) {
 		/* Draw Mesh */
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
@@ -913,6 +921,14 @@ static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPo
 	}
 }
 
+static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat4N]) 
+{
+	screenPosition[0] = pointerPosition.x * 2 - 1;
+	screenPosition[1] = pointerPosition.y * 2 - 1;
+	screenPosition[2] = 0;
+	screenPosition[3] = 1;
+}
+
 void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 {
 	ChessBoard self = (ChessBoard) chessBoard;
@@ -929,6 +945,13 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 		break;
 	case NORMALIZED_POINTER_MOVE:
 		self->pointerPosition = *(NormalizedPointerPosition *) inputEvent->data;
+
+		float screenPosition[mat4N];
+		screenPositionFromPointerPosition(self->pointerPosition, screenPosition);
+		mat4Vec4Multiply(self->mvpInverse, screenPosition);
+		vec4ScalarDivide(screenPosition[3], screenPosition);
+		printf("%f, %f, %f, %f\n", screenPosition[0], screenPosition[1], screenPosition[2], screenPosition[3]);
+
 		break;
 	}
 }
