@@ -536,14 +536,14 @@ static bool createPiecesUniformBuffer(ChessBoard self, char **error)
 static void updateBoardUniformBuffer(ChessBoard self)
 {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		updateHostVisibleMutableBuffer(self->device, &self->boardUniformBufferMappedMemories[i], &self->boardUniform, 1, sizeof(self->boardUniform));
+		updateHostVisibleMutableBuffer(self->device, self->boardUniformBufferMappedMemories[i], &self->boardUniform, 1, sizeof(self->boardUniform));
 	}
 }
 
 static void updatePiecesUniformBuffer(ChessBoard self)
 {
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		updateHostVisibleMutableBuffer(self->device, &self->piecesUniformBufferMappedMemories[i], self->piecesUniforms, CHESS_SQUARE_COUNT, sizeof(self->piecesUniforms[0]));
+		updateHostVisibleMutableBuffer(self->device, self->piecesUniformBufferMappedMemories[i], self->piecesUniforms, CHESS_SQUARE_COUNT, sizeof(self->piecesUniforms[0]));
 	}
 }
 
