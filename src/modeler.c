@@ -228,7 +228,7 @@ void *threadProc(void *arg)
 	ChessEngine chessEngine;
 	createChessEngine(&chessEngine, &chessBoard);
 
-	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions.orientation), false, error)) {
+	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions.orientation), true, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 

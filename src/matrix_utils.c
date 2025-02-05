@@ -172,6 +172,13 @@ void mat4Copy(float mat[mat4N * mat4N], float dest[mat4N * mat4N])
 	}
 }
 
+void vec4Copy(float vec[mat4N], float dest[mat4N])
+{
+	for (size_t i = 0; i < mat4N; ++i) {
+		dest[i] = vec[i];
+	}
+}
+
 void mat4Multiply(float m1[mat4N * mat4N], float m2[mat4N * mat4N], float dest[mat4N * mat4N])
 {
 	float a00 = m1[0 * mat4N + 0];
@@ -224,3 +231,22 @@ void mat4Multiply(float m1[mat4N * mat4N], float m2[mat4N * mat4N], float dest[m
 	dest[3 * mat4N + 2] = a02 * b30 + a12 * b31 + a22 * b32 + a32 * b33;
 	dest[3 * mat4N + 3] = a03 * b30 + a13 * b31 + a23 * b32 + a33 * b33;
  }
+
+void mat4Vec4Multiply(float mat[mat4N * mat4N], float vec[mat4N])
+{
+	float newVector[mat4N];
+
+	newVector[0] = mat[0 * mat4N + 0] * vec[0] + mat[1 * mat4N + 0] * vec[1] + mat[2 * mat4N + 0] * vec[2] + mat[3 * mat4N + 0] * vec[3];
+	newVector[1] = mat[0 * mat4N + 1] * vec[0] + mat[1 * mat4N + 1] * vec[1] + mat[2 * mat4N + 1] * vec[2] + mat[3 * mat4N + 1] * vec[3];
+	newVector[2] = mat[0 * mat4N + 2] * vec[0] + mat[1 * mat4N + 2] * vec[1] + mat[2 * mat4N + 2] * vec[2] + mat[3 * mat4N + 2] * vec[3];
+	newVector[3] = mat[0 * mat4N + 3] * vec[0] + mat[1 * mat4N + 3] * vec[1] + mat[2 * mat4N + 3] * vec[2] + mat[3 * mat4N + 3] * vec[3];
+
+	vec4Copy(newVector, vec);
+}
+
+void vec4ScalarDivide(float scalar, float vec[mat4N])
+{
+	for (size_t i = 0; i < mat4N; ++i) {
+		vec[i] = vec[i] / scalar;
+	}
+}

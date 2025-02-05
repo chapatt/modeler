@@ -12,6 +12,9 @@ void mat4Transpose(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
 void mat4Scale(float mat[mat4N * mat4N], float scale);
 void mat4Inverse(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
 void mat4Copy(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
+void vec4Copy(float vec[mat4N], float dest[mat4N]);
 void mat4Multiply(float m1[mat4N * mat4N], float m2[mat4N * mat4N], float dest[mat4N * mat4N]);
+void mat4Vec4Multiply(float mat[mat4N * mat4N], float vec[mat4N]);
+void vec4ScalarDivide(float scalar, float vec[mat4N]);
 
 #endif /* MODELER_MATRIX_UTILS_H */
