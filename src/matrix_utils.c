@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stddef.h>
 #include <math.h>
 
@@ -179,6 +180,13 @@ void vec4Copy(float vec[mat4N], float dest[mat4N])
 	}
 }
 
+void vec3Copy(float vec[mat3N], float dest[mat3N])
+{
+	for (size_t i = 0; i < mat3N; ++i) {
+		dest[i] = vec[i];
+	}
+}
+
 void mat4Multiply(float m1[mat4N * mat4N], float m2[mat4N * mat4N], float dest[mat4N * mat4N])
 {
 	float a00 = m1[0 * mat4N + 0];
@@ -232,16 +240,12 @@ void mat4Multiply(float m1[mat4N * mat4N], float m2[mat4N * mat4N], float dest[m
 	dest[3 * mat4N + 3] = a03 * b30 + a13 * b31 + a23 * b32 + a33 * b33;
  }
 
-void mat4Vec4Multiply(float mat[mat4N * mat4N], float vec[mat4N])
+void mat4Vec4Multiply(float mat[mat4N * mat4N], float vec[mat4N], float dest[mat4N])
 {
-	float newVector[mat4N];
-
-	newVector[0] = mat[0 * mat4N + 0] * vec[0] + mat[1 * mat4N + 0] * vec[1] + mat[2 * mat4N + 0] * vec[2] + mat[3 * mat4N + 0] * vec[3];
-	newVector[1] = mat[0 * mat4N + 1] * vec[0] + mat[1 * mat4N + 1] * vec[1] + mat[2 * mat4N + 1] * vec[2] + mat[3 * mat4N + 1] * vec[3];
-	newVector[2] = mat[0 * mat4N + 2] * vec[0] + mat[1 * mat4N + 2] * vec[1] + mat[2 * mat4N + 2] * vec[2] + mat[3 * mat4N + 2] * vec[3];
-	newVector[3] = mat[0 * mat4N + 3] * vec[0] + mat[1 * mat4N + 3] * vec[1] + mat[2 * mat4N + 3] * vec[2] + mat[3 * mat4N + 3] * vec[3];
-
-	vec4Copy(newVector, vec);
+	dest[0] = mat[0 * mat4N + 0] * vec[0] + mat[1 * mat4N + 0] * vec[1] + mat[2 * mat4N + 0] * vec[2] + mat[3 * mat4N + 0] * vec[3];
+	dest[1] = mat[0 * mat4N + 1] * vec[0] + mat[1 * mat4N + 1] * vec[1] + mat[2 * mat4N + 1] * vec[2] + mat[3 * mat4N + 1] * vec[3];
+	dest[2] = mat[0 * mat4N + 2] * vec[0] + mat[1 * mat4N + 2] * vec[1] + mat[2 * mat4N + 2] * vec[2] + mat[3 * mat4N + 2] * vec[3];
+	dest[3] = mat[0 * mat4N + 3] * vec[0] + mat[1 * mat4N + 3] * vec[1] + mat[2 * mat4N + 3] * vec[2] + mat[3 * mat4N + 3] * vec[3];
 }
 
 void vec4ScalarDivide(float scalar, float vec[mat4N])
@@ -250,3 +254,73 @@ void vec4ScalarDivide(float scalar, float vec[mat4N])
 		vec[i] = vec[i] / scalar;
 	}
 }
+
+void vec3ScalarMultiply(float scalar, float vec[mat3N])
+{
+	for (size_t i = 0; i < mat3N; ++i) {
+		vec[i] = vec[i] * scalar;
+	}
+}
+
+void vec3Subtract(float v1[mat3N], float v2[mat3N], float dest[mat3N])
+{
+	for (size_t i = 0; i < mat3N; ++i) {
+		dest[i] = v1[i] - v2[i];
+	}
+}
+
+void vec3Add(float v1[mat3N], float v2[mat3N], float dest[mat3N])
+{
+	for (size_t i = 0; i < mat3N; ++i) {
+		dest[i] = v1[i] + v2[i];
+	}
+}
+
+void normalize(float vec[mat3N])
+{
+	float length = sqrt(dot(vec, vec));
+	float newVector[] = {
+		vec[0] / length,
+		vec[1] / length,
+		vec[2] / length
+	};
+
+	vec3Copy(newVector, vec);
+}
+
+float dot(float v1[mat3N], float v2[mat3N])
+{
+	return (v1[0] * v2[0]) + (v1[1] * v2[1]) + (v1[2] * v2[2]);
+}
+
+void screenToWorld(float homogenous[mat3N], float world[mat3N], float inverseViewProjection[mat4N * mat4N])
+{
+	float homogenousVec4[mat4N] = {homogenous[0], homogenous[1], homogenous[2], 1.0f};
+	float worldVec4[mat4N];
+	mat4Vec4Multiply(inverseViewProjection, homogenousVec4, worldVec4);
+	vec4ScalarDivide(worldVec4[3], worldVec4);
+	world[0] = worldVec4[0];
+	world[1] = worldVec4[1];
+	world[2] = worldVec4[2];
+}
+
+void castScreenToPlane(float intersection[mat3N], float screen[mat2N], float planePoint[mat3N], float planeNormal[mat3N], float inverseViewProjection[mat4N * mat4N])
+{
+	float rayOrigin[mat4N];
+	float rayEnd[mat4N];
+	float rayNormal[mat3N];
+	float homogenousOrigin[mat3N] = {screen[0], screen[1], 0.0f};
+	float homogenousEnd[mat3N] = {screen[0], screen[1], 1.0f};
+	float rayToPlane[mat3N];
+	float output[mat3N];
+	screenToWorld(homogenousOrigin, rayOrigin, inverseViewProjection);
+	screenToWorld(homogenousEnd, rayEnd, inverseViewProjection);
+	vec3Subtract(rayEnd, rayOrigin, rayNormal);
+	normalize(rayNormal);
+	vec3Subtract(planePoint, rayOrigin, rayToPlane);
+	float t = dot(rayToPlane, planeNormal) / dot(rayNormal, planeNormal);
+	vec3ScalarMultiply(t, rayNormal);
+	vec3Add(rayOrigin, rayNormal, intersection);
+	printf("on plane: %f\n", t);
+}
+
