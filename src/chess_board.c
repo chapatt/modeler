@@ -135,7 +135,7 @@ struct chess_board_t {
 	LastMove lastMove;
 	NormalizedPointerPosition pointerPosition;
 	ChessEngine engine;
-	float mvpInverse[mat4N * mat4N];
+	float inverseViewProjection[mat4N * mat4N];
 };
 
 static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
@@ -157,7 +157,8 @@ static bool createPiecesUniformBuffer(ChessBoard self, char **error);
 static void updateBoardUniformBuffer(ChessBoard self);
 static void updatePiecesUniformBuffer(ChessBoard self);
 static void updateVertices(ChessBoard self);
-static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition, Orientation orientation);
+static ChessSquare squareFromPointerPosition(ChessBoard self);
+static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat2N]);
 static float getRotationRadians(ChessBoard self);
 
 bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, char **error)
@@ -262,8 +263,8 @@ static void updateUniformBuffers(ChessBoard self)
 	float modelViewInverse[mat4N * mat4N];
 	float normalMatrix[mat4N * mat4N];
 	float projection[mat4N * mat4N];
-	float mvp[mat4N * mat4N];
-	float mvpInverse[mat4N * mat4N];
+	float viewProjection[mat4N * mat4N];
+	float inverseViewProjection[mat4N * mat4N];
 
 	float rotation = getRotationRadians(self);
 
@@ -295,9 +296,9 @@ static void updateUniformBuffers(ChessBoard self)
 	mat4Copy(view, self->boardUniform.MV);
 	mat4Copy(projection, self->boardUniform.P);
 	mat4Copy(normalMatrix, self->boardUniform.normalMatrix);
-	mat4Multiply(projection, view, mvp);
-	mat4Inverse(mvp, mvpInverse);
-	mat4Copy(mvpInverse, self->mvpInverse);
+	mat4Multiply(projection, view, viewProjection);
+	mat4Inverse(viewProjection, inverseViewProjection);
+	mat4Copy(inverseViewProjection, self->inverseViewProjection);
 
 	/* Piece */
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
@@ -907,9 +908,24 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	return true;
 }
 
-static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPosition, Orientation orientation)
+static ChessSquare squareFromPointerPosition(ChessBoard self)
 {
-	switch (orientation) {
+	NormalizedPointerPosition pointerPosition = self->pointerPosition;
+	if (self->enable3d) {
+		float screen[mat2N];
+		float intersection[mat3N];
+		float planePoint[] = {0.0f, 0.0f, 0.0f};
+		float planeNormal[] = {0.0f, 0.0f, 1.0f};
+		screenPositionFromPointerPosition(self->pointerPosition, screen);
+		castScreenToPlane(intersection, screen, planePoint, planeNormal, self->inverseViewProjection);
+		pointerPosition = (NormalizedPointerPosition) {
+			.x = (intersection[0] + 1) / 2,
+			.y = (intersection[1] + 1) / 2
+		};
+		printf("%f, %f, %f\n", intersection[0], intersection[1], intersection[2]);
+	}
+
+	switch (self->orientation) {
 	case ROTATE_0:
 		return (floor(pointerPosition.y * 8) * 8) + floor(pointerPosition.x * 8);
 	case ROTATE_90:
@@ -921,12 +937,10 @@ static ChessSquare squareFromPointerPosition(NormalizedPointerPosition pointerPo
 	}
 }
 
-static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat4N]) 
+static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat2N])
 {
 	screenPosition[0] = pointerPosition.x * 2 - 1;
 	screenPosition[1] = pointerPosition.y * 2 - 1;
-	screenPosition[2] = 0;
-	screenPosition[3] = 1;
 }
 
 void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
@@ -940,18 +954,11 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 	case BUTTON_DOWN:
 		break;
 	case BUTTON_UP:
-		square = squareFromPointerPosition(self->pointerPosition, self->orientation);
+		square = squareFromPointerPosition(self);
 		chessEngineSquareSelected(self->engine, square);
 		break;
 	case NORMALIZED_POINTER_MOVE:
 		self->pointerPosition = *(NormalizedPointerPosition *) inputEvent->data;
-
-		float screenPosition[mat4N];
-		screenPositionFromPointerPosition(self->pointerPosition, screenPosition);
-		mat4Vec4Multiply(self->mvpInverse, screenPosition);
-		vec4ScalarDivide(screenPosition[3], screenPosition);
-		printf("%f, %f, %f, %f\n", screenPosition[0], screenPosition[1], screenPosition[2], screenPosition[3]);
-
 		break;
 	}
 }
