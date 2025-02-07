@@ -37,6 +37,11 @@
 		AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */; };
 		AB7E0B142D1F42680068EC79 /* pieces.png in Resources */ = {isa = PBXBuildFile; fileRef = AB7E0B132D1F42680068EC79 /* pieces.png */; };
 		ABA366AB2D432C3B004921D7 /* pawn.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA366AA2D432C3A004921D7 /* pawn.obj */; };
+		ABA980022D558F1100ED6755 /* bishop.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA97FFF2D558EE500ED6755 /* bishop.obj */; };
+		ABA980032D558F1100ED6755 /* king.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA980012D558EE500ED6755 /* king.obj */; };
+		ABA980042D558F1100ED6755 /* knight.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA97FFD2D558EE500ED6755 /* knight.obj */; };
+		ABA980052D558F1100ED6755 /* queen.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA980002D558EE500ED6755 /* queen.obj */; };
+		ABA980062D558F1100ED6755 /* rook.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA97FFE2D558EE500ED6755 /* rook.obj */; };
 		ABC0F3052C02C93700771076 /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABC0F3062C05B82B00771076 /* roboto.ttf */; };
 		ABE1DEF52A3592D600A963A6 /* vulkan in Resources */ = {isa = PBXBuildFile; fileRef = ABE1DEF42A3592D600A963A6 /* vulkan */; };
@@ -107,6 +112,35 @@
 		AB7E0B102D1B66F80068EC79 /* chess_board.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = chess_board.frag.spv; path = ../chess_board.frag.spv; sourceTree = "<group>"; };
 		AB7E0B132D1F42680068EC79 /* pieces.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = pieces.png; path = ../pieces.png; sourceTree = "<group>"; };
 		ABA366AA2D432C3A004921D7 /* pawn.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = pawn.obj; path = ../pawn.obj; sourceTree = "<group>"; };
+		ABA97FDC2D558EE500ED6755 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		ABA97FDE2D558EE500ED6755 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		ABA97FDF2D558EE500ED6755 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		ABA97FE02D558EE500ED6755 /* modeler.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = modeler.entitlements; sourceTree = "<group>"; };
+		ABA97FE12D558EE500ED6755 /* modeler-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modeler-Bridging-Header.h"; sourceTree = "<group>"; };
+		ABA97FE22D558EE500ED6755 /* ModelerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerApp.swift; sourceTree = "<group>"; };
+		ABA97FE32D558EE500ED6755 /* ModelerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerView.swift; sourceTree = "<group>"; };
+		ABA97FE42D558EE500ED6755 /* ModelerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewController.swift; sourceTree = "<group>"; };
+		ABA97FE52D558EE500ED6755 /* ModelerViewControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewControllerRepresentable.swift; sourceTree = "<group>"; };
+		ABA97FE72D558EE500ED6755 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		ABA97FE82D558EE500ED6755 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		ABA97FE92D558EE500ED6755 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		ABA97FEA2D558EE500ED6755 /* modeler-ios-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modeler-ios-Bridging-Header.h"; sourceTree = "<group>"; };
+		ABA97FEB2D558EE500ED6755 /* ModelerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerApp.swift; sourceTree = "<group>"; };
+		ABA97FEC2D558EE500ED6755 /* ModelerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerView.swift; sourceTree = "<group>"; };
+		ABA97FED2D558EE500ED6755 /* ModelerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewController.swift; sourceTree = "<group>"; };
+		ABA97FEE2D558EE500ED6755 /* ModelerViewControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelerViewControllerRepresentable.swift; sourceTree = "<group>"; };
+		ABA97FF02D558EE500ED6755 /* VkLayer_api_dump.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = VkLayer_api_dump.json; sourceTree = "<group>"; };
+		ABA97FF12D558EE500ED6755 /* VkLayer_khronos_profiles.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = VkLayer_khronos_profiles.json; sourceTree = "<group>"; };
+		ABA97FF22D558EE500ED6755 /* VkLayer_khronos_shader_object.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = VkLayer_khronos_shader_object.json; sourceTree = "<group>"; };
+		ABA97FF32D558EE500ED6755 /* VkLayer_khronos_synchronization2.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = VkLayer_khronos_synchronization2.json; sourceTree = "<group>"; };
+		ABA97FF42D558EE500ED6755 /* VkLayer_khronos_validation.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = VkLayer_khronos_validation.json; sourceTree = "<group>"; };
+		ABA97FF62D558EE500ED6755 /* MoltenVK_icd.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = MoltenVK_icd.json; sourceTree = "<group>"; };
+		ABA97FF92D558EE500ED6755 /* modeler.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = modeler.xcodeproj; sourceTree = "<group>"; };
+		ABA97FFD2D558EE500ED6755 /* knight.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = knight.obj; path = ../knight.obj; sourceTree = "<group>"; };
+		ABA97FFE2D558EE500ED6755 /* rook.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = rook.obj; path = ../rook.obj; sourceTree = "<group>"; };
+		ABA97FFF2D558EE500ED6755 /* bishop.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = bishop.obj; path = ../bishop.obj; sourceTree = "<group>"; };
+		ABA980002D558EE500ED6755 /* queen.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = queen.obj; path = ../queen.obj; sourceTree = "<group>"; };
+		ABA980012D558EE500ED6755 /* king.obj */ = {isa = PBXFileReference; lastKnownFileType = text; name = king.obj; path = ../king.obj; sourceTree = "<group>"; };
 		ABC0F3062C05B82B00771076 /* roboto.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = roboto.ttf; path = ../roboto.ttf; sourceTree = "<group>"; };
 		ABC4BB9E2D37331D00A9D2CF /* modeler-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "modeler-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ABE1DEF42A3592D600A963A6 /* vulkan */ = {isa = PBXFileReference; lastKnownFileType = folder; path = vulkan; sourceTree = "<group>"; };
@@ -178,9 +212,99 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		ABA97FDD2D558EE500ED6755 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				ABA97FDC2D558EE500ED6755 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		ABA97FE62D558EE500ED6755 /* modeler */ = {
+			isa = PBXGroup;
+			children = (
+				ABA97FDD2D558EE500ED6755 /* Preview Content */,
+				ABA97FDE2D558EE500ED6755 /* Assets.xcassets */,
+				ABA97FDF2D558EE500ED6755 /* Info.plist */,
+				ABA97FE02D558EE500ED6755 /* modeler.entitlements */,
+				ABA97FE12D558EE500ED6755 /* modeler-Bridging-Header.h */,
+				ABA97FE22D558EE500ED6755 /* ModelerApp.swift */,
+				ABA97FE32D558EE500ED6755 /* ModelerView.swift */,
+				ABA97FE42D558EE500ED6755 /* ModelerViewController.swift */,
+				ABA97FE52D558EE500ED6755 /* ModelerViewControllerRepresentable.swift */,
+			);
+			path = modeler;
+			sourceTree = "<group>";
+		};
+		ABA97FEF2D558EE500ED6755 /* modeler-ios */ = {
+			isa = PBXGroup;
+			children = (
+				ABA97FE72D558EE500ED6755 /* Assets.xcassets */,
+				ABA97FE82D558EE500ED6755 /* Info.plist */,
+				ABA97FE92D558EE500ED6755 /* LaunchScreen.storyboard */,
+				ABA97FEA2D558EE500ED6755 /* modeler-ios-Bridging-Header.h */,
+				ABA97FEB2D558EE500ED6755 /* ModelerApp.swift */,
+				ABA97FEC2D558EE500ED6755 /* ModelerView.swift */,
+				ABA97FED2D558EE500ED6755 /* ModelerViewController.swift */,
+				ABA97FEE2D558EE500ED6755 /* ModelerViewControllerRepresentable.swift */,
+			);
+			path = "modeler-ios";
+			sourceTree = "<group>";
+		};
+		ABA97FF52D558EE500ED6755 /* explicit_layer.d */ = {
+			isa = PBXGroup;
+			children = (
+				ABA97FF02D558EE500ED6755 /* VkLayer_api_dump.json */,
+				ABA97FF12D558EE500ED6755 /* VkLayer_khronos_profiles.json */,
+				ABA97FF22D558EE500ED6755 /* VkLayer_khronos_shader_object.json */,
+				ABA97FF32D558EE500ED6755 /* VkLayer_khronos_synchronization2.json */,
+				ABA97FF42D558EE500ED6755 /* VkLayer_khronos_validation.json */,
+			);
+			path = explicit_layer.d;
+			sourceTree = "<group>";
+		};
+		ABA97FF72D558EE500ED6755 /* icd.d */ = {
+			isa = PBXGroup;
+			children = (
+				ABA97FF62D558EE500ED6755 /* MoltenVK_icd.json */,
+			);
+			path = icd.d;
+			sourceTree = "<group>";
+		};
+		ABA97FF82D558EE500ED6755 /* vulkan */ = {
+			isa = PBXGroup;
+			children = (
+				ABA97FF52D558EE500ED6755 /* explicit_layer.d */,
+				ABA97FF72D558EE500ED6755 /* icd.d */,
+			);
+			path = vulkan;
+			sourceTree = "<group>";
+		};
+		ABA97FFA2D558EE500ED6755 /* xcode */ = {
+			isa = PBXGroup;
+			children = (
+				ABA97FE62D558EE500ED6755 /* modeler */,
+				ABA97FEF2D558EE500ED6755 /* modeler-ios */,
+				ABA97FF82D558EE500ED6755 /* vulkan */,
+				ABA97FF92D558EE500ED6755 /* modeler.xcodeproj */,
+			);
+			name = xcode;
+			sourceTree = "<group>";
+		};
+		ABA97FFB2D558EE500ED6755 /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
 		ABF1622C2A34E3A6007655F7 = {
 			isa = PBXGroup;
 			children = (
+				ABA97FFF2D558EE500ED6755 /* bishop.obj */,
+				ABA980012D558EE500ED6755 /* king.obj */,
+				ABA97FFD2D558EE500ED6755 /* knight.obj */,
+				ABA980002D558EE500ED6755 /* queen.obj */,
+				ABA97FFE2D558EE500ED6755 /* rook.obj */,
+				ABA97FFA2D558EE500ED6755 /* xcode */,
 				ABA366AA2D432C3A004921D7 /* pawn.obj */,
 				AB37D74B2D41602F006A6613 /* phong.frag.spv */,
 				AB37D74C2D41602F006A6613 /* phong.vert.spv */,
@@ -308,6 +432,12 @@
 			mainGroup = ABF1622C2A34E3A6007655F7;
 			productRefGroup = ABF162362A34E3A7007655F7 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = ABA97FFB2D558EE500ED6755 /* Products */;
+					ProjectRef = ABA97FF92D558EE500ED6755 /* modeler.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				ABF162342A34E3A7007655F7 /* modeler */,
@@ -328,10 +458,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ABA980032D558F1100ED6755 /* king.obj in Resources */,
+				ABA980052D558F1100ED6755 /* queen.obj in Resources */,
+				ABA980062D558F1100ED6755 /* rook.obj in Resources */,
+				ABA980022D558F1100ED6755 /* bishop.obj in Resources */,
+				ABA980042D558F1100ED6755 /* knight.obj in Resources */,
 				ABA366AB2D432C3B004921D7 /* pawn.obj in Resources */,
+				AB37D74A2D415FC1006A6613 /* teapot.obj in Resources */,
 				AB37D74D2D41602F006A6613 /* phong.frag.spv in Resources */,
 				AB37D74E2D41602F006A6613 /* phong.vert.spv in Resources */,
-				AB37D74A2D415FC1006A6613 /* teapot.obj in Resources */,
 				AB7E0B142D1F42680068EC79 /* pieces.png in Resources */,
 				AB7E0B112D1B66F80068EC79 /* chess_board.vert.spv in Resources */,
 				AB7E0B122D1B66F80068EC79 /* chess_board.frag.spv in Resources */,
