@@ -917,6 +917,9 @@ static ChessSquare squareFromPointerPosition(ChessBoard self)
 		float planeNormal[] = {0.0f, 0.0f, 1.0f};
 		screenPositionFromPointerPosition(self->pointerPosition, screen);
 		castScreenToPlane(intersection, screen, planePoint, planeNormal, self->inverseViewProjection);
+		if (intersection[0] < -1.0f || intersection[0] > 1.0f || intersection[1] < -1.0f || intersection[1] > 1.0f) {
+			return CHESS_SQUARE_COUNT;
+		}
 		pointerPosition = (NormalizedPointerPosition) {
 			.x = (intersection[0] + 1) / 2,
 			.y = (intersection[1] + 1) / 2
@@ -952,7 +955,9 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 	case BUTTON_DOWN:
 		break;
 	case BUTTON_UP:
-		square = squareFromPointerPosition(self);
+		if ((square = squareFromPointerPosition(self)) >= CHESS_SQUARE_COUNT) {
+			break;
+		}
 		chessEngineSquareSelected(self->engine, square);
 		break;
 	case NORMALIZED_POINTER_MOVE:
