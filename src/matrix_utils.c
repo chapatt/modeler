@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stddef.h>
 #include <math.h>
 
@@ -321,6 +320,5 @@ void castScreenToPlane(float intersection[mat3N], float screen[mat2N], float pla
 	float t = dot(rayToPlane, planeNormal) / dot(rayNormal, planeNormal);
 	vec3ScalarMultiply(t, rayNormal);
 	vec3Add(rayOrigin, rayNormal, intersection);
-	printf("on plane: %f\n", t);
 }
 

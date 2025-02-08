@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -922,7 +921,6 @@ static ChessSquare squareFromPointerPosition(ChessBoard self)
 			.x = (intersection[0] + 1) / 2,
 			.y = (intersection[1] + 1) / 2
 		};
-		printf("%f, %f, %f\n", intersection[0], intersection[1], intersection[2]);
 	}
 
 	switch (self->orientation) {
