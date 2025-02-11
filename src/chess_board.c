@@ -891,8 +891,7 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipelineLayout, 0, 1, self->boardDescriptorSets, 0, NULL);
 	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
 
-	if (false) {
-	// if (self->enable3d) {
+	if (self->enable3d) {
 		/* Draw Mesh */
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
 		vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
@@ -1047,6 +1046,8 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->piecesVertexBuffer, &self->piecesVertexBufferAllocation, vertices, self->piecesVertexCount, sizeof(*vertices), error)) {
 		return false;
 	}
+
+	free(vertices);
 
 	uint16_t *indices = malloc(sizeof(*indices) * self->piecesVertexCount);
 
