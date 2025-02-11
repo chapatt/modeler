@@ -980,13 +980,14 @@ static void readObj(void* ctx, const char* filename, const int is_mtl, const cha
 
 static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 {
+	char *piecesMeshPath;
+	asprintf(&piecesMeshPath, "%s/%s", self->resourcePath, "pawn.obj");
+
 	tinyobj_attrib_t attrib;
 	tinyobj_shape_t *shapes = NULL;
 	size_t shapeCount;
 	tinyobj_material_t *materials = NULL;
 	size_t materialCount;
-	char *piecesMeshPath;
-	asprintf(&piecesMeshPath, "%s/%s", self->resourcePath, "pawn.obj");
 
 	if (tinyobj_parse_obj(&attrib, &shapes, &shapeCount, &materials, &materialCount, piecesMeshPath, readObj, NULL, TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS) {
 		asprintf(error, "Failed to load mesh.\n");
@@ -1060,6 +1061,10 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 	}
 
 	free(indices);
+
+	tinyobj_attrib_free(&attrib);
+	tinyobj_shapes_free(shapes, shapeCount);
+	tinyobj_materials_free(materials, materialCount);
 
 	return true;
 }
