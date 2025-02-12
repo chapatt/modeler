@@ -160,7 +160,7 @@ static void updateVertices(ChessBoard self);
 static ChessSquare squareFromPointerPosition(ChessBoard self);
 static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat2N]);
 static float getRotationRadians(ChessBoard self);
-static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, tinyobj_shape_t *shapes, size_t shapeCount, size_t vertexOffset, size_t vertexCount, MeshVertex *vertices, uint16_t *indices);
+static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, size_t vertexOffset, size_t vertexCount, MeshVertex *vertices, uint32_t *indices);
 
 bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, char **error)
 {
@@ -896,12 +896,12 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	if (self->enable3d) {
 		/* Draw Mesh */
 		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+		vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
 		for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 			uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 1, &piecesUniformBufferOffset);
-			vkCmdDrawIndexed(commandBuffer, self->pieceVertexCounts[0], 1, self->pieceVertexOffsets[0], 0, 0);
+			vkCmdDrawIndexed(commandBuffer, self->pieceVertexCounts[5], 1, self->pieceVertexOffsets[5], 0, 0);
 		}
 	}
 
@@ -1009,13 +1009,13 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 	}
 
 	MeshVertex *vertices = malloc(sizeof(*vertices) * totalVertexCount);
-	uint16_t *indices = malloc(sizeof(*indices) * totalVertexCount);
+	uint32_t *indices = malloc(sizeof(*indices) * totalVertexCount);
 
 	for (size_t i = 0; i < 6; ++i) {
-		parseTinyobjIntoBuffers(attrib[i], shapes[i], shapeCount[i], self->pieceVertexOffsets[i], self->pieceVertexCounts[i], vertices, indices);
+		parseTinyobjIntoBuffers(attrib[i], self->pieceVertexOffsets[i], self->pieceVertexCounts[i], vertices, indices);
 	}
 
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->piecesVertexBuffer, &self->piecesVertexBufferAllocation, vertices, totalVertexCount, sizeof(vertices[0]), error)) {
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->piecesVertexBuffer, &self->piecesVertexBufferAllocation, vertices, totalVertexCount, sizeof(*vertices), error)) {
 		free(vertices);
 		free(indices);
 		return false;
@@ -1023,7 +1023,7 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 
 	free(vertices);
 
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, totalVertexCount, sizeof(indices[0]), error)) {
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, totalVertexCount, sizeof(*indices), error)) {
 		free(vertices);
 		free(indices);
 		return false;
@@ -1040,19 +1040,19 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 	return true;
 }
 
-static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, tinyobj_shape_t *shapes, size_t shapeCount, size_t vertexOffset, size_t vertexCount, MeshVertex *vertices, uint16_t *indices)
+static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, size_t vertexOffset, size_t vertexCount, MeshVertex *vertices, uint32_t *indices)
 {
 	size_t faceOffset = 0;
 
-	for (size_t i = 0; i < attrib.num_face_num_verts; i++) {
-		for (size_t f = 0; f < (size_t) attrib.face_num_verts[i] / 3; f++) {
+	for (size_t i = 0; i < attrib.num_face_num_verts; ++i) {
+		for (size_t f = 0; f < (size_t) attrib.face_num_verts[i] / 3; ++f) {
 			tinyobj_vertex_index_t idx0 = attrib.faces[faceOffset + 3 * f + 0];
 			tinyobj_vertex_index_t idx1 = attrib.faces[faceOffset + 3 * f + 1];
 			tinyobj_vertex_index_t idx2 = attrib.faces[faceOffset + 3 * f + 2];
 
 			float v[3][3];
 
-			for (size_t k = 0; k < 3; k++) {
+			for (size_t k = 0; k < 3; ++k) {
 				int f0 = idx0.v_idx;
 				int f1 = idx1.v_idx;
 				int f2 = idx2.v_idx;
@@ -1070,7 +1070,7 @@ static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, tinyobj_shape_t *sh
 				int f2 = idx2.vn_idx;
 
 				if (f0 >= 0 && f1 >= 0 && f2 >= 0) {
- 					for (size_t k = 0; k < 3; k++) {
+ 					for (size_t k = 0; k < 3; ++k) {
 						n[0][k] = attrib.normals[3 * (size_t)f0 + k];
 						n[1][k] = attrib.normals[3 * (size_t)f1 + k];
 						n[2][k] = attrib.normals[3 * (size_t)f2 + k];
