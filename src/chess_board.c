@@ -58,6 +58,22 @@ typedef struct transform_uniform_t {
 	float normalMatrix[16];
 } TransformUniform;
 
+size_t pieceMeshIndexMap[13] = {
+	0,
+	5,
+	4,
+	3,
+	2,
+	1,
+	0,
+	5,
+	4,
+	3,
+	2,
+	1,
+	0
+};
+
 float pieceSpriteOriginMap[13][2] = {
 	{0.75f, 0.75f},
 	{0.25f, 0.75f},
@@ -899,9 +915,14 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 		vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
 		for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+			if (self->board[i] == EMPTY) {
+				continue;
+			}
+
+			size_t meshIndex = pieceMeshIndexMap[self->board[i]];
 			uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 1, &piecesUniformBufferOffset);
-			vkCmdDrawIndexed(commandBuffer, self->pieceVertexCounts[5], 1, self->pieceVertexOffsets[5], self->pieceVertexOffsets[5], 0);
+			vkCmdDrawIndexed(commandBuffer, self->pieceVertexCounts[meshIndex], 1, self->pieceVertexOffsets[meshIndex], self->pieceVertexOffsets[meshIndex], 0);
 		}
 	}
 
