@@ -104,7 +104,8 @@ struct chess_board_t {
 	VmaAllocation boardVertexBufferAllocation;
 	VkBuffer boardIndexBuffer;
 	VmaAllocation boardIndexBufferAllocation;
-	size_t piecesVertexCount;
+	size_t pieceVertexCounts[6];
+	size_t pieceVertexOffsets[6];
 	VkBuffer piecesVertexBuffer;
 	VmaAllocation piecesVertexBufferAllocation;
 	VkBuffer piecesIndexBuffer;
@@ -159,6 +160,7 @@ static void updateVertices(ChessBoard self);
 static ChessSquare squareFromPointerPosition(ChessBoard self);
 static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat2N]);
 static float getRotationRadians(ChessBoard self);
+static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, tinyobj_shape_t *shapes, size_t shapeCount, size_t vertexOffset, size_t vertexCount, MeshVertex *vertices, uint16_t *indices);
 
 bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, char **error)
 {
@@ -899,7 +901,7 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 		for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 			uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 1, &piecesUniformBufferOffset);
-			vkCmdDrawIndexed(commandBuffer, self->piecesVertexCount, 1, 0, 0, 0);
+			vkCmdDrawIndexed(commandBuffer, self->pieceVertexCounts[0], 1, self->pieceVertexOffsets[0], 0, 0);
 		}
 	}
 
@@ -980,23 +982,66 @@ static void readObj(void* ctx, const char* filename, const int is_mtl, const cha
 
 static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 {
-	char *piecesMeshPath;
-	asprintf(&piecesMeshPath, "%s/%s", self->resourcePath, "pawn.obj");
+	char *pieceNames[] = {"king", "queen", "rook", "bishop", "knight", "pawn"};
+	tinyobj_attrib_t attrib[6];
+	tinyobj_shape_t *shapes[6];
+	size_t shapeCount[6];
+	tinyobj_material_t *materials[6];
+	size_t materialCount[6];
 
-	tinyobj_attrib_t attrib;
-	tinyobj_shape_t *shapes = NULL;
-	size_t shapeCount;
-	tinyobj_material_t *materials = NULL;
-	size_t materialCount;
+	size_t totalVertexCount = 0;
 
-	if (tinyobj_parse_obj(&attrib, &shapes, &shapeCount, &materials, &materialCount, piecesMeshPath, readObj, NULL, TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS) {
-		asprintf(error, "Failed to load mesh.\n");
+	for (size_t i = 0; i < 6; ++i) {
+		char *pieceMeshPath;
+		asprintf(&pieceMeshPath, "%s/%s.obj", self->resourcePath, pieceNames[i]);
+
+		if (tinyobj_parse_obj(attrib + i, shapes + i, shapeCount + i, materials + i, materialCount + i, pieceMeshPath, readObj, NULL, TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS) {
+			free(pieceMeshPath);
+			asprintf(error, "Failed to load mesh.\n");
+			return false;
+		}
+
+		free(pieceMeshPath);
+
+		self->pieceVertexCounts[i] = attrib[i].num_face_num_verts * 3;
+		self->pieceVertexOffsets[i] = i == 0 ? 0 : self->pieceVertexOffsets[i - 1] + self->pieceVertexCounts[i - 1];
+		totalVertexCount += self->pieceVertexCounts[i];
+	}
+
+	MeshVertex *vertices = malloc(sizeof(*vertices) * totalVertexCount);
+	uint16_t *indices = malloc(sizeof(*indices) * totalVertexCount);
+
+	for (size_t i = 0; i < 6; ++i) {
+		parseTinyobjIntoBuffers(attrib[i], shapes[i], shapeCount[i], self->pieceVertexOffsets[i], self->pieceVertexCounts[i], vertices, indices);
+	}
+
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->piecesVertexBuffer, &self->piecesVertexBufferAllocation, vertices, totalVertexCount, sizeof(vertices[0]), error)) {
+		free(vertices);
+		free(indices);
 		return false;
 	}
 
-	self->piecesVertexCount = attrib.num_face_num_verts * 3;
-	MeshVertex *vertices = malloc(sizeof(*vertices) * self->piecesVertexCount);
+	free(vertices);
 
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, totalVertexCount, sizeof(indices[0]), error)) {
+		free(vertices);
+		free(indices);
+		return false;
+	}
+
+	free(indices);
+
+	for (size_t i = 0; i < 6; ++i) {
+		tinyobj_attrib_free(attrib + i);
+		tinyobj_shapes_free(shapes[i], shapeCount[i]);
+		tinyobj_materials_free(materials[i], materialCount[i]);
+	}
+
+	return true;
+}
+
+static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, tinyobj_shape_t *shapes, size_t shapeCount, size_t vertexOffset, size_t vertexCount, MeshVertex *vertices, uint16_t *indices)
+{
 	size_t faceOffset = 0;
 
 	for (size_t i = 0; i < attrib.num_face_num_verts; i++) {
@@ -1034,7 +1079,7 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 			}
 
 			for (size_t j = 0; j < 3; ++j) {
-				vertices[faceOffset + (f * 3) + j] = (MeshVertex) {
+				vertices[vertexOffset + faceOffset + (f * 3) + j] = (MeshVertex) {
 					.pos = {v[j][0], v[j][1], v[j][2]},
 					.normal = {n[j][0], n[j][1], n[j][2]}
 				};
@@ -1044,29 +1089,9 @@ static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
 		faceOffset += (size_t) attrib.face_num_verts[i];
 	}
 
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->piecesVertexBuffer, &self->piecesVertexBufferAllocation, vertices, self->piecesVertexCount, sizeof(*vertices), error)) {
-		return false;
+	for (size_t i = 0; i < vertexCount; ++i) {
+		indices[vertexOffset + i] = vertexOffset + i;
 	}
-
-	free(vertices);
-
-	uint16_t *indices = malloc(sizeof(*indices) * self->piecesVertexCount);
-
-	for (size_t i = 0; i < self->piecesVertexCount; ++i) {
-		indices[i] = i;
-	}
-
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->piecesIndexBuffer, &self->piecesIndexBufferAllocation, indices, self->piecesVertexCount, sizeof(indices[0]), error)) {
-		return false;
-	}
-
-	free(indices);
-
-	tinyobj_attrib_free(&attrib);
-	tinyobj_shapes_free(shapes, shapeCount);
-	tinyobj_materials_free(materials, materialCount);
-
-	return true;
 }
 
 void destroyChessBoard(ChessBoard self)
