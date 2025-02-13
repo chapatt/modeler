@@ -98,6 +98,26 @@ void mat4Scale(float mat[mat4N * mat4N], float scale)
 	mat[3 * mat4N + 3] *= scale;
 }
 
+void mat4ScaleVec3(float mat[mat4N * mat4N], float vec[mat3N], float dest[mat4N * mat4N])
+{
+	mat4Copy(mat, dest);
+
+	dest[0 * mat4N + 0] *= vec[0];
+	dest[0 * mat4N + 1] *= vec[0];
+	dest[0 * mat4N + 2] *= vec[0];
+	dest[0 * mat4N + 3] *= vec[0];
+
+	dest[1 * mat4N + 0] *= vec[1];
+	dest[1 * mat4N + 1] *= vec[1];
+	dest[1 * mat4N + 2] *= vec[1];
+	dest[1 * mat4N + 3] *= vec[1];
+
+	dest[2 * mat4N + 0] *= vec[2];
+	dest[2 * mat4N + 1] *= vec[2];
+	dest[2 * mat4N + 2] *= vec[2];
+	dest[2 * mat4N + 3] *= vec[2];
+}
+
 void mat4Inverse(float mat[mat4N * mat4N], float dest[mat4N * mat4N])
 {
 	float t[6];

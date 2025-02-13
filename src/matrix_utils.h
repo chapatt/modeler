@@ -12,6 +12,7 @@ void transformRotateZ(float mat[mat4N * mat4N], float rotation);
 void transformScale(float mat[mat4N * mat4N], float scale);
 void mat4Transpose(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
 void mat4Scale(float mat[mat4N * mat4N], float scale);
+void mat4ScaleVec3(float mat[mat4N * mat4N], float vec[mat3N], float dest[mat4N * mat4N]);
 void mat4Inverse(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
 void mat4Copy(float mat[mat4N * mat4N], float dest[mat4N * mat4N]);
 void vec4Copy(float vec[mat4N], float dest[mat4N]);
