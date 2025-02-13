@@ -3,6 +3,18 @@
 
 #include "matrix_utils.h"
 
+void orthographicProjection(float mat[mat4N * mat4N], float bottom, float top, float left, float right, float near, float far)
+{
+	float newMatrix[] = {
+		2.0f / (right - left), 0.0f, 0.0f, 0.0f,
+		0.0f, 2.0f / (bottom - top), 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f / (far - near), 0.0f,
+		-(right + left) / (right - left), -(top + bottom) / (bottom - top), near / (far - near), 1.0f
+	};
+
+	mat4Copy(newMatrix, mat);
+}
+
 void perspectiveProjection(float mat[mat4N * mat4N], float fovy, float aspectRatio, float near, float far)
 {
 	const float e = 1.0f / tan(fovy * 0.5f);
@@ -341,4 +353,3 @@ void castScreenToPlane(float intersection[mat3N], float screen[mat2N], float pla
 	vec3ScalarMultiply(t, rayNormal);
 	vec3Add(rayOrigin, rayNormal, intersection);
 }
-

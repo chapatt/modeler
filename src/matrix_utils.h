@@ -5,6 +5,7 @@
 #define mat3N 3
 #define mat2N 2
 
+void orthographicProjection(float mat[mat4N * mat4N], float bottom, float top, float left, float right, float near, float far);
 void perspectiveProjection(float mat[mat4N * mat4N], float fovy, float aspectRatio, float near, float far);
 void transformTranslation(float mat[mat4N * mat4N], float x, float y, float z);
 void transformRotation(float mat[mat4N * mat4N], float rotation, float x, float y, float z);

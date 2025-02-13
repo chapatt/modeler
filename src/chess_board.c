@@ -300,7 +300,8 @@ static void updateUniformBuffers(ChessBoard self)
 		mat4Multiply(cameraTranslation, cameraTilt, view);
 
 		/* Projection matrix */
-		perspectiveProjection(perspective, M_PI_2, 1, 0.1, 10);
+		//perspectiveProjection(perspective, M_PI_2, 1.0f, 0.1f, 10.0f);
+		orthographicProjection(perspective, 1.0f, -1.0f, -1.0f, 1.0f, 0.1f, 10.0f);
 		mat4Multiply(perspective, preRotation, projection);
 	} else {
 		mat4Copy(identity, view);
