@@ -110,6 +110,7 @@ struct chess_board_t {
 	float originY;
 	Orientation orientation;
 	bool enable3d;
+	Projection projection;
 	VkPipelineLayout boardPipelineLayout;
 	VkPipeline boardPipeline;
 	BoardVertex boardVertices[CHESS_VERTEX_COUNT];
@@ -178,7 +179,7 @@ static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerP
 static float getRotationRadians(ChessBoard self);
 static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, size_t vertexOffset, size_t vertexCount, MeshVertex *vertices, uint16_t *indices);
 
-bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, char **error)
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, Projection projection, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -198,6 +199,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	self->originY = originY;
 	self->orientation = orientation;
 	self->enable3d = enable3d;
+	self->projection = projection;
 
 	self->selected = CHESS_SQUARE_COUNT;
 	self->lastMove = (LastMove) {
@@ -295,13 +297,21 @@ static void updateUniformBuffers(ChessBoard self)
 	transformRotation(preRotation, -rotation, 0, 0, 1);
 	if (self->enable3d) {
 		/* View matrix */
-		transformRotation(cameraTilt, M_PI_4, -1, 0, 0);
-		transformTranslation(cameraTranslation, 0, 0, 2);
+		if (self->projection == PERSPECTIVE) {
+			transformRotation(cameraTilt, M_PI / 5, -1, 0, 0);
+			transformTranslation(cameraTranslation, 0, 0, 3);
+		} else if (self->projection == ORTHOGRAPHIC) {
+			transformRotation(cameraTilt, M_PI / 6, -1, 0, 0);
+			transformTranslation(cameraTranslation, 0, 0, 2);
+		}
 		mat4Multiply(cameraTranslation, cameraTilt, view);
 
 		/* Projection matrix */
-		//perspectiveProjection(perspective, M_PI_2, 1.0f, 0.1f, 10.0f);
-		orthographicProjection(perspective, 1.0f, -1.0f, -1.0f, 1.0f, 0.1f, 10.0f);
+		if (self->projection == PERSPECTIVE) {
+			perspectiveProjection(perspective, M_PI_4, 1.0f, 0.1f, 10.0f);
+		} else if (self->projection == ORTHOGRAPHIC) {
+			orthographicProjection(perspective, 1.0f, -1.0f, -1.0f, 1.0f, 0.1f, 10.0f);
+		}
 		mat4Multiply(perspective, preRotation, projection);
 	} else {
 		mat4Copy(identity, view);
