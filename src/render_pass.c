@@ -82,11 +82,6 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	};
 
 #ifdef ENABLE_IMGUI
-	VkAttachmentReference imAttachmentReference = {
-		.attachment = 0,
-		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-	};
-
 	VkSubpassDescription imSubpassDescription = {
 		.flags = 0,
 		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -94,8 +89,8 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.pInputAttachments = NULL,
 		.colorAttachmentCount = 1,
 		.pColorAttachments = &attachmentReference,
-		.pResolveAttachments = NULL,
-		.pDepthStencilAttachment = NULL,
+		.pResolveAttachments = &resolveAttachmentReference,
+		.pDepthStencilAttachment = &depthAttachmentReference,
 		.preserveAttachmentCount = 0,
 		.pPreserveAttachments = NULL
 	};
