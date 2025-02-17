@@ -28,7 +28,6 @@ typedef struct font_t {
 } Font;
 #endif /* ENABLE_IMGUI */
 
-static bool resetChessBoard(ChessBoard chessBoard, char **error);
 static inline Orientation negateRotation(Orientation orientation);
 static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, PointerPosition pointerPosition);
 #ifdef ENABLE_IMGUI
@@ -37,7 +36,7 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 #endif /* ENABLE_IMGUI */
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, char **error)
 {
 #ifdef ENABLE_IMGUI
 	Font *fonts = NULL;
@@ -268,9 +267,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			sendExitFullscreenSignal(platformWindow);
 		}
 		if (ImGui_Button("Reset Board")) {
-			if (!resetChessBoard(chessBoard, error)) {
-				return false;
-			}
+			chessEngineReset(chessEngine);
 		}
 		ImGui_Checkbox("3D", &enable3d);
 		ImGui_End();
@@ -440,25 +437,3 @@ static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, 
 	}
 }
 #endif /* ENABLE_IMGUI */
-
-static bool resetChessBoard(ChessBoard chessBoard, char **error)
-{
-	Board8x8 newSetup = {
-		BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK,
-		BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN, BLACK_PAWN,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,
-		WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN, WHITE_PAWN,
-		WHITE_ROOK, WHITE_KNIGHT, WHITE_BISHOP, WHITE_QUEEN, WHITE_KING, WHITE_BISHOP, WHITE_KNIGHT, WHITE_ROOK
-	};
-
-	chessBoardSetBoard(chessBoard, newSetup);
-	if (!updateChessBoard(chessBoard, error)) {
-		asprintf(error, "Failed to update chess board.\n");
-		return false;
-	}
-
-	return true;
-}
