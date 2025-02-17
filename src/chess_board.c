@@ -155,8 +155,6 @@ struct chess_board_t {
 	float inverseViewProjection[mat4N * mat4N];
 };
 
-static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
-static void basicSetBoard(ChessBoard self, Board8x8 board);
 static void initializePieces(ChessBoard self);
 static void initializeMove(ChessBoard self);
 static void updateUniformBuffers(ChessBoard self);
@@ -178,6 +176,8 @@ static ChessSquare squareFromPointerPosition(ChessBoard self);
 static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat2N]);
 static float getRotationRadians(ChessBoard self);
 static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, size_t vertexOffset, size_t vertexCount, MeshVertex *vertices, uint16_t *indices);
+static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
+static void basicSetBoard(ChessBoard self, Board8x8 board);
 
 bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, Projection projection, char **error)
 {
@@ -799,59 +799,6 @@ static bool createBoardPipeline(ChessBoard self, char **error)
 	return true;
 }
 
-void chessBoardSetDimensions(ChessBoard self, float width, float originX, float originY, Orientation orientation)
-{
-	self->width = width;
-	self->originX = originX;
-	self->originY = originY;
-	self->orientation = orientation;
-
-	updateUniformBuffers(self);
-	updateBoardUniformBuffer(self);
-	updatePiecesUniformBuffer(self);
-	updateVertices(self);
-}
-
-void basicSetBoard(ChessBoard self, Board8x8 board)
-{
-	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
-		self->board[i] = board[i];
-	}
-}
-
-void chessBoardSetBoard(ChessBoard self, Board8x8 board)
-{
-	basicSetBoard(self, board);
-	updateVertices(self);
-}
-
-void basicSetMove(ChessBoard self, MoveBoard8x8 move)
-{
-	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
-		self->move[i] = move[i];
-	}
-}
-
-void chessBoardSetMove(ChessBoard self, MoveBoard8x8 move)
-{
-	basicSetMove(self, move);
-	updateVertices(self);
-}
-
-void chessBoardSetSelected(ChessBoard self, ChessSquare selected)
-{
-	self->selected = selected;
-
-	updateVertices(self);
-}
-
-void chessBoardSetLastMove(ChessBoard self, LastMove lastMove)
-{
-	self->lastMove = lastMove;
-
-	updateVertices(self);
-}
-
 static void updateVertices(ChessBoard self)
 {
 	float dark[] = {0.71f, 0.533f, 0.388f};
@@ -1178,4 +1125,76 @@ void destroyChessBoard(ChessBoard self)
 
 	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
 	free(self);
+}
+
+void chessBoardSetDimensions(ChessBoard self, float width, float originX, float originY, Orientation orientation)
+{
+	self->width = width;
+	self->originX = originX;
+	self->originY = originY;
+	self->orientation = orientation;
+
+	updateUniformBuffers(self);
+	updateBoardUniformBuffer(self);
+	updatePiecesUniformBuffer(self);
+	updateVertices(self);
+}
+
+void basicSetBoard(ChessBoard self, Board8x8 board)
+{
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+		self->board[i] = board[i];
+	}
+}
+
+void chessBoardSetBoard(ChessBoard self, Board8x8 board)
+{
+	basicSetBoard(self, board);
+	updateVertices(self);
+}
+
+void basicSetMove(ChessBoard self, MoveBoard8x8 move)
+{
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+		self->move[i] = move[i];
+	}
+}
+
+void chessBoardSetMove(ChessBoard self, MoveBoard8x8 move)
+{
+	basicSetMove(self, move);
+	updateVertices(self);
+}
+
+void chessBoardSetSelected(ChessBoard self, ChessSquare selected)
+{
+	self->selected = selected;
+
+	updateVertices(self);
+}
+
+void chessBoardSetLastMove(ChessBoard self, LastMove lastMove)
+{
+	self->lastMove = lastMove;
+
+	updateVertices(self);
+}
+
+bool chessBoardGetEnable3d(ChessBoard self)
+{
+	return self->enable3d;
+}
+
+void chessBoardSetEnable3d(ChessBoard self, bool enable3d)
+{
+	if (self->enable3d == enable3d) {
+		return;
+	}
+
+	self->enable3d = enable3d;
+
+	updateVertices(self);
+	updateUniformBuffers(self);
+	updateBoardUniformBuffer(self);
+	updatePiecesUniformBuffer(self);
 }

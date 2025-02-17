@@ -59,6 +59,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	size_t head = 0;
 	long elapsed = 1;
 	PointerPosition pointerPosition;
+	bool enable3d = chessBoardGetEnable3d(chessBoard);
 
 #ifdef ENABLE_IMGUI
 	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath);
@@ -183,6 +184,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			windowResized = false;
 		}
 
+		chessBoardSetEnable3d(chessBoard, enable3d);
+
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
 			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
 			return false;
@@ -269,6 +272,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 		}
+		ImGui_Checkbox("3D", &enable3d);
 		ImGui_End();
 		ImGui_PopFont();
 		ImGui_Render();
