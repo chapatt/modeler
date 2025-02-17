@@ -36,7 +36,7 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
 #endif /* ENABLE_IMGUI */
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet **descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet *descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, char **error)
 {
 #ifdef ENABLE_IMGUI
 	Font *fonts = NULL;
@@ -286,7 +286,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0]);
-		vkCmdBindDescriptorSets(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts[0], 0, 1, *descriptorSets, 0, NULL);
+		vkCmdBindDescriptorSets(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts[0], 0, 1, descriptorSets, 0, NULL);
 		VkViewport secondViewport = {
 			.x = 0.0f,
 			.y = 0.0f,

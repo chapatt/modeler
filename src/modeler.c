@@ -56,10 +56,8 @@ struct swapchain_create_info_t {
 	VkImageView **imageViews;
 	VkFramebuffer **framebuffers;
 	VkDescriptorPool *descriptorPool;
-	VkDescriptorSet **imageDescriptorSets;
-	VkDescriptorSetLayout **imageDescriptorSetLayouts;
-	VkDescriptorSet **bufferDescriptorSets;
-	VkDescriptorSetLayout **bufferDescriptorSetLayouts;
+	VkDescriptorSet *imageDescriptorSets;
+	VkDescriptorSetLayout *imageDescriptorSetLayouts;
 	WindowDimensions *windowDimensions;
 	VkImage *depthImage;
 	VmaAllocation *depthImageAllocation;
@@ -157,10 +155,8 @@ void *threadProc(void *arg)
 	SwapchainInfo swapchainInfo = {};
 	VkImageView *imageViews;
 	VkDescriptorPool descriptorPool;
-	VkDescriptorSet *imageDescriptorSets;
-	VkDescriptorSetLayout *imageDescriptorSetLayouts;
-	VkDescriptorSet *bufferDescriptorSets;
-	VkDescriptorSetLayout *bufferDescriptorSetLayouts;
+	VkDescriptorSet imageDescriptorSet;
+	VkDescriptorSetLayout imageDescriptorSetLayout;
 #ifdef DRAW_WINDOW_DECORATION
 	VkImage offscreenImage;
 	VmaAllocation offscreenImageAllocation;
@@ -199,10 +195,8 @@ void *threadProc(void *arg)
 		.multisampleImageAllocation = &multisampleImageAllocation,
 #ifdef DRAW_WINDOW_DECORATION
 		.descriptorPool = &descriptorPool,
-		.imageDescriptorSetLayouts = &imageDescriptorSetLayouts,
-		.imageDescriptorSets = &imageDescriptorSets,
-		.bufferDescriptorSetLayouts = &bufferDescriptorSetLayouts,
-		.bufferDescriptorSets = &bufferDescriptorSets,
+		.imageDescriptorSetLayouts = &imageDescriptorSetLayout,
+		.imageDescriptorSets = &imageDescriptorSet,
 		.offscreenImage = &offscreenImage,
 		.offscreenImageCount = 1,
 		.offscreenImageView = &offscreenImageView,
@@ -278,7 +272,7 @@ void *threadProc(void *arg)
 		.vertexBindingDescriptions = NULL,
 		.vertexAttributeDescriptionCount = 0,
 		.VertexAttributeDescriptions = NULL,
-		.descriptorSetLayouts = imageDescriptorSetLayouts,
+		.descriptorSetLayouts = &imageDescriptorSetLayout,
 		.descriptorSetLayoutCount = 1,
 		.pushConstantRange = pushConstantRange
 	};
@@ -302,12 +296,12 @@ void *threadProc(void *arg)
 	VkPipeline pipelines[] = {pipelineWindowDecoration};
 	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutWindowDecoration};
 	size_t pipelineCount = 1;
-	VkDescriptorSet **drawDescriptorSets = &imageDescriptorSets;
+	VkDescriptorSet *drawDescriptorSets = &imageDescriptorSet;
 #else
 	VkPipeline pipelines[] = {};
 	VkPipelineLayout pipelineLayouts[] = {};
 	size_t pipelineCount = 0;
-	VkDescriptorSet **drawDescriptorSets = NULL;
+	VkDescriptorSet *drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
 
 	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, &swapchainCreateInfo, chessBoard, chessEngine, error)) {
@@ -326,7 +320,7 @@ void *threadProc(void *arg)
 	VkImageView *offscreenImageViews = NULL;
 #endif /* DRAW_WINDOW_DECORATION */
 
-	cleanupVulkan(instance, debugCallback, surface, &physicalDeviceCharacteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayouts, pipelines, pipelineCount, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, MAX_FRAMES_IN_FLIGHT, synchronizationInfo, descriptorPool, imageDescriptorSets, imageDescriptorSetLayouts, chessBoard, depthImage, depthImageAllocation, depthImageView, multisampleImage, multisampleImageView, multisampleImageAllocation, &swapchainCreateInfo, imDescriptorPool);
+	cleanupVulkan(instance, debugCallback, surface, &physicalDeviceCharacteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayouts, pipelines, pipelineCount, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, MAX_FRAMES_IN_FLIGHT, synchronizationInfo, descriptorPool, &imageDescriptorSet, &imageDescriptorSetLayout, chessBoard, depthImage, depthImageAllocation, depthImageView, multisampleImage, multisampleImageView, multisampleImageAllocation, &swapchainCreateInfo, imDescriptorPool);
 
 	return NULL;
 }
@@ -402,11 +396,9 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 	destroyRenderPass(swapchainCreateInfo->device, *swapchainCreateInfo->renderPass);
 #ifdef DRAW_WINDOW_DECORATION
 	for (size_t i = 0; i < swapchainCreateInfo->offscreenImageCount; ++i) {
-		destroyDescriptorSetLayout(swapchainCreateInfo->device, (*swapchainCreateInfo->imageDescriptorSetLayouts)[i]);
+		destroyDescriptorSetLayout(swapchainCreateInfo->device, (swapchainCreateInfo->imageDescriptorSetLayouts)[i]);
 	}
-	free(*swapchainCreateInfo->imageDescriptorSetLayouts);
 	destroyDescriptorPool(swapchainCreateInfo->device, *swapchainCreateInfo->descriptorPool);
-	free(*swapchainCreateInfo->imageDescriptorSets);
 	destroyImageView(swapchainCreateInfo->device, *swapchainCreateInfo->offscreenImageView);
 	destroyImage(swapchainCreateInfo->allocator, *swapchainCreateInfo->offscreenImage, *swapchainCreateInfo->offscreenImageAllocation);
 #endif
@@ -472,19 +464,31 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		return false;
 	}
 
-	VkImageLayout imageLayouts[] = {VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
-	VkSampler samplers[] = {VK_NULL_HANDLE};
-	CreateDescriptorSetInfo createDescriptorSetInfo = {
-		.imageViews = swapchainCreateInfo->offscreenImageView,
-		.imageLayouts = imageLayouts,
-		.imageSamplers = samplers,
-		.imageCount = 1,
-		.buffers = NULL,
-		.bufferOffsets = NULL,
-		.bufferRanges = NULL,
-		.bufferCount = 0
+	VkDescriptorImageInfo imageDescriptorInfo = {
+		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+		.imageView = *swapchainCreateInfo->offscreenImageView,
+		.sampler = NULL
 	};
-	if (!createDescriptorSets(swapchainCreateInfo->device, createDescriptorSetInfo, swapchainCreateInfo->descriptorPool, VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, swapchainCreateInfo->imageDescriptorSets, swapchainCreateInfo->imageDescriptorSetLayouts, swapchainCreateInfo->bufferDescriptorSets, swapchainCreateInfo->bufferDescriptorSetLayouts, error)) {
+
+	VkDescriptorSetLayoutBinding imageBinding = {
+		.binding = 0,
+		.descriptorCount = 1,
+		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.pImmutableSamplers = NULL
+	};
+
+	void *descriptorSetDescriptorInfos[] = {&imageDescriptorInfo};
+	VkDescriptorSetLayoutBinding descriptorSetBindings[] = {imageBinding};
+	CreateDescriptorSetInfo createDescriptorSetInfo = {
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.descriptorInfos = descriptorSetDescriptorInfos,
+		.descriptorCount = 1,
+		.bindings = descriptorSetBindings,
+		.bindingCount = 1
+	};
+
+	if (!createDescriptorSets(swapchainCreateInfo->device, &createDescriptorSetInfo, 1, swapchainCreateInfo->descriptorPool, swapchainCreateInfo->imageDescriptorSets, swapchainCreateInfo->imageDescriptorSetLayouts, error)) {
 		return false;
 	}
 #endif /* DRAW_WINDOW_DECORATION */
