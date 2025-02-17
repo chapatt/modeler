@@ -30,6 +30,9 @@
 #include "../mesh_pawn.h"
 #endif /* EMBED_MESHES */
 
+static const float VIEWPORT_WIDTH = 2.0f;
+static const float VIEWPORT_HEIGHT = 2.0f;
+
 typedef struct board_vertex_t {
 	float pos[3];
 	float color[3];
@@ -302,7 +305,7 @@ static void updateUniformBuffers(ChessBoard self)
 			transformTranslation(cameraTranslation, 0, 0, 3);
 		} else if (self->projection == ORTHOGRAPHIC) {
 			transformRotation(cameraTilt, M_PI / 6, -1, 0, 0);
-			transformTranslation(cameraTranslation, 0, 0, 2);
+			transformTranslation(cameraTranslation, 0, 0, 5);
 		}
 		mat4Multiply(cameraTranslation, cameraTilt, view);
 
@@ -310,7 +313,7 @@ static void updateUniformBuffers(ChessBoard self)
 		if (self->projection == PERSPECTIVE) {
 			perspectiveProjection(perspective, M_PI_4, 1.0f, 0.1f, 10.0f);
 		} else if (self->projection == ORTHOGRAPHIC) {
-			orthographicProjection(perspective, 1.0f, -1.0f, -1.0f, 1.0f, 0.1f, 10.0f);
+			orthographicProjection(perspective, VIEWPORT_HEIGHT / 2 * 1.1f, VIEWPORT_HEIGHT / 2 * -1.1f, VIEWPORT_WIDTH / 2 * -1.1f, VIEWPORT_WIDTH / 2 * 1.1f, 0.1f, 10.0f);
 		}
 		mat4Multiply(perspective, preRotation, projection);
 	} else {
@@ -817,9 +820,6 @@ static void updateVertices(ChessBoard self)
 	srgbToLinear(shadowDark);
 	float shadowLight[] = {0.641f, 0.551f, 0.41f};
 	srgbToLinear(shadowLight);
-
-	const float VIEWPORT_WIDTH = 2.0f;
-	const float VIEWPORT_HEIGHT = 2.0f;
 
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
 		float *spriteOrigin = pieceSpriteOriginMap[self->board[i]];
