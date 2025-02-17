@@ -161,14 +161,14 @@ static void initializePieces(ChessBoard self);
 static void initializeMove(ChessBoard self);
 static void updateUniformBuffers(ChessBoard self);
 static void readObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
-static bool createChessBoardTexture(ChessBoard self, char **error);
-static bool createChessBoardSampler(ChessBoard self, char **error);
-static bool createChessBoardDescriptors(ChessBoard self, char **error);
-static bool createChessBoardVertexBuffer(ChessBoard self, char **error);
-static bool createChessBoardIndexBuffer(ChessBoard self, char **error);
-static bool createChessBoardPipeline(ChessBoard self, char **error);
+static bool createBoardTexture(ChessBoard self, char **error);
+static bool createBoardTextureSampler(ChessBoard self, char **error);
+static bool createDescriptors(ChessBoard self, char **error);
+static bool createBoardVertexBuffer(ChessBoard self, char **error);
+static bool createBoardIndexBuffer(ChessBoard self, char **error);
+static bool createBoardPipeline(ChessBoard self, char **error);
 static bool createPiecesPipeline(ChessBoard self, char **error);
-static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error);
+static bool loadPieceMeshes(ChessBoard self, char **error);
 static bool createBoardUniformBuffer(ChessBoard self, char **error);
 static bool createPiecesUniformBuffer(ChessBoard self, char **error);
 static void updateBoardUniformBuffer(ChessBoard self);
@@ -211,19 +211,19 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	updateVertices(self);
 	updateUniformBuffers(self);
 
-	if (!createChessBoardVertexBuffer(self, error)) {
+	if (!createBoardVertexBuffer(self, error)) {
 		return false;
 	}
 
-	if (!createChessBoardIndexBuffer(self, error)) {
+	if (!createBoardIndexBuffer(self, error)) {
 		return false;
 	}
 
-	if (!createChessBoardTexture(self, error)) {
+	if (!createBoardTexture(self, error)) {
 		return false;
 	}
 
-	if (!createChessBoardSampler(self, error)) {
+	if (!createBoardTextureSampler(self, error)) {
 		return false;
 	}
 
@@ -235,15 +235,15 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 		return false;
 	}
 
-	if (!createChessBoardDescriptors(self, error)) {
+	if (!createDescriptors(self, error)) {
 		return false;
 	}
 
-	if (!createChessBoardPipeline(self, error)) {
+	if (!createBoardPipeline(self, error)) {
 		return false;
 	}
 
-	if (!chessBoardLoadPieceMeshes(self, error)) {
+	if (!loadPieceMeshes(self, error)) {
 		return false;
 	}
 
@@ -379,7 +379,7 @@ static void initializeMove(ChessBoard self)
 	basicSetMove(self, initialSetup);
 }
 
-static bool createChessBoardTexture(ChessBoard self, char **error)
+static bool createBoardTexture(ChessBoard self, char **error)
 {
 #ifndef EMBED_TEXTURES
 	char *piecesTexturePath;
@@ -454,7 +454,7 @@ static bool createChessBoardTexture(ChessBoard self, char **error)
 	return true;
 }
 
-static bool createChessBoardSampler(ChessBoard self, char **error)
+static bool createBoardTextureSampler(ChessBoard self, char **error)
 {
 	if (!createSampler(self->device, 0, PIECES_TEXTURE_MIP_LEVELS, &self->sampler, error)) {
 		return false;
@@ -463,7 +463,7 @@ static bool createChessBoardSampler(ChessBoard self, char **error)
 	return true;
 }
 
-static bool createChessBoardDescriptors(ChessBoard self, char **error)
+static bool createDescriptors(ChessBoard self, char **error)
 {
 	VkDescriptorBufferInfo boardBufferDescriptorInfo = {
 		.buffer = self->boardUniformBuffers[0],
@@ -538,7 +538,7 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 	return true;
 }
 
-static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
+static bool createBoardVertexBuffer(ChessBoard self, char **error)
 {
 	if (!createMutableBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardStagingVertexBufferAllocation, &self->boardVertexBuffer, &self->boardVertexBufferAllocation, self->boardVertices, CHESS_VERTEX_COUNT + 32, sizeof(*self->boardVertices), error)) {
 		return false;
@@ -583,7 +583,7 @@ static void updatePiecesUniformBuffer(ChessBoard self)
 	}
 }
 
-static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
+static bool createBoardIndexBuffer(ChessBoard self, char **error)
 {
 	uint16_t indices[CHESS_INDEX_COUNT + 48];
 
@@ -698,7 +698,7 @@ static bool createPiecesPipeline(ChessBoard self, char **error)
 	return true;
 }
 
-static bool createChessBoardPipeline(ChessBoard self, char **error)
+static bool createBoardPipeline(ChessBoard self, char **error)
 {
 	VkVertexInputBindingDescription vertexBindingDescription = {
 		.binding = 0,
@@ -1035,7 +1035,7 @@ static void readObj(void* ctx, const char* filename, const int is_mtl, const cha
 #endif /* EMBED_MESHES */
 }
 
-static bool chessBoardLoadPieceMeshes(ChessBoard self, char **error)
+static bool loadPieceMeshes(ChessBoard self, char **error)
 {
 	char *pieceNames[] = {"king", "queen", "rook", "bishop", "knight", "pawn"};
 	tinyobj_attrib_t attrib[6];
