@@ -799,7 +799,7 @@ static bool createBoardPipeline(ChessBoard self, char **error)
 	return true;
 }
 
-void setDimensions(ChessBoard self, float width, float originX, float originY, Orientation orientation)
+void chessBoardSetDimensions(ChessBoard self, float width, float originX, float originY, Orientation orientation)
 {
 	self->width = width;
 	self->originX = originX;
@@ -819,7 +819,7 @@ void basicSetBoard(ChessBoard self, Board8x8 board)
 	}
 }
 
-void setBoard(ChessBoard self, Board8x8 board)
+void chessBoardSetBoard(ChessBoard self, Board8x8 board)
 {
 	basicSetBoard(self, board);
 	updateVertices(self);
@@ -832,20 +832,20 @@ void basicSetMove(ChessBoard self, MoveBoard8x8 move)
 	}
 }
 
-void setMove(ChessBoard self, MoveBoard8x8 move)
+void chessBoardSetMove(ChessBoard self, MoveBoard8x8 move)
 {
 	basicSetMove(self, move);
 	updateVertices(self);
 }
 
-void setSelected(ChessBoard self, ChessSquare selected)
+void chessBoardSetSelected(ChessBoard self, ChessSquare selected)
 {
 	self->selected = selected;
 
 	updateVertices(self);
 }
 
-void setLastMove(ChessBoard self, LastMove lastMove)
+void chessBoardSetLastMove(ChessBoard self, LastMove lastMove)
 {
 	self->lastMove = lastMove;
 

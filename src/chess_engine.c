@@ -46,7 +46,7 @@ void chessEngineSquareSelected(ChessEngine self, ChessSquare square)
 
 	if (self->lastSelected == square) {
 		self->lastSelected = CHESS_SQUARE_COUNT;
-		setSelected(*self->chessBoard, self->lastSelected);
+		chessBoardSetSelected(*self->chessBoard, self->lastSelected);
 	} else if (hasLastSelected(self)) {
 		self->board[square] = self->board[self->lastSelected];
 		self->board[self->lastSelected] = EMPTY;
@@ -58,12 +58,12 @@ void chessEngineSquareSelected(ChessEngine self, ChessSquare square)
 
 		self->lastSelected = CHESS_SQUARE_COUNT;
 
-		setBoard(*self->chessBoard, self->board);
-		setLastMove(*self->chessBoard, lastMove);
-		setSelected(*self->chessBoard, self->lastSelected);
+		chessBoardSetBoard(*self->chessBoard, self->board);
+		chessBoardSetLastMove(*self->chessBoard, lastMove);
+		chessBoardSetSelected(*self->chessBoard, self->lastSelected);
 	} else if (self->board[square] != EMPTY) {
 		self->lastSelected = square;
-		setSelected(*self->chessBoard, self->lastSelected);
+		chessBoardSetSelected(*self->chessBoard, self->lastSelected);
 	}
 
 	if (!updateChessBoard(*self->chessBoard, error)) {
