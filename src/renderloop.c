@@ -59,6 +59,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	long elapsed = 1;
 	PointerPosition pointerPosition;
 	bool enable3d = chessBoardGetEnable3d(chessBoard);
+	Projection projection = chessBoardGetProjection(chessBoard);
 
 #ifdef ENABLE_IMGUI
 	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath);
@@ -183,8 +184,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			windowResized = false;
 		}
 
-		chessBoardSetEnable3d(chessBoard, enable3d);
-
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
 			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
 			return false;
@@ -269,7 +268,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		if (ImGui_Button("Reset Board")) {
 			chessEngineReset(chessEngine);
 		}
-		ImGui_Checkbox("3D", &enable3d);
+		if (ImGui_Checkbox("3D", &enable3d)) {
+			chessBoardSetEnable3d(chessBoard, enable3d);
+		}
+		char* projectionLabels[] = {"Orthographic", "Perspective"};
+   		if (ImGui_ComboChar("Projection", &projection, projectionLabels, sizeof(projectionLabels) / sizeof(projectionLabels[0]))) {
+			chessBoardSetProjection(chessBoard, projection);
+		}
 		ImGui_End();
 		ImGui_PopFont();
 		ImGui_Render();

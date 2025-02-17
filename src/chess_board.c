@@ -1198,3 +1198,21 @@ void chessBoardSetEnable3d(ChessBoard self, bool enable3d)
 	updateBoardUniformBuffer(self);
 	updatePiecesUniformBuffer(self);
 }
+
+Projection chessBoardGetProjection(ChessBoard self)
+{
+	return self->projection;
+}
+
+void chessBoardSetProjection(ChessBoard self, Projection projection)
+{
+	if (self->projection == projection) {
+		return;
+	}
+
+	self->projection = projection;
+
+	updateUniformBuffers(self);
+	updateBoardUniformBuffer(self);
+	updatePiecesUniformBuffer(self);
+}

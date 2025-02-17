@@ -14,8 +14,8 @@ typedef struct chess_board_t *ChessBoard;
 #include "vk_mem_alloc.h"
 
 typedef enum projection_t {
-	PERSPECTIVE,
-	ORTHOGRAPHIC
+	ORTHOGRAPHIC,
+	PERSPECTIVE
 } Projection;
 
 bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, Projection projection, char **error);
@@ -30,5 +30,7 @@ void chessBoardSetSelected(ChessBoard self, ChessSquare selected);
 void chessBoardSetLastMove(ChessBoard self, LastMove lastMove);
 bool chessBoardGetEnable3d(ChessBoard self);
 void chessBoardSetEnable3d(ChessBoard self, bool enable3d);
+Projection chessBoardGetProjection(ChessBoard self);
+void chessBoardSetProjection(ChessBoard self, Projection projection);
 
 #endif /* MODELER_CHESS_BOARD_H */
