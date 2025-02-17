@@ -31,7 +31,7 @@
 #endif /* EMBED_MESHES */
 
 typedef struct board_vertex_t {
-	float pos[2];
+	float pos[3];
 	float color[3];
 	float texCoord[2];
 	float texCoord2[2];
@@ -113,7 +113,7 @@ struct chess_board_t {
 	Projection projection;
 	VkPipelineLayout boardPipelineLayout;
 	VkPipeline boardPipeline;
-	BoardVertex boardVertices[CHESS_VERTEX_COUNT];
+	BoardVertex boardVertices[CHESS_VERTEX_COUNT + 32];
 	void *boardStagingVertexBufferMappedMemory;
 	VkBuffer boardStagingVertexBuffer;
 	VmaAllocation boardStagingVertexBufferAllocation;
@@ -540,7 +540,7 @@ static bool createChessBoardDescriptors(ChessBoard self, char **error)
 
 static bool createChessBoardVertexBuffer(ChessBoard self, char **error)
 {
-	if (!createMutableBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardStagingVertexBufferAllocation, &self->boardVertexBuffer, &self->boardVertexBufferAllocation, self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
+	if (!createMutableBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardStagingVertexBufferAllocation, &self->boardVertexBuffer, &self->boardVertexBufferAllocation, self->boardVertices, CHESS_VERTEX_COUNT + 32, sizeof(*self->boardVertices), error)) {
 		return false;
 	}
 
@@ -585,9 +585,9 @@ static void updatePiecesUniformBuffer(ChessBoard self)
 
 static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
 {
-	uint16_t indices[CHESS_INDEX_COUNT];
+	uint16_t indices[CHESS_INDEX_COUNT + 48];
 
-	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
+	for (size_t i = 0; i < CHESS_SQUARE_COUNT + 8; ++i) {
 		size_t verticesOffset = i * 4;
 		size_t indicesOffset = i * 6;
 
@@ -599,7 +599,7 @@ static bool createChessBoardIndexBuffer(ChessBoard self, char **error)
 		indices[indicesOffset + 5] = verticesOffset + 0;
 	}
 
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, indices, sizeof(indices[0]), CHESS_INDEX_COUNT, error)) {
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, indices, sizeof(indices[0]), CHESS_INDEX_COUNT + 48, error)) {
 		return false;
 	}
 
@@ -710,7 +710,7 @@ static bool createChessBoardPipeline(ChessBoard self, char **error)
 		{
 			.binding = 0,
 			.location = 0,
-			.format = VK_FORMAT_R32G32_SFLOAT,
+			.format = VK_FORMAT_R32G32B32_SFLOAT,
 			.offset = offsetof(BoardVertex, pos),
 		}, {
 			.binding = 0,
@@ -866,6 +866,10 @@ static void updateVertices(ChessBoard self)
 	srgbToLinear(selectedDark);
 	float selectedLight[] = {0.914f, 0.694f, 0.494f};
 	srgbToLinear(selectedLight);
+	float shadowDark[] = {0.41f, 0.233f, 0.088f};
+	srgbToLinear(shadowDark);
+	float shadowLight[] = {0.641f, 0.551f, 0.41f};
+	srgbToLinear(shadowLight);
 
 	const float VIEWPORT_WIDTH = 2.0f;
 	const float VIEWPORT_HEIGHT = 2.0f;
@@ -895,10 +899,29 @@ static void updateVertices(ChessBoard self)
 			((offsetX % 2) ? thisLight : thisDark) :
 			(offsetX % 2) ? thisDark : thisLight;
 
-		self->boardVertices[verticesOffset] = (BoardVertex) {{squareOriginX, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
-		self->boardVertices[verticesOffset + 1] = (BoardVertex) {{squareOriginX, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1] + 0.25f}};
-		self->boardVertices[verticesOffset + 2] = (BoardVertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
-		self->boardVertices[verticesOffset + 3] = (BoardVertex) {{squareOriginX + squareWidth, squareOriginY}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
+		self->boardVertices[verticesOffset] = (BoardVertex) {{squareOriginX, squareOriginY, 0}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
+		self->boardVertices[verticesOffset + 1] = (BoardVertex) {{squareOriginX, squareOriginY + squareHeight, 0}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1] + 0.25f}};
+		self->boardVertices[verticesOffset + 2] = (BoardVertex) {{squareOriginX + squareWidth, squareOriginY + squareHeight, 0}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
+		self->boardVertices[verticesOffset + 3] = (BoardVertex) {{squareOriginX + squareWidth, squareOriginY, 0}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
+	}
+
+	if (self->enable3d) {
+		size_t sideOffset = CHESS_SQUARE_COUNT * 4;
+		for (size_t i = 0; i < 8; ++i) {
+			float *spriteOrigin = pieceSpriteOriginMap[EMPTY];
+			float *sprite2Origin = iconSpriteOriginMap[ILLEGAL];
+			size_t verticesOffset = sideOffset + i * 4;
+			float squareWidth = VIEWPORT_WIDTH / 8.0f;
+			float squareHeight = squareWidth / 2;
+			float squareOriginX = (i * squareWidth) - (VIEWPORT_WIDTH / 2);
+
+			const float *color = (i % 2) ? shadowLight : shadowDark;
+
+			self->boardVertices[verticesOffset] = (BoardVertex) {{squareOriginX, 1.0f, 0}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1]}, {sprite2Origin[0], sprite2Origin[1]}};
+			self->boardVertices[verticesOffset + 1] = (BoardVertex) {{squareOriginX, 1.0f, squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0], spriteOrigin[1] + 0.25f}, {sprite2Origin[0], sprite2Origin[1] + 0.25f}};
+			self->boardVertices[verticesOffset + 2] = (BoardVertex) {{squareOriginX + squareWidth, 1.0f, squareHeight}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1] + 0.25f}, {sprite2Origin[0] + 0.25f, sprite2Origin[1] + 0.25f}};
+			self->boardVertices[verticesOffset + 3] = (BoardVertex) {{squareOriginX + squareWidth, 1.0f, 0}, {color[0], color[1], color[2]}, {spriteOrigin[0] + 0.25f, spriteOrigin[1]}, {sprite2Origin[0] + 0.25f, sprite2Origin[1]}};
+		}
 	}
 }
 
@@ -918,7 +941,7 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 	vkCmdBindIndexBuffer(commandBuffer, self->boardIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipeline);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipelineLayout, 0, 1, self->boardDescriptorSets, 0, NULL);
-	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT, 1, 0, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT + 48, 1, 0, 0, 0);
 
 	if (self->enable3d) {
 		/* Draw Mesh */
@@ -1152,6 +1175,7 @@ void destroyChessBoard(ChessBoard self)
 	destroyBuffer(self->allocator, self->piecesVertexBuffer, self->piecesVertexBufferAllocation);
 	destroyBuffer(self->allocator, self->piecesIndexBuffer, self->piecesIndexBufferAllocation);
 	destroyImageView(self->device, self->textureImageView);
+
 	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
 	free(self);
 }
