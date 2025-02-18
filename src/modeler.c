@@ -249,13 +249,25 @@ void *threadProc(void *arg)
 #endif /* EMBED_SHADERS */
 
 #ifdef DRAW_WINDOW_DECORATION
+	VkPipelineLayout pipelineLayoutWindowDecoration;
+	VkPipeline pipelineWindowDecoration;
 	VkPushConstantRange pushConstantRange = {
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.offset = 0,
 		.size = sizeof(PushConstants)
 	};
-	VkPipelineLayout pipelineLayoutWindowDecoration;
-	VkPipeline pipelineWindowDecoration;
+	VkPipelineDepthStencilStateCreateInfo depthStencilState = {
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+		.depthTestEnable = VK_FALSE,
+		.depthWriteEnable = VK_FALSE,
+		.depthCompareOp = VK_COMPARE_OP_NEVER,
+		.depthBoundsTestEnable = VK_FALSE,
+		.minDepthBounds = 0.0f,
+		.maxDepthBounds = 1.0f,
+		.stencilTestEnable = VK_FALSE,
+		.front = {},
+		.back = {}
+	};
 	PipelineCreateInfo pipelineCreateInfoWindowDecoration = {
 		.device = device,
 		.renderPass = renderPass,
@@ -274,7 +286,9 @@ void *threadProc(void *arg)
 		.VertexAttributeDescriptions = NULL,
 		.descriptorSetLayouts = &imageDescriptorSetLayout,
 		.descriptorSetLayoutCount = 1,
-		.pushConstantRange = pushConstantRange
+		.pushConstantRange = pushConstantRange,
+		.depthStencilState = depthStencilState,
+		.sampleCount = VK_SAMPLE_COUNT_1_BIT
 	};
 	bool pipelineCreateSuccessWindowDecoration = createPipeline(pipelineCreateInfoWindowDecoration, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, error);
 #ifndef EMBED_SHADERS
@@ -473,7 +487,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	VkDescriptorSetLayoutBinding imageBinding = {
 		.binding = 0,
 		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		.descriptorType = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.pImmutableSamplers = NULL
 	};
@@ -514,7 +528,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	for (uint32_t i = 0; i < swapchainCreateInfo->swapchainInfo->imageCount; ++i) {
 #ifdef DRAW_WINDOW_DECORATION
 		VkImageView attachments[] = {*swapchainCreateInfo->offscreenImageView, *swapchainCreateInfo->depthImageView, *swapchainCreateInfo->multisampleImageView, (*swapchainCreateInfo->imageViews)[i]}; 
-		uint32_t attachmentCount = 3;
+		uint32_t attachmentCount = 4;
 #else
 		VkImageView attachments[] = {*swapchainCreateInfo->multisampleImageView, *swapchainCreateInfo->depthImageView, (*swapchainCreateInfo->imageViews)[i]};
 		uint32_t attachmentCount = sizeof(attachments) / sizeof(attachments[0]);

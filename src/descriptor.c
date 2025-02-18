@@ -74,6 +74,7 @@ bool createDescriptorSets(
 			};
 
 			switch (infos[i].bindings[j].descriptorType) {
+			case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
 			case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
 				writeDescriptorSets[writeDescriptorSetOffset].pImageInfo = ((VkDescriptorImageInfo **) infos[i].descriptorInfos)[j];
 				break;
