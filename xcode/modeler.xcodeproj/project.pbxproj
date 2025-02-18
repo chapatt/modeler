@@ -42,6 +42,7 @@
 		ABA980042D558F1100ED6755 /* knight.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA97FFD2D558EE500ED6755 /* knight.obj */; };
 		ABA980052D558F1100ED6755 /* queen.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA980002D558EE500ED6755 /* queen.obj */; };
 		ABA980062D558F1100ED6755 /* rook.obj in Resources */ = {isa = PBXBuildFile; fileRef = ABA97FFE2D558EE500ED6755 /* rook.obj */; };
+		ABA980072D63BB1D00ED6755 /* roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABC0F3062C05B82B00771076 /* roboto.ttf */; };
 		ABC0F3052C02C93700771076 /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		ABC0F3072C05B82B00771076 /* roboto.ttf in Resources */ = {isa = PBXBuildFile; fileRef = ABC0F3062C05B82B00771076 /* roboto.ttf */; };
 		ABE1DEF52A3592D600A963A6 /* vulkan in Resources */ = {isa = PBXBuildFile; fileRef = ABE1DEF42A3592D600A963A6 /* vulkan */; };
@@ -451,6 +452,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ABA980072D63BB1D00ED6755 /* roboto.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
