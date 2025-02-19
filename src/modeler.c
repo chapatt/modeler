@@ -527,7 +527,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	*swapchainCreateInfo->framebuffers = malloc(sizeof(**swapchainCreateInfo->framebuffers) * swapchainCreateInfo->swapchainInfo->imageCount);
 	for (uint32_t i = 0; i < swapchainCreateInfo->swapchainInfo->imageCount; ++i) {
 #ifdef DRAW_WINDOW_DECORATION
-		VkImageView attachments[] = {*swapchainCreateInfo->offscreenImageView, *swapchainCreateInfo->depthImageView, *swapchainCreateInfo->multisampleImageView, (*swapchainCreateInfo->imageViews)[i]}; 
+		VkImageView attachments[] = {*swapchainCreateInfo->multisampleImageView, *swapchainCreateInfo->depthImageView, *swapchainCreateInfo->offscreenImageView, (*swapchainCreateInfo->imageViews)[i]};
 		uint32_t attachmentCount = 4;
 #else
 		VkImageView attachments[] = {*swapchainCreateInfo->multisampleImageView, *swapchainCreateInfo->depthImageView, (*swapchainCreateInfo->imageViews)[i]};
