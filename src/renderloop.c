@@ -222,6 +222,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		vkBeginCommandBuffer(commandBuffers[currentFrame], &commandBufferBeginInfos[currentFrame]);
 		vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassBeginInfos[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
 
+		/* First subpass */
+
 		VkRect2D scissor = {
 			.offset = {
 				.x = chessBoardViewport.x,
@@ -290,8 +292,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		VkViewport secondViewport = {
 			.x = 0.0f,
 			.y = 0.0f,
-			.width = swapchainInfo->extent.width,
-			.height = swapchainInfo->extent.height,
+			.width = windowDimensions->surfaceArea.width,
+			.height = windowDimensions->surfaceArea.height,
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};
@@ -300,7 +302,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				.x = 0,
 				.y = 0
 			},
-			.extent = swapchainInfo->extent
+			.extent = windowDimensions->surfaceArea
 		};
 		vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &secondViewport);
 		vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &secondScissor);
