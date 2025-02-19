@@ -28,6 +28,11 @@
 
 #ifdef EMBED_MESHES
 #include "../mesh_pawn.h"
+#include "../mesh_knight.h"
+#include "../mesh_bishop.h"
+#include "../mesh_rook.h"
+#include "../mesh_queen.h"
+#include "../mesh_king.h"
 #endif /* EMBED_MESHES */
 
 static const float VIEWPORT_WIDTH = 2.0f;
@@ -62,19 +67,19 @@ typedef struct transform_uniform_t {
 } TransformUniform;
 
 size_t pieceMeshIndexMap[13] = {
+	0, /* meaningless, this is the EMPTY piece */
 	0,
-	5,
-	4,
-	3,
-	2,
 	1,
+	2,
+	3,
+	4,
+	5,
 	0,
-	5,
-	4,
-	3,
-	2,
 	1,
-	0
+	2,
+	3,
+	4,
+	5
 };
 
 float pieceSpriteOriginMap[13][2] = {
@@ -161,7 +166,8 @@ struct chess_board_t {
 static void initializePieces(ChessBoard self);
 static void initializeMove(ChessBoard self);
 static void updateUniformBuffers(ChessBoard self);
-static void readObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
+static void readObjFromFile(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
+static void readEmbeddedObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len);
 static bool createBoardTexture(ChessBoard self, char **error);
 static bool createBoardTextureSampler(ChessBoard self, char **error);
 static bool createDescriptors(ChessBoard self, char **error);
@@ -969,22 +975,43 @@ void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent)
 	}
 }
 
-static void readObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
+static void readObjFromFile(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
 {
-#ifndef EMBED_TEXTURES
 	if ((*len = readFileToString(obj_filename, data)) == -1) {
     		*data = NULL;
     		*len = 0;
 	}
-#else /* EMBED_MESHES */
-	*data = pawnMeshBytes;
-	*len = pawnMeshSize;
+}
+
+static void readEmbeddedObj(void* ctx, const char* filename, const int is_mtl, const char* obj_filename, char** data, size_t* len)
+{
+#ifdef EMBED_MESHES
+	if (!strcmp(obj_filename, "pawn")) {
+		*data = pawnMeshBytes;
+		*len = pawnMeshSize;
+	} else if (!strcmp(obj_filename, "knight")) {
+		*data = knightMeshBytes;
+		*len = knightMeshSize;
+	} else if (!strcmp(obj_filename, "bishop")) {
+		*data = bishopMeshBytes;
+		*len = bishopMeshSize;
+	} else if (!strcmp(obj_filename, "rook")) {
+		*data = rookMeshBytes;
+		*len = rookMeshSize;
+	} else if (!strcmp(obj_filename, "queen")) {
+		*data = queenMeshBytes;
+		*len = queenMeshSize;
+	} else if (!strcmp(obj_filename, "king")) {
+		*data = kingMeshBytes;
+		*len = kingMeshSize;
+	}
 #endif /* EMBED_MESHES */
 }
 
 static bool loadPieceMeshes(ChessBoard self, char **error)
 {
-	char *pieceNames[] = {"king", "queen", "rook", "bishop", "knight", "pawn"};
+	/* pieceMeshIndexMap depends on this order */
+	char *pieceNames[] = {"pawn", "knight", "bishop", "rook", "queen", "king"};
 	tinyobj_attrib_t attrib[6];
 	tinyobj_shape_t *shapes[6];
 	size_t shapeCount[6];
@@ -994,16 +1021,37 @@ static bool loadPieceMeshes(ChessBoard self, char **error)
 	size_t totalVertexCount = 0;
 
 	for (size_t i = 0; i < 6; ++i) {
+#ifndef EMBED_MESHES
 		char *pieceMeshPath;
 		asprintf(&pieceMeshPath, "%s/%s.obj", self->resourcePath, pieceNames[i]);
+#endif /* EMBED_MESHES */
 
-		if (tinyobj_parse_obj(attrib + i, shapes + i, shapeCount + i, materials + i, materialCount + i, pieceMeshPath, readObj, NULL, TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS) {
+		if (tinyobj_parse_obj(
+			attrib + i,
+			shapes + i,
+			shapeCount + i,
+			materials + i,
+			materialCount + i,
+#ifndef EMBED_MESHES
+			pieceMeshPath,
+			readObjFromFile,
+#else /* EMBED_MESHES */
+			pieceNames[i],
+			readEmbeddedObj,
+#endif /* EMBED_MESHES */
+			NULL,
+			TINYOBJ_FLAG_TRIANGULATE) != TINYOBJ_SUCCESS
+		) {
+#ifndef EMBED_MESHES
 			free(pieceMeshPath);
+#endif /* EMBED_MESHES */
 			asprintf(error, "Failed to load mesh.\n");
 			return false;
 		}
 
+#ifndef EMBED_MESHES
 		free(pieceMeshPath);
+#endif /* EMBED_MESHES */
 
 		self->pieceVertexCounts[i] = attrib[i].num_face_num_verts * 3;
 		self->pieceVertexOffsets[i] = i == 0 ? 0 : self->pieceVertexOffsets[i - 1] + self->pieceVertexCounts[i - 1];
