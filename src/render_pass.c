@@ -50,7 +50,11 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+#if DRAW_WINDOW_DECORATION
+		.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+#else /* DRAW_WINDOW_DECORATION */
 		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+#endif /* DRAW_WINDOW_DECORATION */
 	};
 
 	VkAttachmentReference resolveAttachmentReference = {
@@ -120,7 +124,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	};
 
 	VkAttachmentReference windowDecorationAttachmentInputReference = {
-		.attachment = 0,
+		.attachment = 2,
 		.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 	};
 
