@@ -186,23 +186,8 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.flags = 0,
 		.attachmentCount = sizeof(attachmentDescriptions) / sizeof(attachmentDescriptions[0]),
 		.pAttachments = attachmentDescriptions,
-#if DRAW_WINDOW_DECORATION
-#if ENABLE_IMGUI
-		.subpassCount = 3,
-		.dependencyCount = 3,
-#else /* ENABLE_IMGUI */
-		.subpassCount = 2,
-		.dependencyCount = 2,
-#endif /* ENABLE_IMGUI */
-#else /* DRAW_WINDOW_DECORATION */
-#if ENABLE_IMGUI
-		.subpassCount = 2,
-		.dependencyCount = 2,
-#else /* ENABLE_IMGUI */
-		.subpassCount = 1,
-		.dependencyCount = 1,
-#endif /* ENABLE_IMGUI */
-#endif /* DRAW_WINDOW_DECORATION */
+		.subpassCount = sizeof(subpassDescriptions) / sizeof(subpassDescriptions[0]),
+		.dependencyCount = sizeof(subpassDependencies) / sizeof(subpassDependencies[0]),
 		.pSubpasses = subpassDescriptions,
 		.pDependencies = subpassDependencies
 	};
