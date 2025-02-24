@@ -191,7 +191,20 @@ int main(int argc, char **argv)
 		if (epollEventBuffer.data.fd == wlFd) {
 			wl_display_dispatch(display.display);
 		} else if (epollEventBuffer.data.fd == display.threadPipe[0]) {
-			handleFatalError(error);
+			char c;
+			read(display.threadPipe[0], &c, 1);
+
+			switch (c) {
+			case 'f':
+				handleFatalError(error);
+				break;
+			case 'g':
+				xdg_toplevel_set_fullscreen(display.xdgToplevel, display.activeOutputInfos[0]->output);
+				break;
+			case 'h':
+				xdg_toplevel_unset_fullscreen(display.xdgToplevel);
+				break;
+			}
 		}
 	}
 
