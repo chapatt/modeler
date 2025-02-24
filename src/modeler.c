@@ -74,6 +74,7 @@ static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
 static bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
 static bool createDepthBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkSampleCountFlagBits sampleCount, VkImage *image, VmaAllocation *imageAllocation, VkFormat *format, VkImageView *imageView, char **error);
 static void destroyDepthBuffer(VkDevice device, VmaAllocator allocator, VkImage image, VmaAllocation imageAllocation, VkImageView imageView);
+static void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D savedExtent);
 
 static inline Orientation negateRotation(Orientation orientation)
 {
@@ -424,6 +425,15 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo->surfaceCharacteristics);
 }
 
+static void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D savedExtent)
+{
+	uint32_t horizontalMargin = windowDimensions->surfaceArea.width - windowDimensions->activeArea.extent.width;
+	uint32_t verticalMargin = windowDimensions->surfaceArea.height - windowDimensions->activeArea.extent.height;
+	windowDimensions->surfaceArea = savedExtent;
+	windowDimensions->activeArea.extent.width = savedExtent.width - horizontalMargin;
+	windowDimensions->activeArea.extent.height = savedExtent.height - verticalMargin;
+}
+
 bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	VkExtent2D requestedExtent = swapchainCreateInfo->windowDimensions->surfaceArea;
@@ -461,8 +471,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		savedExtent.height = width;
 	}
 
-	swapchainCreateInfo->windowDimensions->surfaceArea = savedExtent;
-	swapchainCreateInfo->windowDimensions->activeArea.extent = savedExtent;
+	updateWindowDimensionsExtent(swapchainCreateInfo->windowDimensions, savedExtent);
 
 	*swapchainCreateInfo->imageViews = malloc(sizeof(*swapchainCreateInfo->imageViews) * swapchainCreateInfo->swapchainInfo->imageCount);
 	if (!createImageViews(swapchainCreateInfo->device, swapchainCreateInfo->swapchainInfo->images, swapchainCreateInfo->swapchainInfo->imageCount, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, *swapchainCreateInfo->imageViews, error)) {
