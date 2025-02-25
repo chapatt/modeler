@@ -578,19 +578,19 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 	struct display *display = data;
 
 	xdg_surface_ack_configure(xdg_surface, serial);
-
+	
 	char *error;
 	if (!display->vulkanInitialized) {
 		if (!initVulkanWayland(display->display, display->surface, display->xdgSurface, display->windowDimensions, &display->inputQueue, display->threadPipe[1], &error)) {
 			handleFatalError(error);
 		}
 		display->vulkanInitialized = true;
-	}
+			}
 
 	setUpRegions(display);
-
+	
 	enqueueResizeEvent(display);
-}
+	}
 
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)
 {
@@ -609,8 +609,15 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 			printf("maximized\n");
 			leftTiled = rightTiled = topTiled = bottomTiled = true;
 			break;
+		case XDG_TOPLEVEL_STATE_FULLSCREEN:
+			printf("fullscreen\n");
+			leftTiled = rightTiled = topTiled = bottomTiled = true;
+			break;
 		case XDG_TOPLEVEL_STATE_RESIZING:
 			printf("resizing\n");
+			break;
+		case XDG_TOPLEVEL_STATE_ACTIVATED:
+			printf("activated\n");
 			break;
 		case XDG_TOPLEVEL_STATE_TILED_LEFT:
 			printf("tiled left\n");
