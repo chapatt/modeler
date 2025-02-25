@@ -58,13 +58,14 @@ static void sendSignal(void *platformWindow, char signal)
 {
 	int fd = ((WaylandWindow *) platformWindow)->fd;
 	write(fd, &signal, 1);
-	close(fd);
-	pthread_exit(NULL);
 }
 
 void sendThreadFailureSignal(void *platformWindow)
 {
+	int fd = ((WaylandWindow *) platformWindow)->fd;
 	sendSignal(platformWindow, 'f');
+	close(fd);
+	pthread_exit(NULL);
 }
 
 void sendFullscreenSignal(void *platformWindow)
