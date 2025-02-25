@@ -597,6 +597,8 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 	printf("Got a xdg toplevel configure event\n");
 	struct display *display = data;
 
+	bool maximized = false;
+	bool fullscreen = false;
 	bool leftTiled = false;
 	bool rightTiled = false;
 	bool topTiled = false;
@@ -607,11 +609,11 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 		switch (*state) {
 		case XDG_TOPLEVEL_STATE_MAXIMIZED:
 			printf("maximized\n");
-			leftTiled = rightTiled = topTiled = bottomTiled = true;
+			maximized = leftTiled = rightTiled = topTiled = bottomTiled = true;
 			break;
 		case XDG_TOPLEVEL_STATE_FULLSCREEN:
 			printf("fullscreen\n");
-			leftTiled = rightTiled = topTiled = bottomTiled = true;
+			fullscreen = leftTiled = rightTiled = topTiled = bottomTiled = true;
 			break;
 		case XDG_TOPLEVEL_STATE_RESIZING:
 			printf("resizing\n");
@@ -653,6 +655,12 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 		display->windowDimensions.activeArea.offset.y = marginTop;
 		display->windowDimensions.activeArea.extent.width = width;
 		display->windowDimensions.activeArea.extent.height = height;
+	}
+
+	if (maximized || fullscreen) {
+		display->windowDimensions.cornerRadius = 0;
+	} else {
+		display->windowDimensions.cornerRadius = CORNER_RADIUS;
 	}
 }
 
