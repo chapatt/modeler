@@ -54,11 +54,10 @@ typedef struct mesh_vertex_t {
 #define CHESS_INDEX_COUNT CHESS_SQUARE_COUNT * 6
 #define PIECES_TEXTURE_MIP_LEVELS 7
 
-typedef struct chess_board_push_constants_t {
-	float MV[16];
-	float P[16];
-	float normalMatrix[16];
-} ChessBoardPushConstants;
+typedef struct chess_piece_push_constants_t {
+	float diffuseColor[3];
+	float ambientColor[3];
+} ChessPiecePushConstants;
 
 typedef struct transform_uniform_t {
 	float MV[16];
@@ -659,9 +658,9 @@ static bool createPiecesPipeline(ChessBoard self, char **error)
 #endif /* EMBED_SHADERS */
 
 	VkPushConstantRange pushConstantRange = {
-		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.offset = 0,
-		.size = sizeof(ChessBoardPushConstants)
+		.size = sizeof(ChessPiecePushConstants)
 	};
 
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = {
@@ -759,12 +758,6 @@ static bool createBoardPipeline(ChessBoard self, char **error)
 	}
 #endif /* EMBED_SHADERS */
 
-	VkPushConstantRange pushConstantRange = {
-		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-		.offset = 0,
-		.size = sizeof(ChessBoardPushConstants)
-	};
-
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 		.depthTestEnable = VK_TRUE,
@@ -792,7 +785,7 @@ static bool createBoardPipeline(ChessBoard self, char **error)
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
 		.descriptorSetLayouts = self->boardDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
-		.pushConstantRange = pushConstantRange,
+		.pushConstantRange = 0,
 		.depthStencilState = depthStencilState,
 		.sampleCount = self->sampleCount
 	};
@@ -906,9 +899,26 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 				continue;
 			}
 
+			ChessPiecePushConstants pushConstants;
+			if (self->board[i] >= BLACK_PAWN && self->board[i] <= BLACK_KING) {
+				pushConstants = (ChessPiecePushConstants) {
+					.diffuseColor = {0.3f, 0.3f, 0.3f},
+					.ambientColor = {0.03f, 0.03f, 0.03f}
+				};
+			} else if (self->board[i] >= WHITE_PAWN && self->board[i] <= WHITE_KING) {
+				pushConstants = (ChessPiecePushConstants) {
+					.diffuseColor = {0.9f, 0.9f, 0.9f},
+					.ambientColor = {0.09f, 0.09f, 0.09f}
+				};
+			}
+			srgbToLinear(pushConstants.diffuseColor);
+			srgbToLinear(pushConstants.ambientColor);
+
 			size_t meshIndex = pieceMeshIndexMap[self->board[i]];
 			uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
+
 			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 1, &piecesUniformBufferOffset);
+			vkCmdPushConstants(commandBuffer, self->piecesPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
 			vkCmdDrawIndexed(commandBuffer, self->pieceVertexCounts[meshIndex], 1, self->pieceVertexOffsets[meshIndex], self->pieceVertexOffsets[meshIndex], 0);
 		}
 	}
