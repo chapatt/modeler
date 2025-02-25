@@ -50,6 +50,7 @@ typedef struct output_info_t {
 } OutputInfo;
 
 struct display {
+	pthread_t thread;
 	struct wl_display *display;
 	struct wl_registry *registry;
 	struct wl_registry_listener registryListener;
@@ -101,6 +102,7 @@ static void surfaceLeaveHandler(void *data, struct wl_surface *surface, struct w
 static void xdgWmBasePingHandler(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
 static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states);
+static void xdgToplevelCloseHandler(void *data, struct xdg_toplevel *xdg_toplevel);
 static void outputGeometryHandler(void *data, struct wl_output *output, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, const char *make, const char *model, int32_t transform);
 static void outputModeHandler(void *data, struct wl_output *output, enum wl_output_mode mode, int32_t width, int32_t height, int32_t refresh);
 static void outputDoneHandler(void *data, struct wl_output *output);
@@ -334,6 +336,7 @@ static void createWindow(struct display *display)
 
 	display->xdgToplevel = xdg_surface_get_toplevel(display->xdgSurface);
 	display->xdgToplevelListener.configure = xdgToplevelConfigureHandler;
+	display->xdgToplevelListener.close = xdgToplevelCloseHandler;
 	xdg_toplevel_add_listener(display->xdgToplevel, &display->xdgToplevelListener, display);
 	xdg_toplevel_set_title(display->xdgToplevel, "Modeler");
 
@@ -581,16 +584,25 @@ static void xdgSurfaceConfigureHandler(void *data, struct xdg_surface *xdg_surfa
 	
 	char *error;
 	if (!display->vulkanInitialized) {
-		if (!initVulkanWayland(display->display, display->surface, display->xdgSurface, display->windowDimensions, &display->inputQueue, display->threadPipe[1], &error)) {
+		if (!(display->thread = initVulkanWayland(display->display, display->surface, display->xdgSurface, display->windowDimensions, &display->inputQueue, display->threadPipe[1], &error))) {
 			handleFatalError(error);
 		}
-		display->vulkanInitialized = true;
-			}
+			display->vulkanInitialized = true;
+		}
 
-	setUpRegions(display);
+		setUpRegions(display);
 	
-	enqueueResizeEvent(display);
+		enqueueResizeEvent(display);
 	}
+
+static void xdgToplevelCloseHandler(void *data, struct xdg_toplevel *xdg_toplevel)
+{
+	printf("Got a xdg toplevel close event\n");
+	struct display *display = data;
+
+	terminateVulkan(&display->inputQueue, display->thread);
+	exit(EXIT_SUCCESS);
+}
 
 static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height, struct wl_array *states)
 {
