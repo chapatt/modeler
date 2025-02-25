@@ -9,8 +9,8 @@ const float Ka = 1.0;
 const float Kd = 1.0;
 const float Ks = 1.0;
 const float shininessVal = 0.9;
-const vec3 ambientColor = vec3(0.03, 0.03, 0.03);
 const vec3 diffuseColor = vec3(0.5, 0.5, 0.5);
+const vec3 ambientColor = diffuseColor * 0.015;
 const vec3 specularColor = vec3(1.0, 1.0, 1.0);
 const vec3 lightPos = vec3(10.0, -5.0, -10.0);
 
