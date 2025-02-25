@@ -657,7 +657,7 @@ static void xdgToplevelConfigureHandler(void *data, struct xdg_toplevel *xdg_top
 		display->windowDimensions.activeArea.extent.height = height;
 	}
 
-	if (maximized || fullscreen) {
+	if (maximized || fullscreen || leftTiled || rightTiled || topTiled || bottomTiled) {
 		display->windowDimensions.cornerRadius = 0;
 	} else {
 		display->windowDimensions.cornerRadius = CORNER_RADIUS;
