@@ -22,9 +22,9 @@ float sigmoid(float t) {
 vec2 extent = PushConstants.extent;
 vec2 offset = PushConstants.offset;
 float cornerRadius = PushConstants.cornerRadius;
-float blurRadius = 20.0;
+const float blurRadius = 20.0;
 vec3 fragColor = subpassLoad(inputColor).rgb;
-vec3 shadowPaint = vec3(0.0);
+const vec3 shadowPaint = vec3(0.0);
 
 void main()
 {
