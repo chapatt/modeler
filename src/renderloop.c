@@ -272,6 +272,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		}
 		if (ImGui_Checkbox("3D", &enable3d)) {
 			chessBoardSetEnable3d(chessBoard, enable3d);
+			if (!updateChessBoard(chessBoard, error)) {
+				return false;
+			}
 		}
 		char* projectionLabels[] = {"Orthographic", "Perspective"};
    		if (ImGui_ComboChar("Projection", &projection, projectionLabels, sizeof(projectionLabels) / sizeof(projectionLabels[0]))) {

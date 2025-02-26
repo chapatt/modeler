@@ -179,7 +179,7 @@ static bool createBoardUniformBuffer(ChessBoard self, char **error);
 static bool createPiecesUniformBuffer(ChessBoard self, char **error);
 static void updateBoardUniformBuffer(ChessBoard self);
 static void updatePiecesUniformBuffer(ChessBoard self);
-static void updateVertices(ChessBoard self);
+static void updateBoardMesh(ChessBoard self);
 static ChessSquare squareFromPointerPosition(ChessBoard self);
 static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat2N]);
 static float getRotationRadians(ChessBoard self);
@@ -216,7 +216,7 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	};
 	initializePieces(self);
 	initializeMove(self);
-	updateVertices(self);
+	updateBoardMesh(self);
 	updateUniformBuffers(self);
 
 	if (!createBoardVertexBuffer(self, error)) {
@@ -803,7 +803,7 @@ static bool createBoardPipeline(ChessBoard self, char **error)
 	return true;
 }
 
-static void updateVertices(ChessBoard self)
+static void updateBoardMesh(ChessBoard self)
 {
 	float dark[] = {0.71f, 0.533f, 0.388f};
 	srgbToLinear(dark);
@@ -823,7 +823,7 @@ static void updateVertices(ChessBoard self)
 	srgbToLinear(shadowLight);
 
 	for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
-		float *spriteOrigin = pieceSpriteOriginMap[self->board[i]];
+		float *spriteOrigin = self->enable3d ? pieceSpriteOriginMap[EMPTY] : pieceSpriteOriginMap[self->board[i]];
 		float *sprite2Origin = iconSpriteOriginMap[self->move[i]];
 		size_t verticesOffset = i * 4;
 		size_t offsetX = i % 8;
@@ -1197,7 +1197,7 @@ void chessBoardSetDimensions(ChessBoard self, float width, float originX, float 
 	updateUniformBuffers(self);
 	updateBoardUniformBuffer(self);
 	updatePiecesUniformBuffer(self);
-	updateVertices(self);
+	updateBoardMesh(self);
 }
 
 void basicSetBoard(ChessBoard self, Board8x8 board)
@@ -1210,7 +1210,7 @@ void basicSetBoard(ChessBoard self, Board8x8 board)
 void chessBoardSetBoard(ChessBoard self, Board8x8 board)
 {
 	basicSetBoard(self, board);
-	updateVertices(self);
+	updateBoardMesh(self);
 }
 
 void basicSetMove(ChessBoard self, MoveBoard8x8 move)
@@ -1223,21 +1223,21 @@ void basicSetMove(ChessBoard self, MoveBoard8x8 move)
 void chessBoardSetMove(ChessBoard self, MoveBoard8x8 move)
 {
 	basicSetMove(self, move);
-	updateVertices(self);
+	updateBoardMesh(self);
 }
 
 void chessBoardSetSelected(ChessBoard self, ChessSquare selected)
 {
 	self->selected = selected;
 
-	updateVertices(self);
+	updateBoardMesh(self);
 }
 
 void chessBoardSetLastMove(ChessBoard self, LastMove lastMove)
 {
 	self->lastMove = lastMove;
 
-	updateVertices(self);
+	updateBoardMesh(self);
 }
 
 bool chessBoardGetEnable3d(ChessBoard self)
@@ -1253,7 +1253,7 @@ void chessBoardSetEnable3d(ChessBoard self, bool enable3d)
 
 	self->enable3d = enable3d;
 
-	updateVertices(self);
+	updateBoardMesh(self);
 	updateUniformBuffers(self);
 	updateBoardUniformBuffer(self);
 	updatePiecesUniformBuffer(self);
