@@ -690,7 +690,8 @@ static bool createPiecesPipeline(ChessBoard self, char **error)
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
 		.descriptorSetLayouts = self->piecesDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
-		.pushConstantRange = pushConstantRange,
+		.pushConstantRangeCount = 1,
+		.pushConstantRanges = &pushConstantRange,
 		.depthStencilState = depthStencilState,
 		.sampleCount = self->sampleCount
 	};
@@ -785,7 +786,8 @@ static bool createBoardPipeline(ChessBoard self, char **error)
 		.VertexAttributeDescriptions = vertexAttributeDescriptions,
 		.descriptorSetLayouts = self->boardDescriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
-		.pushConstantRange = 0,
+		.pushConstantRangeCount = 0,
+		.pushConstantRanges = NULL,
 		.depthStencilState = depthStencilState,
 		.sampleCount = self->sampleCount
 	};

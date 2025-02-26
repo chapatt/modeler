@@ -24,7 +24,8 @@ typedef struct pipeline_create_info_t {
 	VkVertexInputAttributeDescription *VertexAttributeDescriptions;
 	VkDescriptorSetLayout *descriptorSetLayouts;
 	uint32_t descriptorSetLayoutCount;
-	VkPushConstantRange pushConstantRange;
+	VkPushConstantRange *pushConstantRanges;
+	uint32_t pushConstantRangeCount;
 	VkPipelineDepthStencilStateCreateInfo depthStencilState;
 	VkSampleCountFlagBits sampleCount;
 } PipelineCreateInfo;

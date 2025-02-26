@@ -142,8 +142,8 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.flags = 0,
 		.setLayoutCount = pipelineCreateInfo.descriptorSetLayoutCount,
 		.pSetLayouts = pipelineCreateInfo.descriptorSetLayouts,
-		.pushConstantRangeCount = 1,
-		.pPushConstantRanges = &pipelineCreateInfo.pushConstantRange
+		.pushConstantRangeCount = pipelineCreateInfo.pushConstantRangeCount,
+		.pPushConstantRanges = pipelineCreateInfo.pushConstantRanges
 	};
 
 	if ((result = vkCreatePipelineLayout(pipelineCreateInfo.device, &pipelineLayoutCreateInfo, NULL, pipelineLayout)) != VK_SUCCESS) {

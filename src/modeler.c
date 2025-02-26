@@ -287,7 +287,8 @@ void *threadProc(void *arg)
 		.VertexAttributeDescriptions = NULL,
 		.descriptorSetLayouts = &imageDescriptorSetLayout,
 		.descriptorSetLayoutCount = 1,
-		.pushConstantRange = pushConstantRange,
+		.pushConstantRangeCount = 1,
+		.pushConstantRanges = &pushConstantRange,
 		.depthStencilState = depthStencilState,
 		.sampleCount = VK_SAMPLE_COUNT_1_BIT
 	};
