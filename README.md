@@ -1,8 +1,8 @@
 # modeler
 
-A cross-platform (macOS, Windows, Linux) application implementing native, borderless windows and a Vulkan rendering context.
+A cross-platform (macOS, Windows, Linux, iOS, Android) application implementing native, borderless windows and a Vulkan rendering context.
 
-* All window management (creation/resizing/etc.) is handled via native system APIs (AppKit, win32, wayland) rather than a layer like GLFW or SDL
+* All window management (creation/resizing/etc.) is handled via native system APIs (SwiftUI (with AppKit/UIKit), win32, wayland, GameActivity) rather than a layer like GLFW or SDL
 * Legitimate application windows are used, so all behaviors like snapping, tiling, etc. work as expected
 * Multi-monitor HiDPI awareness is implemented on all platforms
 
@@ -33,7 +33,12 @@ Linux:<br />
 ```shell
 make
 ```
-builds the binary on Linux (`modeler`) and Windows (`modeler.exe`), and a static library (`modeler.a`) on macOS. The macos application can be built via the Xcode project under `xcode/`.
+builds the binary on Linux (`modeler`) and Windows (`modeler.exe`), a static library (`modeler.a`) on macOS and iOS, and a static library (`modeler_android.a`) on Android. The macOS and iOS applications can be built via the Xcode project under `xcode/`. The Android app can be built via the Android Studio project under `android/`.
+
+To build for iOS, set environment variable `IOS` to true. Similarly, for Android, set `ANDROID` to true. E.g.
+```shell
+make IOS=true
+```
 
 To enable debugging symbols, external SPIR-V files, and dynamic libraries, set the `DEBUG` environment variable
 ```shell
@@ -62,7 +67,7 @@ bsdextrautils (hexdump)
 #### Debug only
 vulkan-validationlayers
 
-## macOS
+## macOS and iOS
 
 ### Vulkan SDK
 Set up locations of Vulkan libraries to which to link: Xcode > Settings > Locations > Custom Paths
@@ -71,6 +76,7 @@ Set up locations of Vulkan libraries to which to link: Xcode > Settings > Locati
 |--					|--					|--														|
 | VULKAN_SDK		| Vulkan SDK		| <path_to_vulkan_sdk_including_version>				|
 | VULKAN_HEADERS	| Vulkan Headers	| <path_to_vulkan_sdk_including_version>/macOS/include	|
+| VULKAN_IOS_HEADERS	| Vulkan iOS Headers	| <path_to_vulkan_sdk_including_version>/iOS/include	|
 | VULKAN_LIB		| Vulkan Libraries	| <path_to_vulkan_sdk_including_version>/macOS/lib		|
 
 ## Windows
