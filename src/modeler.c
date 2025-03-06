@@ -518,11 +518,11 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 #endif /* DRAW_WINDOW_DECORATION */
 
 	VkSampleCountFlagBits sampleCount = getMaxSampleCount(swapchainCreateInfo->physicalDeviceCharacteristics.deviceProperties);
-	if (!createImage(swapchainCreateInfo->device, swapchainCreateInfo->allocator, swapchainCreateInfo->swapchainInfo->extent, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, 1, sampleCount, swapchainCreateInfo->multisampleImage, swapchainCreateInfo->multisampleImageAllocation, error)) {
+	if (!createImage(swapchainCreateInfo->device, swapchainCreateInfo->allocator, swapchainCreateInfo->swapchainInfo->extent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, 1, sampleCount, swapchainCreateInfo->multisampleImage, swapchainCreateInfo->multisampleImageAllocation, error)) {
 		return false;
 	}
 
-	if (!createImageView(swapchainCreateInfo->device, *swapchainCreateInfo->multisampleImage, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, 1, swapchainCreateInfo->multisampleImageView, error)) {
+	if (!createImageView(swapchainCreateInfo->device, *swapchainCreateInfo->multisampleImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, 1, swapchainCreateInfo->multisampleImageView, error)) {
 		return false;
 	}
 
