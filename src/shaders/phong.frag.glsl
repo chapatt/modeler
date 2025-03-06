@@ -6,8 +6,8 @@ layout(location = 1) in vec3 fragNormal;
 layout(location = 0) out vec4 outColor;
 
 layout (push_constant) uniform _push_constants {
-	vec3 diffuseColor;
-	vec3 ambientColor;
+	vec4 diffuseColor;
+	vec4 ambientColor;
 } PushConstants;
 
 
@@ -18,8 +18,8 @@ const float shininessVal = 5.0;
 const vec3 specularColor = vec3(1.0, 1.0, 1.0);
 const vec3 lightPos = vec3(10.0, -5.0, -10.0);
 
-vec3 diffuseColor = PushConstants.diffuseColor;
-vec3 ambientColor = PushConstants.ambientColor;
+vec3 diffuseColor = vec3(PushConstants.diffuseColor);
+vec3 ambientColor = vec3(PushConstants.ambientColor);
 
 void main() {
 	vec3 N = normalize(fragNormal);

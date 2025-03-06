@@ -55,8 +55,8 @@ typedef struct mesh_vertex_t {
 #define PIECES_TEXTURE_MIP_LEVELS 7
 
 typedef struct chess_piece_push_constants_t {
-	float diffuseColor[3];
-	float ambientColor[3];
+	float diffuseColor[4];
+	float ambientColor[4];
 } ChessPiecePushConstants;
 
 typedef struct transform_uniform_t {
@@ -901,20 +901,30 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 				continue;
 			}
 
-			ChessPiecePushConstants pushConstants;
+			float diffuseColor[3];
+			float ambientColor[3];
 			if (self->board[i] >= BLACK_PAWN && self->board[i] <= BLACK_KING) {
-				pushConstants = (ChessPiecePushConstants) {
-					.diffuseColor = {0.3f, 0.3f, 0.3f},
-					.ambientColor = {0.03f, 0.03f, 0.03f}
-				};
+				diffuseColor[0] = 0.3f;
+				diffuseColor[1] = 0.3f;
+				diffuseColor[2] = 0.3f;
+				ambientColor[0] = 0.03f;
+				ambientColor[1] = 0.03f;
+				ambientColor[2] = 0.03f;
 			} else if (self->board[i] >= WHITE_PAWN && self->board[i] <= WHITE_KING) {
-				pushConstants = (ChessPiecePushConstants) {
-					.diffuseColor = {0.9f, 0.9f, 0.9f},
-					.ambientColor = {0.09f, 0.09f, 0.09f}
-				};
+				diffuseColor[0] = 0.9f;
+				diffuseColor[1] = 0.9f;
+				diffuseColor[2] = 0.9f;
+				ambientColor[0] = 0.09f;
+				ambientColor[1] = 0.09f;
+				ambientColor[2] = 0.09f;
 			}
-			srgbToLinear(pushConstants.diffuseColor);
-			srgbToLinear(pushConstants.ambientColor);
+			srgbToLinear(diffuseColor);
+			srgbToLinear(ambientColor);
+
+			ChessPiecePushConstants pushConstants = {
+				.diffuseColor = {diffuseColor[0], diffuseColor[1], diffuseColor[2], 0.0f},
+				.ambientColor = {ambientColor[0], ambientColor[1], ambientColor[2], 0.0f}
+			};
 
 			size_t meshIndex = pieceMeshIndexMap[self->board[i]];
 			uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
