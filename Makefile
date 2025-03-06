@@ -5,6 +5,8 @@ LDLIBS=
 
 ifeq ($(OS),Windows_NT)
 	HEXDUMP=/msys64/usr/bin/hexdump
+	RM=/msys64/usr/bin/rm
+	CP=/msys64/usr/bin/cp
 	SED=sed
 	ANDROID_NDK=/Android/Sdk/ndk/28.0.12674087
 	ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/windows-x86_64
@@ -85,18 +87,22 @@ HEADER_MESHES=mesh_pawn.h mesh_knight.h mesh_bishop.h mesh_rook.h mesh_queen.h m
 MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o matrix_utils.o
 VENDOR_LIBS=vma_implementation.o lodepng.o tinyobj_implementation.o
 
-ifdef DEBUG
-	CFLAGS+=-DDEBUG -g
-	SHADERS=$(SPIRV_SHADERS)
-	TEXTURES=$(PNG_TEXTURES)
-	MESHES=$(OBJ_MESHES)
-else
+ifdef EMBED_RESOURCES
 	CFLAGS+=-DEMBED_SHADERS
 	SHADERS=$(HEADER_SHADERS)
 	CFLAGS+=-DEMBED_TEXTURES
 	TEXTURES=$(HEADER_TEXTURES)
 	CFLAGS+=-DEMBED_MESHES
 	MESHES=$(HEADER_MESHES)
+else
+	SHADERS=$(SPIRV_SHADERS)
+	TEXTURES=$(PNG_TEXTURES)
+	MESHES=$(OBJ_MESHES)
+endif
+
+ifdef DEBUG
+	CFLAGS+=-DDEBUG -g
+else
 	ifeq ($(OS),Windows_NT)
 		LDFLAGS+=-static
 	endif
