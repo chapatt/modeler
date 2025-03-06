@@ -3,30 +3,47 @@ CXXFLAGS+=-std=c++17
 LDFLAGS=
 LDLIBS=
 
-ifdef ANDROID
-	NDK=$(LOCALAPPDATA)/Android/Sdk/ndk/28.0.12674087
-	TOOLCHAIN=$(NDK)/toolchains/llvm/prebuilt/windows-x86_64
-	CC=$(TOOLCHAIN)/bin/clang
-	CXX=$(TOOLCHAIN)/bin/clang++
-	AR=$(TOOLCHAIN)/bin/llvm-ar
-	CP=/msys64/usr/bin/cp
+ifeq ($(OS),Windows_NT)
 	HEXDUMP=/msys64/usr/bin/hexdump
 	SED=sed
-	GLSLC=/VulkanSDK/1.3.296.0/Bin/glslc
+	ANDROID_NDK=/Android/Sdk/ndk/28.0.12674087
+	ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/windows-x86_64
+	VULKAN_SDK=/VulkanSDK/1.3.296.0
+	GLSLC=$(VULKAN_SDK)/Bin/glslc
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Linux)
+		CP=cp
+		SED=sed
+		ANDROID_NDK=~/Android/Sdk/ndk/28.0.12674087
+		ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/linux-x86_64
+		GLSLC=glslc
+	endif
+	ifeq ($(UNAME_S),Darwin)
+		CP=cp
+		SED=gsed
+		ANDROID_NDK=~/Library/Android/sdk/ndk/28.0.12674087
+		ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/darwin-x86_64
+		VULKAN_SDK=~/VulkanSDK/1.3.296.0
+		GLSLC=$(VULKAN_SDK)/macOS/bin/glslc
+	endif
+endif
+
+ifdef ANDROID
+	CC=$(ANDROID_TOOLCHAIN)/bin/clang
+	CXX=$(ANDROID_TOOLCHAIN)/bin/clang++
+	AR=$(ANDROID_TOOLCHAIN)/bin/llvm-ar
 	TARGET=aarch64-linux-android
 	API=21
 	LDLIBS+=-lvulkan
 	ALL_TARGET=modeler_android.a imgui.a
 	CFLAGS+=--target=$(TARGET)$(API)
-	CFLAGS+=-I$(TOOLCHAIN)/sysroot/usr/include
+	CFLAGS+=-I$(ANDROID_TOOLCHAIN)/sysroot/usr/include
 	CFLAGS+=-DVK_USE_PLATFORM_ANDROID_KHR
 	CFLAGS+=-DANDROID
 	CFLAGS+=-fPIC
 else ifdef IOS
-	SED=gsed
-	CP=cp
-	GLSLC=/Users/chase/VulkanSDK/1.3.296.0/iOS/bin/glslc
-	CFLAGS+=-I/Users/chase/VulkanSDK/1.3.296.0/iOS/include
+	CFLAGS+=-I$(VULKAN_SDK)/iOS/include
 	LDLIBS+=-lvulkan
 	ALL_TARGET=modeler.a
 	CFLAGS+=-DVK_USE_PLATFORM_METAL_EXT
@@ -34,13 +51,8 @@ else ifdef IOS
 else ifeq ($(OS),Windows_NT)
 	CC=/msys64/mingw64/bin/gcc
 	CXX=/msys64/mingw64/bin/g++
-	RM=/msys64/usr/bin/rm
-	CP=/msys64/usr/bin/cp
-	HEXDUMP=/msys64/usr/bin/hexdump
-	SED=sed
-	GLSLC=/VulkanSDK/1.3.296.0/Bin/glslc
-	CFLAGS+=-I/VulkanSDK/1.3.296.0/Include -mwindows -municode
-	LDFLAGS+=-L/VulkanSDK/1.3.296.0/Lib
+	CFLAGS+=-I$(VULKAN_SDK)/Include -mwindows -municode
+	LDFLAGS+=-L$(VULKAN_SDK)/Lib
 	LDLIBS+=-lvulkan-1 -ldwmapi
 	ALL_TARGET=modeler.exe
 	CFLAGS+=-DVK_USE_PLATFORM_WIN32_KHR
@@ -48,18 +60,12 @@ else
 	UNAME_S := $(shell uname -s)
 	ifeq ($(UNAME_S),Linux)
 		CC=gcc
-		SED=sed
-		CP=cp
-		GLSLC=glslc
 		LDLIBS+=-lvulkan -lwayland-client -lwayland-cursor
 		ALL_TARGET=modeler
 		CFLAGS+=-DVK_USE_PLATFORM_WAYLAND_KHR -DDRAW_WINDOW_DECORATION
 	endif
 	ifeq ($(UNAME_S),Darwin)
-		SED=gsed
-		CP=cp
-		GLSLC=/Users/chase/VulkanSDK/1.3.296.0/macOS/bin/glslc
-		CFLAGS+=-I/Users/chase/VulkanSDK/1.3.296.0/macOS/include
+		CFLAGS+=-I$(VULKAN_SDK)/macOS/include
 		LDLIBS+=-lvulkan
 		ALL_TARGET=modeler.a
 		CFLAGS+=-DVK_USE_PLATFORM_METAL_EXT
