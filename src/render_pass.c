@@ -59,7 +59,11 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 
 	VkAttachmentReference resolveAttachmentReference = {
 		.attachment = 2,
+#if DRAW_WINDOW_DECORATION
 		.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+#else /* DRAW_WINDOW_DECORATION */
+		.layout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+#endif /* DRAW_WINDOW_DECORATION */
 	};
 
 	VkSubpassDescription subpassDescription = {
