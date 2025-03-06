@@ -17,16 +17,16 @@ else
 	ifeq ($(UNAME_S),Linux)
 		CP=cp
 		SED=sed
-		ANDROID_NDK=~/Android/Sdk/ndk/28.0.12674087
+		ANDROID_NDK=$${HOME}/Android/Sdk/ndk/28.0.12674087
 		ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/linux-x86_64
 		GLSLC=glslc
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		CP=cp
 		SED=gsed
-		ANDROID_NDK=~/Library/Android/sdk/ndk/28.0.12674087
+		ANDROID_NDK=$${HOME}/Library/Android/sdk/ndk/28.0.12674087
 		ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/darwin-x86_64
-		VULKAN_SDK=~/VulkanSDK/1.3.296.0
+		VULKAN_SDK=$${HOME}/VulkanSDK/1.3.296.0
 		GLSLC=$(VULKAN_SDK)/macOS/bin/glslc
 	endif
 endif
