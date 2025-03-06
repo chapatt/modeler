@@ -941,32 +941,22 @@ bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error
 static ChessSquare squareFromPointerPosition(ChessBoard self)
 {
 	NormalizedPointerPosition pointerPosition = self->pointerPosition;
-	if (self->enable3d) {
-		float screen[mat2N];
-		float intersection[mat3N];
-		float planePoint[] = {0.0f, 0.0f, 0.0f};
-		float planeNormal[] = {0.0f, 0.0f, 1.0f};
-		screenPositionFromPointerPosition(self->pointerPosition, screen);
-		castScreenToPlane(intersection, screen, planePoint, planeNormal, self->inverseViewProjection);
-		if (intersection[0] < -1.0f || intersection[0] > 1.0f || intersection[1] < -1.0f || intersection[1] > 1.0f) {
-			return CHESS_SQUARE_COUNT;
-		}
-		pointerPosition = (NormalizedPointerPosition) {
-			.x = (intersection[0] + 1) / 2,
-			.y = (intersection[1] + 1) / 2
-		};
-	}
 
-	switch (self->orientation) {
-	case ROTATE_0:
-		return (floor(pointerPosition.y * 8) * 8) + floor(pointerPosition.x * 8);
-	case ROTATE_90:
-		return ((int) floor(pointerPosition.x * 8) * 8) + (int) floor((1.0 - pointerPosition.y) * 8);
-	case ROTATE_180:
-		return (floor((1 - pointerPosition.y) * 8) * 8) + floor((1.0 - pointerPosition.x) * 8);
-	case ROTATE_270:
-		return ((int) floor((1.0 - pointerPosition.x) * 8) * 8) + (int) floor(pointerPosition.y * 8);
+	float screen[mat2N];
+	float intersection[mat3N];
+	float planePoint[] = {0.0f, 0.0f, 0.0f};
+	float planeNormal[] = {0.0f, 0.0f, 1.0f};
+	screenPositionFromPointerPosition(self->pointerPosition, screen);
+	castScreenToPlane(intersection, screen, planePoint, planeNormal, self->inverseViewProjection);
+	if (intersection[0] < -1.0f || intersection[0] > 1.0f || intersection[1] < -1.0f || intersection[1] > 1.0f) {
+		return CHESS_SQUARE_COUNT;
 	}
+	pointerPosition = (NormalizedPointerPosition) {
+		.x = (intersection[0] + 1) / 2,
+		.y = (intersection[1] + 1) / 2
+	};
+
+	return (floor(pointerPosition.y * 8) * 8) + floor(pointerPosition.x * 8);
 }
 
 static void screenPositionFromPointerPosition(NormalizedPointerPosition pointerPosition, float screenPosition[mat2N])
