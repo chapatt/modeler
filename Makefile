@@ -81,9 +81,11 @@ endif
 SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv phong.vert.spv phong.frag.spv
 PNG_TEXTURES=pieces.png
 OBJ_MESHES=teapot.obj pawn.obj knight.obj bishop.obj rook.obj queen.obj king.obj
+TTF_FONTS=roboto.ttf
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h shader_phong.vert.h shader_phong.frag.h
 HEADER_TEXTURES=texture_pieces.h
 HEADER_MESHES=mesh_pawn.h mesh_knight.h mesh_bishop.h mesh_rook.h mesh_queen.h mesh_king.h
+HEADER_FONTS=font_roboto.h
 MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o matrix_utils.o
 VENDOR_LIBS=vma_implementation.o lodepng.o tinyobj_implementation.o
 
@@ -94,10 +96,13 @@ ifdef EMBED_RESOURCES
 	TEXTURES=$(HEADER_TEXTURES)
 	CFLAGS+=-DEMBED_MESHES
 	MESHES=$(HEADER_MESHES)
+	CFLAGS+=-DEMBED_FONTS
+	FONTS=$(HEADER_FONTS)
 else
 	SHADERS=$(SPIRV_SHADERS)
 	TEXTURES=$(PNG_TEXTURES)
 	MESHES=$(OBJ_MESHES)
+	FONTS=$(TTF_FONTS)
 endif
 
 ifdef DEBUG
@@ -118,16 +123,16 @@ all: $(ALL_TARGET)
 %.o: src/%.c
 	$(CC) $(CFLAGS) -c $<
 
-modeler: $(SHADERS) $(TEXTURES) $(MESHES) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(VENDOR_LIBS) $(IMGUI_LIBS)
+modeler: $(SHADERS) $(TEXTURES) $(MESHES) $(FONTS) $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler $(MODELER_OBJS) main_wayland.o modeler_wayland.o surface_wayland.o xdg-shell-protocol.o $(VENDOR_LIBS) $(LDLIBS) $(IMGUI_LIBS)
 
-modeler.exe: $(SHADERS) $(TEXTURES) $(MESHES) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS)
+modeler.exe: $(SHADERS) $(TEXTURES) $(MESHES) $(FONTS) $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(LDFLAGS) -o modeler.exe $(MODELER_OBJS) main_win32.o modeler_win32.o surface_win32.o utils_win32.o $(VENDOR_LIBS) $(IMGUI_LIBS) $(LDLIBS)
 
-modeler.a: $(SHADERS) $(TEXTURES) $(MESHES) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS) $(IMGUI_LIBS)
+modeler.a: $(SHADERS) $(TEXTURES) $(MESHES) $(FONTS) $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_metal.o surface_metal.o $(VENDOR_LIBS)
 
-modeler_android.a: $(SHADERS) $(TEXTURES) $(MESHES) $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS) $(IMGUI_LIBS)
+modeler_android.a: $(SHADERS) $(TEXTURES) $(MESHES) $(FONTS) $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS) $(IMGUI_LIBS)
 	$(AR) rvs $@ $(MODELER_OBJS) modeler_android.o surface_android.o $(VENDOR_LIBS)
 
 main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
@@ -148,6 +153,9 @@ main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
 %.obj: src/meshes/%.obj
 	$(CP) $< $@
 
+%.ttf: src/fonts/%.ttf
+	$(CP) $< $@
+
 $(HEADER_SHADERS): shader_%.h: %.spv
 	./hexdump_include.sh "`echo $(basename $<)ShaderBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)ShaderSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 
@@ -156,6 +164,9 @@ $(HEADER_TEXTURES): texture_%.h: %.png
 
 $(HEADER_MESHES): mesh_%.h: %.obj
 	./hexdump_include.sh "`echo $(basename $<)MeshBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)MeshSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
+
+$(HEADER_FONTS): font_%.h: %.ttf
+	./hexdump_include.sh "`echo $(basename $<)FontBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)FontSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 
 imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
 	$(AR) rvs $@ cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
@@ -201,7 +212,7 @@ clean-app:
 		modeler_win32.o modeler_wayland.o modeler_metal.o modeler_android.o \
 		surface_win32.o surface_wayland.o surface_metal.o surface_android.o \
 		utils_win32.o \
-		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(PNG_TEXTURES) $(HEADER_TEXTURES) $(OBJ_MESHES) $(HEADER_MESHES)
+		$(MODELER_OBJS) $(SPIRV_SHADERS) $(HEADER_SHADERS) $(PNG_TEXTURES) $(HEADER_TEXTURES) $(OBJ_MESHES) $(HEADER_MESHES) $(TTF_FONTS) $(HEADER_FONTS)
 
 clean-vendor:
 	$(RM) -rf $(VENDOR_LIBS) \

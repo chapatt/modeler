@@ -15,6 +15,10 @@
 #include "imgui/imgui_impl_modeler.h"
 #endif /* ENABLE_IMGUI */
 
+#ifdef EMBED_FONTS
+#include "../font_roboto.h"
+#endif /* EMBED_FONTS */
+
 typedef struct component_t {
 	void *object;
 	VkViewport viewport;
@@ -441,15 +445,17 @@ static bool rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, 
 {
 	if (!(*currentFont = findFontWithScale(*fonts, *fontCount, scale))) {
 		ImGuiIO *io = ImGui_GetIO();
-		char *fontPath;
-		int fontSize;
-		char *fontBytes;
-		asprintf(&fontPath, "%s/%s", resourcePath, "roboto.ttf");
-		if ((fontSize = readFileToString(fontPath, &fontBytes)) == -1) {
+#ifndef EMBED_FONTS
+		char *robotoFontPath;
+		int robotoFontSize;
+		char *robotoFontBytes;
+		asprintf(&robotoFontPath, "%s/%s", resourcePath, "roboto.ttf");
+		if ((robotoFontSize = readFileToString(robotoFontPath, &robotoFontBytes)) == -1) {
 			asprintf(error, "Failed to load font file.\n");
 			return false;
 		}
-		ImFont *font = ImFontAtlas_AddFontFromMemoryTTF(io->Fonts, fontBytes, fontSize, 16 * scale, NULL, NULL);
+#endif /* EMBED_FONTS */
+		ImFont *font = ImFontAtlas_AddFontFromMemoryTTF(io->Fonts, robotoFontBytes, robotoFontSize, 16 * scale, NULL, NULL);
 		pushFont(fonts, fontCount, font, scale);
 		ImFontAtlas_Build(io->Fonts);
 		cImGui_ImplVulkan_CreateFontsTexture();

@@ -11,8 +11,10 @@ xcuserdata/
 /*.frag.h
 /texture_*.h
 /mesh_*.h
+/font_*.h
 /*.rgba
 /*.png
 /*.obj
+/*.ttf
 /modeler
 /android/.idea/deploymentTargetSelector.xml
