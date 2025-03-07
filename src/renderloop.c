@@ -33,7 +33,7 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 #ifdef ENABLE_IMGUI
 static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale);
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
-static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath);
+static bool rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath, char **error);
 #endif /* ENABLE_IMGUI */
 
 bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet *descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, char **error)
@@ -62,7 +62,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	Projection projection = chessBoardGetProjection(chessBoard);
 
 #ifdef ENABLE_IMGUI
-	rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath);
+	if (!rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath, error)) {
+		return false;
+	}
 #endif /* ENABLE_IMGUI */
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
@@ -155,7 +157,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				resizeInfo = (ResizeInfo *) data;
 #ifdef ENABLE_IMGUI
 				if (resizeInfo->windowDimensions.scale != windowDimensions->scale) {
-					rescaleImGui(&fonts, &fontCount, &currentFont, resizeInfo->windowDimensions.scale, resourcePath);
+					if (!rescaleImGui(&fonts, &fontCount, &currentFont, resizeInfo->windowDimensions.scale, resourcePath, error)) {
+						return false;
+					}
 				}
 #endif /* ENABLE_IMGUI */
 				*windowDimensions = resizeInfo->windowDimensions;
@@ -433,17 +437,25 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale)
 	return NULL;
 }
 
-static void rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath)
+static bool rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath, char **error)
 {
 	if (!(*currentFont = findFontWithScale(*fonts, *fontCount, scale))) {
 		ImGuiIO *io = ImGui_GetIO();
 		char *fontPath;
+		int fontSize;
+		char *fontBytes;
 		asprintf(&fontPath, "%s/%s", resourcePath, "roboto.ttf");
-		ImFont *font = ImFontAtlas_AddFontFromFileTTF(io->Fonts, fontPath, 16 * scale, NULL, NULL);
+		if ((fontSize = readFileToString(fontPath, &fontBytes)) == -1) {
+			asprintf(error, "Failed to load font file.\n");
+			return false;
+		}
+		ImFont *font = ImFontAtlas_AddFontFromMemoryTTF(io->Fonts, fontBytes, fontSize, 16 * scale, NULL, NULL);
 		pushFont(fonts, fontCount, font, scale);
 		ImFontAtlas_Build(io->Fonts);
 		cImGui_ImplVulkan_CreateFontsTexture();
 		*currentFont = font;
 	}
+
+	return true;
 }
 #endif /* ENABLE_IMGUI */
