@@ -11,7 +11,7 @@ Functionality is nearly feature-complete. The following major tasks remain:
 - [ ] Fullscreen mode
 	- [ ] Attempt to acquire exclusive fullscreen access if possible (`VK_EXT_full_screen_exclusive` extension)
 	- [ ] Disable window border/shadow renderpass on wayland when transitioning to fullscreen
-		- `DRAW_WINDOW_DECORATION` conditionals
+		- `DRAW_WINDOW_BORDER` conditionals
 		- Move from subpass to genuine renderpass
 
 Nice-to-haves:

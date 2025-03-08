@@ -50,11 +50,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	VkClearValue clearValue = {0.008f, 0.008f, 0.008f, 1.0f};
 	VkClearValue stencilClearValue = {1.0f, 0.0f};
 	VkClearValue secondClearValue = {0.0f, 0.0f, 0.0f, 0.0f};
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 	VkClearValue clearValues[] = {clearValue, stencilClearValue, secondClearValue};
 #else
 	VkClearValue clearValues[] = {clearValue, stencilClearValue};
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 
 	struct timespec previousTime = {};
 	const size_t queueLength = 10;
@@ -295,7 +295,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		cImGui_ImplVulkan_RenderDrawData(drawData, commandBuffers[currentFrame]);
 #endif /* ENABLE_IMGUI */
 
-#if DRAW_WINDOW_DECORATION
+#if DRAW_WINDOW_BORDER
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[0]);
@@ -324,7 +324,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		};
 		vkCmdPushConstants(commandBuffers[currentFrame], pipelineLayouts[0], VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(secondPushConstants), &secondPushConstants);
 		vkCmdDraw(commandBuffers[currentFrame], 3, 1, 0, 0);
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 
 		vkCmdEndRenderPass(commandBuffers[currentFrame]);
 		vkEndCommandBuffer(commandBuffers[currentFrame]);

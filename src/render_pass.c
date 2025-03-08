@@ -50,11 +50,11 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 		.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
 		.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 		.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-#if DRAW_WINDOW_DECORATION
+#if DRAW_WINDOW_BORDER
 		.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-#else /* DRAW_WINDOW_DECORATION */
+#else /* DRAW_WINDOW_BORDER */
 		.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 	};
 
 	VkAttachmentReference resolveAttachmentReference = {
@@ -110,7 +110,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	};
 #endif /* ENABLE_IMGUI */
 
-#if DRAW_WINDOW_DECORATION
+#if DRAW_WINDOW_BORDER
 	VkAttachmentDescription windowDecorationAttachmentDescription = {
 		.flags = 0,
 		.format = swapchainInfo.surfaceFormat.format,
@@ -169,7 +169,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, windowDecorationSubpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency, windowDecorationSubpassDependency};
 #endif /* ENABLE_IMGUI */
-#else /* DRAW_WINDOW_DECORATION */
+#else /* DRAW_WINDOW_BORDER */
 	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, resolveAttachmentDescription};
 #if ENABLE_IMGUI
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription};
@@ -178,7 +178,7 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	VkSubpassDescription subpassDescriptions[] = {subpassDescription};
 	VkSubpassDependency subpassDependencies[] = {subpassDependency};
 #endif /* ENABLE_IMGUI */
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 
 	VkRenderPassCreateInfo renderPassCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,

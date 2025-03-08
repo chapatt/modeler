@@ -158,11 +158,11 @@ void *threadProc(void *arg)
 	VkDescriptorPool descriptorPool;
 	VkDescriptorSet imageDescriptorSet;
 	VkDescriptorSetLayout imageDescriptorSetLayout;
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 	VkImage offscreenImage;
 	VmaAllocation offscreenImageAllocation;
 	VkImageView offscreenImageView;
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 	VkRenderPass renderPass;
 	VkFramebuffer *framebuffers;
 	VkImage multisampleImage;
@@ -194,7 +194,7 @@ void *threadProc(void *arg)
 		.multisampleImage = &multisampleImage,
 		.multisampleImageView = &multisampleImageView,
 		.multisampleImageAllocation = &multisampleImageAllocation,
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 		.descriptorPool = &descriptorPool,
 		.imageDescriptorSetLayouts = &imageDescriptorSetLayout,
 		.imageDescriptorSets = &imageDescriptorSet,
@@ -207,7 +207,7 @@ void *threadProc(void *arg)
 		.offscreenImageCount = 0,
 		.offscreenImageView = NULL,
 		.offscreenImageAllocation = NULL
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 	};
 
 	if (!createAppSwapchain(&swapchainCreateInfo, error)) {
@@ -228,7 +228,7 @@ void *threadProc(void *arg)
 	}
 
 #ifndef EMBED_SHADERS
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 	char *windowBorderVertShaderPath;
 	char *windowBorderFragShaderPath;
 	asprintf(&windowBorderVertShaderPath, "%s/%s", resourcePath, "window_border.vert.spv");
@@ -246,10 +246,10 @@ void *threadProc(void *arg)
 		asprintf(error, "Failed to open window border fragment shader for reading.\n");
 		sendThreadFailureSignal(platformWindow);
 	}
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 #endif /* EMBED_SHADERS */
 
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 	VkPipelineLayout pipelineLayoutWindowDecoration;
 	VkPipeline pipelineWindowDecoration;
 	VkPushConstantRange pushConstantRange = {
@@ -300,7 +300,7 @@ void *threadProc(void *arg)
 	if (!pipelineCreateSuccessWindowDecoration) {
 		sendThreadFailureSignal(platformWindow);
 	}
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 
 	VkDescriptorPool imDescriptorPool;
 #ifdef ENABLE_IMGUI
@@ -308,7 +308,7 @@ void *threadProc(void *arg)
 	initializeImgui(platformWindow, &swapchainInfo, physicalDeviceCharacteristics, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, &imDescriptorPool, error);
 #endif /* ENABLE_IMGUI */
 
-#if DRAW_WINDOW_DECORATION
+#if DRAW_WINDOW_BORDER
 	VkPipeline pipelines[] = {pipelineWindowDecoration};
 	VkPipelineLayout pipelineLayouts[] = {pipelineLayoutWindowDecoration};
 	size_t pipelineCount = 1;
@@ -318,13 +318,13 @@ void *threadProc(void *arg)
 	VkPipelineLayout pipelineLayouts[] = {};
 	size_t pipelineCount = 0;
 	VkDescriptorSet *drawDescriptorSets = NULL;
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 
 	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, &swapchainCreateInfo, chessBoard, chessEngine, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 	size_t offscreenImageCount = 1;
 	VkImage offscreenImages[] = {offscreenImage};
 	VmaAllocation offscreenImageAllocations[] = {offscreenImageAllocation};
@@ -334,7 +334,7 @@ void *threadProc(void *arg)
 	VmaAllocation *offscreenImageAllocations = NULL;
 	size_t offscreenImageCount = 0;
 	VkImageView *offscreenImageViews = NULL;
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 
 	cleanupVulkan(instance, debugCallback, surface, &physicalDeviceCharacteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayouts, pipelines, pipelineCount, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, MAX_FRAMES_IN_FLIGHT, synchronizationInfo, descriptorPool, &imageDescriptorSet, &imageDescriptorSetLayout, chessBoard, depthImage, depthImageAllocation, depthImageView, multisampleImage, multisampleImageView, multisampleImageAllocation, &swapchainCreateInfo, imDescriptorPool);
 
@@ -410,7 +410,7 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 {
 	destroyFramebuffers(swapchainCreateInfo->device, *swapchainCreateInfo->framebuffers, swapchainCreateInfo->swapchainInfo->imageCount);
 	destroyRenderPass(swapchainCreateInfo->device, *swapchainCreateInfo->renderPass);
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 	for (size_t i = 0; i < swapchainCreateInfo->offscreenImageCount; ++i) {
 		destroyDescriptorSetLayout(swapchainCreateInfo->device, (swapchainCreateInfo->imageDescriptorSetLayouts)[i]);
 	}
@@ -479,7 +479,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		return false;
 	}
 
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 	if (!createImage(swapchainCreateInfo->device, swapchainCreateInfo->allocator, swapchainCreateInfo->swapchainInfo->extent, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, 1, VK_SAMPLE_COUNT_1_BIT, swapchainCreateInfo->offscreenImage, swapchainCreateInfo->offscreenImageAllocation, error)) {
 		return false;
 	}
@@ -515,7 +515,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	if (!createDescriptorSets(swapchainCreateInfo->device, &createDescriptorSetInfo, 1, swapchainCreateInfo->descriptorPool, swapchainCreateInfo->imageDescriptorSets, swapchainCreateInfo->imageDescriptorSetLayouts, error)) {
 		return false;
 	}
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 
 	VkSampleCountFlagBits sampleCount = getMaxSampleCount(swapchainCreateInfo->physicalDeviceCharacteristics.deviceProperties);
 	if (!createImage(swapchainCreateInfo->device, swapchainCreateInfo->allocator, swapchainCreateInfo->swapchainInfo->extent, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT, 1, sampleCount, swapchainCreateInfo->multisampleImage, swapchainCreateInfo->multisampleImageAllocation, error)) {
@@ -536,13 +536,13 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 
 	*swapchainCreateInfo->framebuffers = malloc(sizeof(**swapchainCreateInfo->framebuffers) * swapchainCreateInfo->swapchainInfo->imageCount);
 	for (uint32_t i = 0; i < swapchainCreateInfo->swapchainInfo->imageCount; ++i) {
-#ifdef DRAW_WINDOW_DECORATION
+#ifdef DRAW_WINDOW_BORDER
 		VkImageView attachments[] = {*swapchainCreateInfo->multisampleImageView, *swapchainCreateInfo->depthImageView, *swapchainCreateInfo->offscreenImageView, (*swapchainCreateInfo->imageViews)[i]};
 		uint32_t attachmentCount = 4;
 #else
 		VkImageView attachments[] = {*swapchainCreateInfo->multisampleImageView, *swapchainCreateInfo->depthImageView, (*swapchainCreateInfo->imageViews)[i]};
 		uint32_t attachmentCount = sizeof(attachments) / sizeof(attachments[0]);
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 
 		if (!createFramebuffer(swapchainCreateInfo->device, *swapchainCreateInfo->swapchainInfo, attachments, attachmentCount, *swapchainCreateInfo->renderPass, *swapchainCreateInfo->framebuffers + i, error)) {
 			return false;

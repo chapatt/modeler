@@ -64,7 +64,7 @@ else
 		CC=gcc
 		LDLIBS+=-lvulkan -lwayland-client -lwayland-cursor
 		ALL_TARGET=modeler
-		CFLAGS+=-DVK_USE_PLATFORM_WAYLAND_KHR -DDRAW_WINDOW_DECORATION
+		CFLAGS+=-DVK_USE_PLATFORM_WAYLAND_KHR -DDRAW_WINDOW_BORDER
 	endif
 	ifeq ($(UNAME_S),Darwin)
 		CFLAGS+=-I$(VULKAN_SDK)/macOS/include

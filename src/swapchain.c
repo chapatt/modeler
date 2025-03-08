@@ -33,13 +33,13 @@ bool createSwapchain(VkDevice device, VkSurfaceKHR surface, PhysicalDeviceSurfac
 		.imageArrayLayers = 1,
 		.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 		.preTransform = surfaceCharacteristics.capabilities.currentTransform,
-#if DRAW_WINDOW_DECORATION
+#if DRAW_WINDOW_BORDER
 		.compositeAlpha = VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
 #elif defined(ANDROID)
 		.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR,
 #else
 		.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 		.presentMode = swapchainInfo->presentMode,
 		.clipped = VK_TRUE,
 		.oldSwapchain = oldSwapchain

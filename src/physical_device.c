@@ -100,13 +100,13 @@ SuitabilityResult findQueueFamilyWithSurfaceSupport(uint32_t queueFamilyCount, V
 bool isPhysicalDeviceSurfaceSupportSuitable(PhysicalDeviceSurfaceCharacteristics characteristics)
 {
 	return characteristics.formatCount && characteristics.presentModeCount &&
-#if DRAW_WINDOW_DECORATION
+#if DRAW_WINDOW_BORDER
 		(characteristics.capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR);
 #elif defined(ANDROID)
 		(characteristics.capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR);
 #else
 		(characteristics.capabilities.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
-#endif /* DRAW_WINDOW_DECORATION */
+#endif /* DRAW_WINDOW_BORDER */
 }
 
 SuitabilityResult isPhysicalDeviceSuitable(PhysicalDeviceCharacteristics characteristics, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, char **error)
