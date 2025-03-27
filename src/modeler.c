@@ -230,7 +230,7 @@ void *threadProc(void *arg)
 	}
 
 	Titlebar titlebar;
-	if (!createTitlebar(&titlebar, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, error)) {
+	if (!createTitlebar(&titlebar, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 2, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -327,7 +327,7 @@ void *threadProc(void *arg)
 	VkDescriptorSet *drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_BORDER */
 
-	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, &swapchainCreateInfo, chessBoard, chessEngine, error)) {
+	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, &swapchainCreateInfo, chessBoard, chessEngine, titlebar, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
