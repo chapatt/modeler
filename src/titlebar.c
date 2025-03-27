@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "lodepng.h"
 
 #include "titlebar.h"
@@ -22,14 +24,10 @@ static const float VIEWPORT_WIDTH = 2.0f;
 static const float VIEWPORT_HEIGHT = 2.0f;
 
 typedef struct titlebar_push_constants_t {
-	float ambientColor[4];
+	float minimizeColor[4];
+	float maximizeColor[4];
+	float closeColor[4];
 } TitlebarPushConstants;
-
-float iconSpriteOriginMap[3][2] = {
-	{0.75f, 0.75f},
-	{0.5f, 0.25f},
-	{0.75f, 0.25f}
-};
 
 struct titlebar_t {
 	VkDevice device;
@@ -53,16 +51,16 @@ struct titlebar_t {
 	NormalizedPointerPosition pointerPosition;
 };
 
-static bool createTexture(Titlebar self, char **error);
-static bool createTextureSampler(Titlebar self, char **error);
-static bool createDescriptors(Titlebar self, char **error);
-static bool createPipeline(Titlebar self, char **error);
+static bool createTitlebarTexture(Titlebar self, char **error);
+static bool createTitlebarTextureSampler(Titlebar self, char **error);
+static bool createTitlebarDescriptors(Titlebar self, char **error);
+static bool createTitlebarPipeline(Titlebar self, char **error);
 
 bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, char **error)
 {
-	*chessBoard = malloc(sizeof(**chessBoard));
+	*titlebar = malloc(sizeof(**titlebar));
 
-	ChessBoard self = *chessBoard;
+	Titlebar self = *titlebar;
 
 	self->device = device;
 	self->allocator = allocator;
@@ -73,31 +71,32 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->sampleCount = sampleCount;
 	self->resourcePath = resourcePath;
 
-	if (!createTexture(self, error)) {
+	if (!createTitlebarTexture(self, error)) {
 		return false;
 	}
 
-	if (!createTextureSampler(self, error)) {
+	if (!createTitlebarTextureSampler(self, error)) {
 		return false;
 	}
 
-	if (!createDescriptors(self, error)) {
+	if (!createTitlebarDescriptors(self, error)) {
 		return false;
 	}
 
-	if (!createPipeline(self, error)) {
+	if (!createTitlebarPipeline(self, error)) {
 		return false;
 	}
 
-	if (!createPipeline(self, error)) {
+	if (!createTitlebarPipeline(self, error)) {
 		return false;
 	}
 
 	return true;
 }
 
-static bool createTexture(Titlebar self, char **error)
+static bool createTitlebarTexture(Titlebar self, char **error)
 {
+#if 0
 #ifndef EMBED_TEXTURES
 	char *piecesTexturePath;
 	asprintf(&piecesTexturePath, "%s/%s", self->resourcePath, "pieces.png");
@@ -168,44 +167,28 @@ static bool createTexture(Titlebar self, char **error)
 		return false;
 	}
 
+#endif
 	return true;
 }
 
-static bool createTextureSampler(Titlebar self, char **error)
+static bool createTitlebarTextureSampler(Titlebar self, char **error)
 {
+#if 0
 	if (!createSampler(self->device, 0, PIECES_TEXTURE_MIP_LEVELS, &self->sampler, error)) {
 		return false;
 	}
 
+#endif
 	return true;
 }
 
-static bool createDescriptors(Titlebar self, char **error)
+static bool createTitlebarDescriptors(Titlebar self, char **error)
 {
-	VkDescriptorBufferInfo boardBufferDescriptorInfo = {
-		.buffer = self->boardUniformBuffers[0],
-		.offset = 0,
-		.range = sizeof(self->boardUniform)
-	};
-
-	VkDescriptorBufferInfo piecesBufferDescriptorInfo = {
-		.buffer = self->piecesUniformBuffers[0],
-		.offset = 0,
-		.range = sizeof(self->piecesUniforms[0])
-	};
-
+#if 0
 	VkDescriptorImageInfo imageDescriptorInfo = {
 		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 		.imageView = self->textureImageView,
 		.sampler = self->sampler
-	};
-
-	VkDescriptorSetLayoutBinding boardBufferBinding = {
-		.binding = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-		.pImmutableSamplers = NULL
 	};
 
 	VkDescriptorSetLayoutBinding imageBinding = {
@@ -216,84 +199,47 @@ static bool createDescriptors(Titlebar self, char **error)
 		.pImmutableSamplers = NULL
 	};
 
-	VkDescriptorSetLayoutBinding piecesBufferBinding = {
-		.binding = 0,
-		.descriptorCount = 1,
-		.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC,
-		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-		.pImmutableSamplers = NULL
-	};
-
-	void *boardDescriptorSetDescriptorInfos[] = {&boardBufferDescriptorInfo, &imageDescriptorInfo};
-	VkDescriptorSetLayoutBinding boardDescriptorSetBindings[] = {boardBufferBinding, imageBinding};
-	void *piecesDescriptorSetDescriptorInfos[] = {&piecesBufferDescriptorInfo};
+	void *boardDescriptorSetDescriptorInfos[] = {&imageDescriptorInfo};
+	VkDescriptorSetLayoutBinding boardDescriptorSetBindings[] = {imageBinding};
 	CreateDescriptorSetInfo createDescriptorSetInfos[] = {
 		{
-			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT & VK_SHADER_STAGE_FRAGMENT_BIT,
+			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 			.descriptorInfos = boardDescriptorSetDescriptorInfos,
-			.descriptorCount = 2,
-			.bindings = boardDescriptorSetBindings,
-			.bindingCount = 2
-		}, {
-			.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-			.descriptorInfos = piecesDescriptorSetDescriptorInfos,
 			.descriptorCount = 1,
-			.bindings = &piecesBufferBinding,
+			.bindings = boardDescriptorSetBindings,
 			.bindingCount = 1
 		}
 	};
-	VkDescriptorSet descriptorSets[2];
-	VkDescriptorSetLayout descriptorSetLayouts[2];
-	if (!createDescriptorSets(self->device, createDescriptorSetInfos, 2, &self->descriptorPool, descriptorSets, descriptorSetLayouts, error)) {
+	VkDescriptorSet descriptorSet;
+	VkDescriptorSetLayout descriptorSetLayout;
+	if (!createDescriptorSets(self->device, createDescriptorSetInfos, 2, &self->descriptorPool, &descriptorSet, &descriptorSetLayout, error)) {
 		return false;
 	}
-	self->boardDescriptorSets[0] = descriptorSets[0];
-	self->piecesDescriptorSets[0] = descriptorSets[1];
-	self->boardDescriptorSetLayouts[0] = descriptorSetLayouts[0];
-	self->piecesDescriptorSetLayouts[0] = descriptorSetLayouts[1];
+	self->descriptorSets[0] = descriptorSet;
+	self->descriptorSetLayouts[0] = descriptorSetLayout;
 
+#endif
 	return true;
 }
 
-static bool createPipeline(Titlebar self, char **error)
+static bool createTitlebarPipeline(Titlebar self, char **error)
 {
-	VkVertexInputBindingDescription vertexBindingDescription = {
-		.binding = 0,
-		.stride = sizeof(MeshVertex),
-		.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
-	};
-
-	VkVertexInputAttributeDescription vertexAttributeDescriptions[] = {
-		{
-			.binding = 0,
-			.location = 0,
-			.format = VK_FORMAT_R32G32B32_SFLOAT,
-			.offset = offsetof(MeshVertex, pos),
-		},
-		{
-			.binding = 0,
-			.location = 1,
-			.format = VK_FORMAT_R32G32B32_SFLOAT,
-			.offset = offsetof(MeshVertex, normal),
-		}
-	};
-
 #ifndef EMBED_SHADERS
-	char *phongVertShaderPath;
-	char *phongFragShaderPath;
-	asprintf(&phongVertShaderPath, "%s/%s", self->resourcePath, "phong.vert.spv");
-	asprintf(&phongFragShaderPath, "%s/%s", self->resourcePath, "phong.frag.spv");
-	char *phongVertShaderBytes;
-	char *phongFragShaderBytes;
-	uint32_t phongVertShaderSize = 0;
-	uint32_t phongFragShaderSize = 0;
+	char *titlebarVertShaderPath;
+	char *titlebarFragShaderPath;
+	asprintf(&titlebarVertShaderPath, "%s/%s", self->resourcePath, "titlebar.vert.spv");
+	asprintf(&titlebarFragShaderPath, "%s/%s", self->resourcePath, "titlebar.frag.spv");
+	char *titlebarVertShaderBytes;
+	char *titlebarFragShaderBytes;
+	uint32_t titlebarVertShaderSize = 0;
+	uint32_t titlebarFragShaderSize = 0;
 
-	if ((phongVertShaderSize = readFileToString(phongVertShaderPath, &phongVertShaderBytes)) == -1) {
-		asprintf(error, "Failed to open phong vertex shader for reading.\n");
+	if ((titlebarVertShaderSize = readFileToString(titlebarVertShaderPath, &titlebarVertShaderBytes)) == -1) {
+		asprintf(error, "Failed to open titlebar vertex shader for reading.\n");
 		return false;
 	}
-	if ((phongFragShaderSize = readFileToString(phongFragShaderPath, &phongFragShaderBytes)) == -1) {
-		asprintf(error, "Failed to open phong fragment shader for reading.\n");
+	if ((titlebarFragShaderSize = readFileToString(titlebarFragShaderPath, &titlebarFragShaderBytes)) == -1) {
+		asprintf(error, "Failed to open titlebar fragment shader for reading.\n");
 		return false;
 	}
 #endif /* EMBED_SHADERS */
@@ -301,7 +247,7 @@ static bool createPipeline(Titlebar self, char **error)
 	VkPushConstantRange pushConstantRange = {
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.offset = 0,
-		.size = sizeof(ChessPiecePushConstants)
+		.size = sizeof(TitlebarPushConstants)
 	};
 
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = {
@@ -321,25 +267,27 @@ static bool createPipeline(Titlebar self, char **error)
 		.device = self->device,
 		.renderPass = self->renderPass,
 		.subpassIndex = self->subpass,
-		.vertexShaderBytes = phongVertShaderBytes,
-		.vertexShaderSize = phongVertShaderSize,
-		.fragmentShaderBytes = phongFragShaderBytes,
-		.fragmentShaderSize = phongFragShaderSize,
-		.vertexBindingDescriptionCount = 1,
-		.vertexBindingDescriptions = &vertexBindingDescription,
-		.vertexAttributeDescriptionCount = sizeof(vertexAttributeDescriptions) / sizeof(*vertexAttributeDescriptions),
-		.VertexAttributeDescriptions = vertexAttributeDescriptions,
-		.descriptorSetLayouts = self->piecesDescriptorSetLayouts,
-		.descriptorSetLayoutCount = 1,
+		.vertexShaderBytes = titlebarVertShaderBytes,
+		.vertexShaderSize = titlebarVertShaderSize,
+		.fragmentShaderBytes = titlebarFragShaderBytes,
+		.fragmentShaderSize = titlebarFragShaderSize,
+		.vertexBindingDescriptionCount = 0,
+		.vertexBindingDescriptions = NULL,
+		.vertexAttributeDescriptionCount = 0,
+		.VertexAttributeDescriptions = NULL,
+		// .descriptorSetLayouts = self->descriptorSetLayouts,
+		// .descriptorSetLayoutCount = 1,
+		.descriptorSetLayouts = NULL,
+		.descriptorSetLayoutCount = 0,
 		.pushConstantRangeCount = 1,
 		.pushConstantRanges = &pushConstantRange,
 		.depthStencilState = depthStencilState,
 		.sampleCount = self->sampleCount
 	};
-	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->piecesPipelineLayout, &self->piecesPipeline, error);
+	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->pipelineLayout, &self->pipeline, error);
 #ifndef EMBED_SHADERS
-	free(phongFragShaderBytes);
-	free(phongVertShaderBytes);
+	free(titlebarFragShaderBytes);
+	free(titlebarVertShaderBytes);
 #endif /* EMBED_SHADERS */
 	if (!pipelineCreateSuccess) {
 		return false;
@@ -350,56 +298,17 @@ static bool createPipeline(Titlebar self, char **error)
 
 bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 {
+	TitlebarPushConstants pushConstants = {
+		.minimizeColor = {1.0f, 0.0f, 0.0f, 0.0f},
+		.maximizeColor = {1.0f, 0.0f, 0.0f, 0.0f},
+		.closeColor = {1.0f, 0.0f, 0.0f, 0.0f}
+	};
+
 	VkDeviceSize offsets[] = {0};
-	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->boardVertexBuffer, offsets);
-	vkCmdBindIndexBuffer(commandBuffer, self->boardIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
-	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipeline);
-	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->boardPipelineLayout, 0, 1, self->boardDescriptorSets, 0, NULL);
-	vkCmdDrawIndexed(commandBuffer, CHESS_INDEX_COUNT + 48, 1, 0, 0, 0);
-
-	if (self->enable3d) {
-		/* Draw Mesh */
-		vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->piecesVertexBuffer, offsets);
-		vkCmdBindIndexBuffer(commandBuffer, self->piecesIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipeline);
-		for (size_t i = 0; i < CHESS_SQUARE_COUNT; ++i) {
-			if (self->board[i] == EMPTY) {
-				continue;
-			}
-
-			float diffuseColor[3];
-			float ambientColor[3];
-			if (self->board[i] >= BLACK_PAWN && self->board[i] <= BLACK_KING) {
-				diffuseColor[0] = 0.3f;
-				diffuseColor[1] = 0.3f;
-				diffuseColor[2] = 0.3f;
-				ambientColor[0] = 0.03f;
-				ambientColor[1] = 0.03f;
-				ambientColor[2] = 0.03f;
-			} else if (self->board[i] >= WHITE_PAWN && self->board[i] <= WHITE_KING) {
-				diffuseColor[0] = 0.9f;
-				diffuseColor[1] = 0.9f;
-				diffuseColor[2] = 0.9f;
-				ambientColor[0] = 0.09f;
-				ambientColor[1] = 0.09f;
-				ambientColor[2] = 0.09f;
-			}
-			srgbToLinear(diffuseColor);
-			srgbToLinear(ambientColor);
-
-			ChessPiecePushConstants pushConstants = {
-				.diffuseColor = {diffuseColor[0], diffuseColor[1], diffuseColor[2], 0.0f},
-				.ambientColor = {ambientColor[0], ambientColor[1], ambientColor[2], 0.0f}
-			};
-
-			size_t meshIndex = pieceMeshIndexMap[self->board[i]];
-			uint32_t piecesUniformBufferOffset = sizeof(self->piecesUniforms[0]) * i;
-
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->piecesPipelineLayout, 0, 1, &self->piecesDescriptorSets[0], 1, &piecesUniformBufferOffset);
-			vkCmdPushConstants(commandBuffer, self->piecesPipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
-			vkCmdDrawIndexed(commandBuffer, self->pieceVertexCounts[meshIndex], 1, self->pieceVertexOffsets[meshIndex], self->pieceVertexOffsets[meshIndex], 0);
-		}
-	}
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
+	//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->descriptorSets, 0, NULL);
+	vkCmdPushConstants(commandBuffer, self->pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
+	vkCmdDraw(commandBuffer, 24, 1, 0, 0);
 
 	return true;
 }
@@ -407,7 +316,6 @@ bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 void titlebarHandleInputEvent(void *titlebar, InputEvent *inputEvent)
 {
 	Titlebar self = (Titlebar) titlebar;
-	ChessSquare square;
 
 	switch(inputEvent->type) {
 	case POINTER_LEAVE:
@@ -415,10 +323,6 @@ void titlebarHandleInputEvent(void *titlebar, InputEvent *inputEvent)
 	case BUTTON_DOWN:
 		break;
 	case BUTTON_UP:
-		if ((square = squareFromPointerPosition(self)) >= CHESS_SQUARE_COUNT) {
-			break;
-		}
-		chessEngineSquareSelected(self->engine, square);
 		break;
 	case NORMALIZED_POINTER_MOVE:
 		self->pointerPosition = *(NormalizedPointerPosition *) inputEvent->data;
@@ -431,28 +335,14 @@ void destroyTitlebar(Titlebar self)
 #ifndef EMBED_TEXTURES
 	/* TODO: free textures and meshes */
 #endif /* EMBED_TEXTURES */
-	destroyPipeline(self->device, self->boardPipeline);
-	destroyPipelineLayout(self->device, self->boardPipelineLayout);
-	destroyPipeline(self->device, self->piecesPipeline);
-	destroyPipelineLayout(self->device, self->piecesPipelineLayout);
+	destroyPipeline(self->device, self->pipeline);
+	destroyPipelineLayout(self->device, self->pipelineLayout);
 	destroyDescriptorPool(self->device, self->descriptorPool);
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
-		destroyDescriptorSetLayout(self->device, self->boardDescriptorSetLayouts[i]);
-		destroyDescriptorSetLayout(self->device, self->piecesDescriptorSetLayouts[i]);
-		vmaUnmapMemory(self->allocator, self->boardUniformBufferAllocations[i]);
-		destroyBuffer(self->allocator, self->boardUniformBuffers[i], self->boardUniformBufferAllocations[i]);
-		vmaUnmapMemory(self->allocator, self->piecesUniformBufferAllocations[i]);
-		destroyBuffer(self->allocator, self->piecesUniformBuffers[i], self->piecesUniformBufferAllocations[i]);
+		destroyDescriptorSetLayout(self->device, self->descriptorSetLayouts[i]);
 	}
 	destroySampler(self->device, self->sampler);
-	vmaUnmapMemory(self->allocator, self->boardStagingVertexBufferAllocation);
-	destroyBuffer(self->allocator, self->boardStagingVertexBuffer, self->boardStagingVertexBufferAllocation);
-	destroyBuffer(self->allocator, self->boardVertexBuffer, self->boardVertexBufferAllocation);
-	destroyBuffer(self->allocator, self->boardIndexBuffer, self->boardIndexBufferAllocation);
-	destroyBuffer(self->allocator, self->piecesVertexBuffer, self->piecesVertexBufferAllocation);
-	destroyBuffer(self->allocator, self->piecesIndexBuffer, self->piecesIndexBufferAllocation);
 	destroyImageView(self->device, self->textureImageView);
-
 	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
 	free(self);
 }
