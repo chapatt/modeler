@@ -10,7 +10,6 @@
 #include "device.h"
 #include "swapchain.h"
 #include "queue.h"
-#include "chess_board.h"
 
 typedef struct swapchain_create_info_t *SwapchainCreateInfo;
 

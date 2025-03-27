@@ -295,6 +295,28 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		cImGui_ImplVulkan_RenderDrawData(drawData, commandBuffers[currentFrame]);
 #endif /* ENABLE_IMGUI */
 
+		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
+		VkViewport titlebarViewport = {
+			.x = windowDimensions->activeArea.offset.x,
+			.y = windowDimensions->activeArea.offset.y,
+			.width = windowDimensions->activeArea.extent.width,
+			.height = windowDimensions->activeArea.extent.height,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+		VkRect2D titlebarScissor = {
+			.offset = {
+				.x = titlebarViewport.x,
+				.y = titlebarViewport.y
+			},
+			.extent = (VkExtent2D) {
+				.width = titlebarViewport.width,
+				.height = titlebarViewport.height
+			}
+		};
+		vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
+		vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
+
 #if DRAW_WINDOW_BORDER
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
 

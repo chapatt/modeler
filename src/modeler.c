@@ -27,7 +27,9 @@
 #include "buffer.h"
 #include "utils.h"
 #include "vulkan_utils.h"
+#include "chess_board.h"
 #include "chess_engine.h"
+#include "titlebar.h"
 #include "renderloop.h"
 
 #ifdef EMBED_SHADERS
@@ -224,6 +226,11 @@ void *threadProc(void *arg)
 	createChessEngine(&chessEngine, &chessBoard);
 
 	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions.orientation), true, PERSPECTIVE, error)) {
+		sendThreadFailureSignal(platformWindow);
+	}
+
+	Titlebar titlebar;
+	if (!createTitlebar(&titlebar, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
