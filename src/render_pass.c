@@ -110,6 +110,34 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 	};
 #endif /* ENABLE_IMGUI */
 
+	VkSubpassDescription titlebarSubpassDescription = {
+		.flags = 0,
+		.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+		.inputAttachmentCount = 0,
+		.pInputAttachments = NULL,
+		.colorAttachmentCount = 1,
+		.pColorAttachments = &attachmentReference,
+		.pResolveAttachments = &resolveAttachmentReference,
+		.pDepthStencilAttachment = &depthAttachmentReference,
+		.preserveAttachmentCount = 0,
+		.pPreserveAttachments = NULL
+	};
+
+	VkSubpassDependency titlebarSubpassDependency = {
+#if ENABLE_IMGUI
+		.srcSubpass = 1,
+		.dstSubpass = 2,
+#else /* ENABLE_IMGUI */
+		.srcSubpass = 0,
+		.dstSubpass = 1,
+#endif /* ENABLE_IMGUI */
+		.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+		.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		.dependencyFlags = 0
+	};
+
 #if DRAW_WINDOW_BORDER
 	VkAttachmentDescription windowDecorationAttachmentDescription = {
 		.flags = 0,
@@ -148,11 +176,11 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 
 	VkSubpassDependency windowDecorationSubpassDependency = {
 #if ENABLE_IMGUI
+		.srcSubpass = 2,
+		.dstSubpass = 3,
+#else /* ENABLE_IMGUI */
 		.srcSubpass = 1,
 		.dstSubpass = 2,
-#else /* ENABLE_IMGUI */
-		.srcSubpass = 0,
-		.dstSubpass = 1,
 #endif /* ENABLE_IMGUI */
 		.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
@@ -163,20 +191,20 @@ bool createRenderPass(VkDevice device, SwapchainInfo swapchainInfo, VkFormat dep
 
 	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, resolveAttachmentDescription, windowDecorationAttachmentDescription};
 #if ENABLE_IMGUI
-	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, windowDecorationSubpassDescription};
-	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, windowDecorationSubpassDependency};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, titlebarSubpassDescription, windowDecorationSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, titlebarSubpassDependency, windowDecorationSubpassDependency};
 #else /* ENABLE_IMGUI */
-	VkSubpassDescription subpassDescriptions[] = {subpassDescription, windowDecorationSubpassDescription};
-	VkSubpassDependency subpassDependencies[] = {subpassDependency, windowDecorationSubpassDependency};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, titlebarSubpassDescription, windowDecorationSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, titlebarSubpassDependency, windowDecorationSubpassDependency};
 #endif /* ENABLE_IMGUI */
 #else /* DRAW_WINDOW_BORDER */
 	VkAttachmentDescription attachmentDescriptions[] = {attachmentDescription, depthAttachmentDescription, resolveAttachmentDescription};
 #if ENABLE_IMGUI
-	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription};
-	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, imSubpassDescription, titlebarSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, imSubpassDependency, titlebarSubpassDependency};
 #else /* ENABLE_IMGUI */
-	VkSubpassDescription subpassDescriptions[] = {subpassDescription};
-	VkSubpassDependency subpassDependencies[] = {subpassDependency};
+	VkSubpassDescription subpassDescriptions[] = {subpassDescription, titlebarSubpassDescription};
+	VkSubpassDependency subpassDependencies[] = {subpassDependency, titlebarSubpassDependency};
 #endif /* ENABLE_IMGUI */
 #endif /* DRAW_WINDOW_BORDER */
 

@@ -78,15 +78,15 @@ ifdef ENABLE_VSYNC
 	CFLAGS+=-DENABLE_VSYNC
 endif
 
-SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv phong.vert.spv phong.frag.spv
+SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv phong.vert.spv phong.frag.spv titlebar.vert.spv titlebar.frag.spv
 PNG_TEXTURES=pieces.png
 OBJ_MESHES=teapot.obj pawn.obj knight.obj bishop.obj rook.obj queen.obj king.obj
 TTF_FONTS=roboto.ttf
-HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h shader_phong.vert.h shader_phong.frag.h
+HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h shader_phong.vert.h shader_phong.frag.h shader_titlebar.vert.h shader_titlebar.frag.h
 HEADER_TEXTURES=texture_pieces.h
 HEADER_MESHES=mesh_pawn.h mesh_knight.h mesh_bishop.h mesh_rook.h mesh_queen.h mesh_king.h
 HEADER_FONTS=font_roboto.h
-MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o matrix_utils.o
+MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o titlebar.o matrix_utils.o
 VENDOR_LIBS=vma_implementation.o lodepng.o tinyobj_implementation.o
 
 ifdef EMBED_RESOURCES
