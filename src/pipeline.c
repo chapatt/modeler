@@ -6,7 +6,7 @@
 
 #include "pipeline.h"
 
-bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error)
+bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, bool blend, char **error)
 {
 	VkResult result;
 
@@ -112,16 +112,31 @@ bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pip
 		.alphaToOneEnable = VK_FALSE
 	};
 
-	VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {
-		.blendEnable = VK_FALSE,
-		.srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
-		.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO,
-		.colorBlendOp = VK_BLEND_OP_ADD,
-		.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-		.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
-		.alphaBlendOp = VK_BLEND_OP_ADD,
-		.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-	};
+	VkPipelineColorBlendAttachmentState colorBlendAttachmentState;
+
+	if (blend) {
+		colorBlendAttachmentState = (VkPipelineColorBlendAttachmentState) {
+			.blendEnable = VK_TRUE,
+			.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+			.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+			.colorBlendOp = VK_BLEND_OP_ADD,
+			.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+	    		.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+			.alphaBlendOp = VK_BLEND_OP_ADD,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+		};
+	} else {
+		colorBlendAttachmentState = (VkPipelineColorBlendAttachmentState) {
+			.blendEnable = VK_FALSE,
+			.srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
+			.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO,
+			.colorBlendOp = VK_BLEND_OP_ADD,
+			.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+			.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+			.alphaBlendOp = VK_BLEND_OP_ADD,
+			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+		};
+	}
 
 	VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,

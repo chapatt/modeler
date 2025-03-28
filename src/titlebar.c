@@ -27,6 +27,7 @@ typedef struct titlebar_push_constants_t {
 	float minimizeColor[4];
 	float maximizeColor[4];
 	float closeColor[4];
+	float height;
 } TitlebarPushConstants;
 
 struct titlebar_t {
@@ -245,7 +246,7 @@ static bool createTitlebarPipeline(Titlebar self, char **error)
 #endif /* EMBED_SHADERS */
 
 	VkPushConstantRange pushConstantRange = {
-		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+		.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
 		.offset = 0,
 		.size = sizeof(TitlebarPushConstants)
 	};
@@ -284,7 +285,7 @@ static bool createTitlebarPipeline(Titlebar self, char **error)
 		.depthStencilState = depthStencilState,
 		.sampleCount = self->sampleCount
 	};
-	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->pipelineLayout, &self->pipeline, error);
+	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->pipelineLayout, &self->pipeline, true, error);
 #ifndef EMBED_SHADERS
 	free(titlebarFragShaderBytes);
 	free(titlebarVertShaderBytes);
@@ -301,13 +302,14 @@ bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 	TitlebarPushConstants pushConstants = {
 		.minimizeColor = {1.0f, 0.0f, 0.0f, 0.0f},
 		.maximizeColor = {1.0f, 0.0f, 0.0f, 0.0f},
-		.closeColor = {1.0f, 0.0f, 0.0f, 0.0f}
+		.closeColor = {1.0f, 0.0f, 0.0f, 0.0f},
+		.height = 0.1f
 	};
 
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
 	//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->descriptorSets, 0, NULL);
-	vkCmdPushConstants(commandBuffer, self->pipelineLayout, VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(pushConstants), &pushConstants);
+	vkCmdPushConstants(commandBuffer, self->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 	vkCmdDraw(commandBuffer, 24, 1, 0, 0);
 
 	return true;

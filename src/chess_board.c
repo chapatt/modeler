@@ -695,7 +695,7 @@ static bool createPiecesPipeline(ChessBoard self, char **error)
 		.depthStencilState = depthStencilState,
 		.sampleCount = self->sampleCount
 	};
-	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->piecesPipelineLayout, &self->piecesPipeline, error);
+	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->piecesPipelineLayout, &self->piecesPipeline, false, error);
 #ifndef EMBED_SHADERS
 	free(phongFragShaderBytes);
 	free(phongVertShaderBytes);
@@ -791,7 +791,7 @@ static bool createBoardPipeline(ChessBoard self, char **error)
 		.depthStencilState = depthStencilState,
 		.sampleCount = self->sampleCount
 	};
-	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->boardPipelineLayout, &self->boardPipeline, error);
+	bool pipelineCreateSuccess = createPipeline(pipelineCreateInfo, &self->boardPipelineLayout, &self->boardPipeline, false, error);
 #ifndef EMBED_SHADERS
 	free(chessBoardFragShaderBytes);
 	free(chessBoardVertShaderBytes);
