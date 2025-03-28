@@ -30,7 +30,7 @@ typedef struct pipeline_create_info_t {
 	VkSampleCountFlagBits sampleCount;
 } PipelineCreateInfo;
 
-bool createPipeline(PipelineCreateInfo createPipelineInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, char **error);
+bool createPipeline(PipelineCreateInfo pipelineCreateInfo, VkPipelineLayout *pipelineLayout, VkPipeline *pipeline, bool blend, char **error);
 
 void destroyPipelineLayout(VkDevice device, VkPipelineLayout pipelineLayout);
 
