@@ -253,9 +253,9 @@ static bool createTitlebarPipeline(Titlebar self, char **error)
 
 	VkPipelineDepthStencilStateCreateInfo depthStencilState = {
 		.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-		.depthTestEnable = VK_TRUE,
-		.depthWriteEnable = VK_TRUE,
-		.depthCompareOp = VK_COMPARE_OP_LESS,
+		.depthTestEnable = VK_FALSE,
+		.depthWriteEnable = VK_FALSE,
+		.depthCompareOp = VK_COMPARE_OP_NEVER,
 		.depthBoundsTestEnable = VK_FALSE,
 		.minDepthBounds = 0.0f,
 		.maxDepthBounds = 1.0f,
