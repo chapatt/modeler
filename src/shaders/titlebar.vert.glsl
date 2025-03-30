@@ -4,14 +4,16 @@ layout (push_constant) uniform _push_constants {
 	vec4 minimizeColor;
 	vec4 maximizeColor;
 	vec4 closeColor;
+	float aspectRatio;
 	float height;
 } PushConstants;
 
 layout(location = 0) out vec2 fragTexCoord;
 layout(location = 1) out vec4 fragColor;
 
+float aspectRatio = PushConstants.aspectRatio;
 float height = PushConstants.height;
-float width = height * 2;
+float width = height / aspectRatio;
 
 vec2 positions[] = vec2[](
 	vec2(-1, -1), vec2(-1, height - 1.0), vec2(1, height - 1.0), vec2(1, -1),

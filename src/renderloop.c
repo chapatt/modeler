@@ -5,6 +5,7 @@
 #include "pipeline.h"
 #include "utils.h"
 #include "vulkan_utils.h"
+#include "window.h"
 
 #include "renderloop.h"
 
@@ -185,6 +186,10 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
+			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
+			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height * windowDimensions->scale;
+			titlebarSetAspectRatio(titlebar, aspectRatio);
+			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
@@ -203,6 +208,10 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
+			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
+			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height * windowDimensions->scale;
+			titlebarSetAspectRatio(titlebar, aspectRatio);
+			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
@@ -392,6 +401,10 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
+			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
+			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height * windowDimensions->scale;
+			titlebarSetAspectRatio(titlebar, aspectRatio);
+			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
