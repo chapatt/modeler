@@ -27,6 +27,7 @@ typedef struct titlebar_push_constants_t {
 	float minimizeColor[4];
 	float maximizeColor[4];
 	float closeColor[4];
+	float aspectRatio;
 	float height;
 } TitlebarPushConstants;
 
@@ -50,6 +51,8 @@ struct titlebar_t {
 	VkDescriptorSet descriptorSets[MAX_FRAMES_IN_FLIGHT];
 	VkDescriptorSetLayout descriptorSetLayouts[MAX_FRAMES_IN_FLIGHT];
 	NormalizedPointerPosition pointerPosition;
+	float aspectRatio;
+	float height;
 };
 
 static bool createTitlebarTexture(Titlebar self, char **error);
@@ -57,7 +60,7 @@ static bool createTitlebarTextureSampler(Titlebar self, char **error);
 static bool createTitlebarDescriptors(Titlebar self, char **error);
 static bool createTitlebarPipeline(Titlebar self, char **error);
 
-bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, char **error)
+bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, float height, char **error)
 {
 	*titlebar = malloc(sizeof(**titlebar));
 
@@ -71,6 +74,8 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->subpass = subpass;
 	self->sampleCount = sampleCount;
 	self->resourcePath = resourcePath;
+	self->aspectRatio = aspectRatio;
+	self->height = height;
 
 	if (!createTitlebarTexture(self, error)) {
 		return false;
@@ -303,7 +308,8 @@ bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 		.minimizeColor = {1.0f, 0.0f, 0.0f, 0.0f},
 		.maximizeColor = {1.0f, 0.0f, 0.0f, 0.0f},
 		.closeColor = {1.0f, 0.0f, 0.0f, 0.0f},
-		.height = 0.1f
+		.aspectRatio = self->aspectRatio,
+		.height = self->height
 	};
 
 	VkDeviceSize offsets[] = {0};
@@ -347,4 +353,14 @@ void destroyTitlebar(Titlebar self)
 	destroyImageView(self->device, self->textureImageView);
 	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
 	free(self);
+}
+
+void titlebarSetAspectRatio(Titlebar self, float aspectRatio)
+{
+	self->aspectRatio = aspectRatio;
+}
+
+void titlebarSetHeight(Titlebar self, float height)
+{
+	self->height = height;
 }

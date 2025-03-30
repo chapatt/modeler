@@ -11,10 +11,10 @@
 #include "queue.h"
 #include "input_event.h"
 #include "utils.h"
+#include "window.h"
 
 #include "modeler_win32.h"
 
-#define CHROME_HEIGHT 50
 #define IDM_MENU 3
 
 const LPCTSTR CLASS_NAME = L"Modeler Window Class";

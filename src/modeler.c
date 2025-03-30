@@ -229,8 +229,10 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
+	float aspectRatio = (float) windowDimensions.activeArea.extent.width / windowDimensions.activeArea.extent.height;
+	float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions.activeArea.extent.height * windowDimensions.scale;
 	Titlebar titlebar;
-	if (!createTitlebar(&titlebar, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 2, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, error)) {
+	if (!createTitlebar(&titlebar, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 2, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, aspectRatio, titlebarHeight, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
