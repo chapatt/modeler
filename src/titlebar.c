@@ -102,42 +102,41 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 
 static bool createTitlebarTexture(Titlebar self, char **error)
 {
-#if 0
 #ifndef EMBED_TEXTURES
-	char *piecesTexturePath;
-	asprintf(&piecesTexturePath, "%s/%s", self->resourcePath, "pieces.png");
-	char *piecesTextureBytes;
-	uint32_t piecesTextureSize = 0;
+	char *texturePath;
+	asprintf(&texturePath, "%s/%s", self->resourcePath, "close_msdf.png");
+	char *textureBytes;
+	uint32_t textureSize = 0;
 
-	if ((piecesTextureSize = readFileToString(piecesTexturePath, &piecesTextureBytes)) == -1) {
+	if ((textureSize = readFileToString(texturePath, &textureBytes)) == -1) {
 		asprintf(error, "Failed to open texture for reading.\n");
 		return false;
 	}
 #endif /* EMBED_TEXTURES */
 
 	unsigned lodepngResult;
-	unsigned char *piecesTextureDecodedBytes;
-	unsigned piecesTextureDecodedWidth;
-	unsigned piecesTextureDecodedHeight;
+	unsigned char *textureDecodedBytes;
+	unsigned textureDecodedWidth;
+	unsigned textureDecodedHeight;
 
-	if (lodepngResult = lodepng_decode32(&piecesTextureDecodedBytes, &piecesTextureDecodedWidth, &piecesTextureDecodedHeight, piecesTextureBytes, piecesTextureSize)) {
+	if (lodepngResult = lodepng_decode32(&textureDecodedBytes, &textureDecodedWidth, &textureDecodedHeight, textureBytes, textureSize)) {
 		asprintf(error, "Failed to decode PNG: %s\n", lodepng_error_text(lodepngResult));
 		return false;
 	}
 
 	VkExtent2D textureExtent = {
-		.width = piecesTextureDecodedHeight,
-		.height = piecesTextureDecodedHeight
+		.width = textureDecodedHeight,
+		.height = textureDecodedHeight
 	};
-	unsigned piecesTextureDecodedSize = (piecesTextureDecodedWidth * piecesTextureDecodedHeight) * (32 / sizeof(piecesTextureDecodedBytes));
+	unsigned textureDecodedSize = (textureDecodedWidth * textureDecodedHeight) * (32 / sizeof(textureDecodedBytes));
 
 #ifndef EMBED_TEXTURES
-	free(piecesTextureBytes);
+	free(textureBytes);
 #endif /* EMBED_TEXTURES */
 
 	VkBuffer stagingBuffer;
 	VmaAllocation stagingBufferAllocation;
-	if (!createBuffer(self->device, self->allocator, piecesTextureDecodedSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, 0, &stagingBuffer, &stagingBufferAllocation, error)) {
+	if (!createBuffer(self->device, self->allocator, textureDecodedSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, 0, &stagingBuffer, &stagingBufferAllocation, error)) {
 		return false;
 	}
 
@@ -147,50 +146,46 @@ static bool createTitlebarTexture(Titlebar self, char **error)
 		asprintf(error, "Failed to map memory: %s", string_VkResult(result));
 		return false;
 	}
-	memcpy(data, piecesTextureDecodedBytes, piecesTextureDecodedSize);
-	free(piecesTextureDecodedBytes);
+	memcpy(data, textureDecodedBytes, textureDecodedSize);
+	free(textureDecodedBytes);
 	vmaUnmapMemory(self->allocator, stagingBufferAllocation);
 
-	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, PIECES_TEXTURE_MIP_LEVELS, VK_SAMPLE_COUNT_1_BIT, &self->textureImage, &self->textureImageAllocation, error)) {
+	if (!createImage(self->device, self->allocator, textureExtent, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, 1, VK_SAMPLE_COUNT_1_BIT, &self->textureImage, &self->textureImageAllocation, error)) {
 		return false;
 	}
 
-	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, PIECES_TEXTURE_MIP_LEVELS, error)) {
+	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, error)) {
 		return false;
 	}
 
-	if (!copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, piecesTextureDecodedWidth, piecesTextureDecodedHeight, PIECES_TEXTURE_MIP_LEVELS, error)) {
+	if (!copyBufferToImage(self->device, self->commandPool, self->queue, stagingBuffer, self->textureImage, textureDecodedWidth, textureDecodedHeight, 1, error)) {
 		return false;
 	}
 
-	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, PIECES_TEXTURE_MIP_LEVELS, error)) {
+	if (!transitionImageLayout(self->device, self->commandPool, self->queue, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1, error)) {
 		return false;
 	}
 
 	destroyBuffer(self->allocator, stagingBuffer, stagingBufferAllocation);
 
-	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, PIECES_TEXTURE_MIP_LEVELS, &self->textureImageView, error)) {
+	if (!createImageView(self->device, self->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, 1, &self->textureImageView, error)) {
 		return false;
 	}
 
-#endif
 	return true;
 }
 
 static bool createTitlebarTextureSampler(Titlebar self, char **error)
 {
-#if 0
-	if (!createSampler(self->device, 0, PIECES_TEXTURE_MIP_LEVELS, &self->sampler, error)) {
+	if (!createSampler(self->device, 0, 1, &self->sampler, error)) {
 		return false;
 	}
 
-#endif
 	return true;
 }
 
 static bool createTitlebarDescriptors(Titlebar self, char **error)
 {
-#if 0
 	VkDescriptorImageInfo imageDescriptorInfo = {
 		.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 		.imageView = self->textureImageView,
@@ -198,33 +193,31 @@ static bool createTitlebarDescriptors(Titlebar self, char **error)
 	};
 
 	VkDescriptorSetLayoutBinding imageBinding = {
-		.binding = 1,
+		.binding = 0,
 		.descriptorCount = 1,
 		.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
 		.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
 		.pImmutableSamplers = NULL
 	};
 
-	void *boardDescriptorSetDescriptorInfos[] = {&imageDescriptorInfo};
-	VkDescriptorSetLayoutBinding boardDescriptorSetBindings[] = {imageBinding};
+	void *descriptorSetDescriptorInfos[] = {&imageDescriptorInfo};
 	CreateDescriptorSetInfo createDescriptorSetInfos[] = {
 		{
 			.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
-			.descriptorInfos = boardDescriptorSetDescriptorInfos,
+			.descriptorInfos = descriptorSetDescriptorInfos,
 			.descriptorCount = 1,
-			.bindings = boardDescriptorSetBindings,
+			.bindings = &imageBinding,
 			.bindingCount = 1
 		}
 	};
 	VkDescriptorSet descriptorSet;
 	VkDescriptorSetLayout descriptorSetLayout;
-	if (!createDescriptorSets(self->device, createDescriptorSetInfos, 2, &self->descriptorPool, &descriptorSet, &descriptorSetLayout, error)) {
+	if (!createDescriptorSets(self->device, createDescriptorSetInfos, 1, &self->descriptorPool, &descriptorSet, &descriptorSetLayout, error)) {
 		return false;
 	}
 	self->descriptorSets[0] = descriptorSet;
 	self->descriptorSetLayouts[0] = descriptorSetLayout;
 
-#endif
 	return true;
 }
 
@@ -281,10 +274,8 @@ static bool createTitlebarPipeline(Titlebar self, char **error)
 		.vertexBindingDescriptions = NULL,
 		.vertexAttributeDescriptionCount = 0,
 		.VertexAttributeDescriptions = NULL,
-		// .descriptorSetLayouts = self->descriptorSetLayouts,
-		// .descriptorSetLayoutCount = 1,
-		.descriptorSetLayouts = NULL,
-		.descriptorSetLayoutCount = 0,
+		.descriptorSetLayouts = self->descriptorSetLayouts,
+		.descriptorSetLayoutCount = 1,
 		.pushConstantRangeCount = 1,
 		.pushConstantRanges = &pushConstantRange,
 		.depthStencilState = depthStencilState,
@@ -314,7 +305,7 @@ bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
-	//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->descriptorSets, 0, NULL);
+	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->descriptorSets, 0, NULL);
 	vkCmdPushConstants(commandBuffer, self->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
 	vkCmdDraw(commandBuffer, 24, 1, 0, 0);
 
