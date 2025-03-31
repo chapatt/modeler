@@ -293,8 +293,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 		}
-		char* projectionLabels[] = {"Orthographic", "Perspective"};
-   		if (ImGui_ComboChar("Projection", &projection, projectionLabels, sizeof(projectionLabels) / sizeof(projectionLabels[0]))) {
+		const char *projectionLabels[] = {"Orthographic", "Perspective"};
+   		if (ImGui_ComboChar("Projection", (int *) &projection, projectionLabels, sizeof(projectionLabels) / sizeof(projectionLabels[0]))) {
 			chessBoardSetProjection(chessBoard, projection);
 		}
 		ImGui_End();
