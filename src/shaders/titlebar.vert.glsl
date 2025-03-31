@@ -36,18 +36,18 @@ void main() {
 
 	if (gl_VertexIndex < 6) {
 		fragColor = vec4(0.0, 0.0, 0.0, 0.0);
-		backgroundColor = vec4(1.0, 1.0, 1.0, 0.2);
+		backgroundColor = vec4(1.0, 1.0, 1.0, 0.01);
 		drawTexture = 0;
 	} else if (gl_VertexIndex < 12) {
-		fragColor = vec4(0.0, 1.0, 0.0, 1.0);
+		fragColor = vec4(1.0, 1.0, 1.0, 1.0);
 		backgroundColor = vec4(0.0, 0.0, 0.0, 0.0);
 		drawTexture = 1;
 	} else if (gl_VertexIndex < 18) {
-		fragColor = vec4(0.0, 0.0, 1.0, 1.0);
+		fragColor = vec4(1.0, 1.0, 1.0, 1.0);
 		backgroundColor = vec4(0.0, 0.0, 0.0, 0.0);
 		drawTexture = 1;
 	} else if (gl_VertexIndex < 24) {
-		fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+		fragColor = vec4(1.0, 1.0, 1.0, 1.0);
 		backgroundColor = vec4(0.0, 0.0, 0.0, 0.0);
 		drawTexture = 1;
 	}
@@ -57,21 +57,57 @@ void main() {
 		fragTexCoord = vec2(0.0, 0.0);
 		break;
 	case 7:
-		fragTexCoord = vec2(0.0, 1.0);
+		fragTexCoord = vec2(0.0, 0.5);
 		break;
 	case 8:
-		fragTexCoord = vec2(1.0, 1.0);
+		fragTexCoord = vec2(0.5, 0.5);
 		break;
 	case 9:
 		fragTexCoord = vec2(0.0, 0.0);
 		break;
 	case 10:
-		fragTexCoord = vec2(1.0, 1.0);
+		fragTexCoord = vec2(0.5, 0.5);
 		break;
 	case 11:
+		fragTexCoord = vec2(0.5, 0.0);
+		break;
+	case 12:
+		fragTexCoord = vec2(0.5, 0.0);
+		break;
+	case 13:
+		fragTexCoord = vec2(0.5, 0.5);
+		break;
+	case 14:
+		fragTexCoord = vec2(1.0, 0.5);
+		break;
+	case 15:
+		fragTexCoord = vec2(0.5, 0.0);
+		break;
+	case 16:
+		fragTexCoord = vec2(1.0, 0.5);
+		break;
+	case 17:
 		fragTexCoord = vec2(1.0, 0.0);
 		break;
+	case 18:
+		fragTexCoord = vec2(0.0, 0.5);
+		break;
+	case 19:
+		fragTexCoord = vec2(0.0, 1.0);
+		break;
+	case 20:
+		fragTexCoord = vec2(0.5, 1.0);
+		break;
+	case 21:
+		fragTexCoord = vec2(0.0, 0.5);
+		break;
+	case 22:
+		fragTexCoord = vec2(0.5, 1.0);
+		break;
+	case 23:
+		fragTexCoord = vec2(0.5, 0.5);
+		break;
 	default:
-		fragTexCoord = vec2(0.0, 0.0);
+		fragTexCoord = vec2(0.0, 0.5);
 	}
 }

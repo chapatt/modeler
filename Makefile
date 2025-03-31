@@ -79,7 +79,7 @@ ifdef ENABLE_VSYNC
 endif
 
 SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv phong.vert.spv phong.frag.spv titlebar.vert.spv titlebar.frag.spv
-PNG_TEXTURES=pieces.png close_msdf.png
+PNG_TEXTURES=pieces.png titlebar.png
 OBJ_MESHES=teapot.obj pawn.obj knight.obj bishop.obj rook.obj queen.obj king.obj
 TTF_FONTS=roboto.ttf
 HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h shader_phong.vert.h shader_phong.frag.h shader_titlebar.vert.h shader_titlebar.frag.h

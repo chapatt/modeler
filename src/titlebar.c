@@ -104,7 +104,7 @@ static bool createTitlebarTexture(Titlebar self, char **error)
 {
 #ifndef EMBED_TEXTURES
 	char *texturePath;
-	asprintf(&texturePath, "%s/%s", self->resourcePath, "close_msdf.png");
+	asprintf(&texturePath, "%s/%s", self->resourcePath, "titlebar.png");
 	char *textureBytes;
 	uint32_t textureSize = 0;
 

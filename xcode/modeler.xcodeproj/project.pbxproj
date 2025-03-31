@@ -51,7 +51,7 @@
 		ABF162402A34E3AC007655F7 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABF1623F2A34E3AC007655F7 /* Preview Assets.xcassets */; };
 		ABF7EC312D95D1B80060B8B1 /* titlebar.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = ABF7EC2F2D95D1B80060B8B1 /* titlebar.frag.spv */; };
 		ABF7EC322D95D1B80060B8B1 /* titlebar.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = ABF7EC302D95D1B80060B8B1 /* titlebar.vert.spv */; };
-		ABF7EC342D9A57D20060B8B1 /* close_msdf.png in Resources */ = {isa = PBXBuildFile; fileRef = ABF7EC332D9A57D20060B8B1 /* close_msdf.png */; };
+		ABF7EC362D9AF4D30060B8B1 /* titlebar.png in Resources */ = {isa = PBXBuildFile; fileRef = ABF7EC352D9AF4D30060B8B1 /* titlebar.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -155,7 +155,7 @@
 		ABF162412A34E3AC007655F7 /* modeler.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = modeler.entitlements; sourceTree = "<group>"; };
 		ABF7EC2F2D95D1B80060B8B1 /* titlebar.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = titlebar.frag.spv; path = ../titlebar.frag.spv; sourceTree = "<group>"; };
 		ABF7EC302D95D1B80060B8B1 /* titlebar.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = titlebar.vert.spv; path = ../titlebar.vert.spv; sourceTree = "<group>"; };
-		ABF7EC332D9A57D20060B8B1 /* close_msdf.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = close_msdf.png; path = ../close_msdf.png; sourceTree = "<group>"; };
+		ABF7EC352D9AF4D30060B8B1 /* titlebar.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = titlebar.png; path = ../titlebar.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -306,7 +306,7 @@
 		ABF1622C2A34E3A6007655F7 = {
 			isa = PBXGroup;
 			children = (
-				ABF7EC332D9A57D20060B8B1 /* close_msdf.png */,
+				ABF7EC352D9AF4D30060B8B1 /* titlebar.png */,
 				ABF7EC2F2D95D1B80060B8B1 /* titlebar.frag.spv */,
 				ABF7EC302D95D1B80060B8B1 /* titlebar.vert.spv */,
 				ABA97FFF2D558EE500ED6755 /* bishop.obj */,
@@ -469,7 +469,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ABF7EC342D9A57D20060B8B1 /* close_msdf.png in Resources */,
+				ABF7EC362D9AF4D30060B8B1 /* titlebar.png in Resources */,
 				ABF7EC312D95D1B80060B8B1 /* titlebar.frag.spv in Resources */,
 				ABF7EC322D95D1B80060B8B1 /* titlebar.vert.spv in Resources */,
 				ABA980032D558F1100ED6755 /* king.obj in Resources */,
