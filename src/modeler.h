@@ -25,6 +25,7 @@ struct threadArguments {
 
 void *threadProc(void *arg);
 bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
+void sendCloseSignal(void *platformWindow);
 void sendFullscreenSignal(void *platformWindow);
 void sendExitFullscreenSignal(void *platformWindow);
 void sendThreadFailureSignal(void *platformWindow);

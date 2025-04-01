@@ -291,6 +291,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		ImGui_PushFont(currentFont);
 		ImGui_Begin("Debug", NULL, 0);
 		ImGui_Text("fps: %ld", 1000000000 / elapsed);
+		if (ImGui_Button("Close")) {
+			sendCloseSignal(platformWindow);
+		}
 		if (ImGui_Button("Fullscreen")) {
 			sendFullscreenSignal(platformWindow);
 		}

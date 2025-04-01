@@ -68,6 +68,11 @@ void sendThreadFailureSignal(void *platformWindow)
 	pthread_exit(NULL);
 }
 
+void sendCloseSignal(void *platformWindow)
+{
+	sendNSNotification(CLOSE_NOTIFICATION_NAME);
+}
+
 void sendFullscreenSignal(void *platformWindow)
 {
 	sendNSNotification(FULLSCREEN_NOTIFICATION_NAME);
