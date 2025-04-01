@@ -353,6 +353,10 @@ void titlebarHandleInputEvent(void *titlebar, InputEvent *inputEvent)
 	case POINTER_LEAVE:
 		break;
 	case BUTTON_DOWN:
+		if (self->hoveringClose) {
+		} else if (self->hoveringMaximize) {
+		} else if (self->hoveringMinimize) {
+		}
 		break;
 	case BUTTON_UP:
 		break;

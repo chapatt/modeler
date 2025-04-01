@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUICore
 
 class ModelerView: NSView, NSViewLayerContentScaleDelegate {
     private var trackingArea: NSTrackingArea!
@@ -18,6 +19,10 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleErrorNotification), name: Notification.Name("THREAD_FAILURE"), object: nil)
         
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleCloseNotification), name: Notification.Name("CLOSE"), object: nil)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleExitFullscreenNotification), name: Notification.Name("EXIT_FULLSCREEN"), object: nil)
+
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleFullscreenNotification), name: Notification.Name("FULLSCREEN"), object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleExitFullscreenNotification), name: Notification.Name("EXIT_FULLSCREEN"), object: nil)
@@ -98,6 +103,12 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
         }
     }
     
+    @objc func handleCloseNotification(notification: NSNotification) {
+        DispatchQueue.main.async {
+            self.window?.close()
+        }
+    }
+
     @objc func handleFullscreenNotification(notification: NSNotification) {
         if !(self.window?.styleMask.contains(.fullScreen) ?? false) {
             DispatchQueue.main.async {
