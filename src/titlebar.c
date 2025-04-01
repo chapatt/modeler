@@ -296,9 +296,9 @@ static bool createTitlebarPipeline(Titlebar self, char **error)
 bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 {
 	TitlebarPushConstants pushConstants = {
-		.minimizeColor = {1.0f, 0.0f, 0.0f, 0.0f},
-		.maximizeColor = {1.0f, 0.0f, 0.0f, 0.0f},
-		.closeColor = {1.0f, 0.0f, 0.0f, 0.0f},
+		.minimizeColor = {1.0f, 1.0f, 1.0f, 0.01f},
+		.maximizeColor = {1.0f, 1.0f, 1.0f, 0.01f},
+		.closeColor = {1.0f, 1.0f, 1.0f, 0.01f},
 		.aspectRatio = self->aspectRatio,
 		.height = self->height
 	};
