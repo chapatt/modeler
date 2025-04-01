@@ -40,15 +40,15 @@ void main() {
 		drawTexture = 0;
 	} else if (gl_VertexIndex < 12) {
 		fragColor = vec4(1.0, 1.0, 1.0, 1.0);
-		backgroundColor = vec4(0.0, 0.0, 0.0, 0.0);
+		backgroundColor = PushConstants.closeColor;
 		drawTexture = 1;
 	} else if (gl_VertexIndex < 18) {
 		fragColor = vec4(1.0, 1.0, 1.0, 1.0);
-		backgroundColor = vec4(0.0, 0.0, 0.0, 0.0);
+		backgroundColor = PushConstants.maximizeColor;
 		drawTexture = 1;
 	} else if (gl_VertexIndex < 24) {
 		fragColor = vec4(1.0, 1.0, 1.0, 1.0);
-		backgroundColor = vec4(0.0, 0.0, 0.0, 0.0);
+		backgroundColor = PushConstants.minimizeColor;
 		drawTexture = 1;
 	}
 
