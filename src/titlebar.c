@@ -57,6 +57,11 @@ struct titlebar_t {
 	bool hoveringMinimize;
 	bool hoveringMaximize;
 	bool hoveringClose;
+	bool pressedMinimize;
+	bool pressedMaximize;
+	bool pressedClose;
+	void (*close)(void *);
+	void *closeArg;
 };
 
 static bool createTitlebarTexture(Titlebar self, char **error);
@@ -64,8 +69,9 @@ static bool createTitlebarTextureSampler(Titlebar self, char **error);
 static bool createTitlebarDescriptors(Titlebar self, char **error);
 static bool createTitlebarPipeline(Titlebar self, char **error);
 static void updateHovering(Titlebar self);
+static void updatePressed(Titlebar self);
 
-bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, float height, char **error)
+bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, float height, void (*close)(void *), void *closeArg, char **error)
 {
 	*titlebar = malloc(sizeof(**titlebar));
 
@@ -84,6 +90,8 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->hoveringMinimize = false;
 	self->hoveringMaximize = false;
 	self->hoveringClose = false;
+	self->close = close;
+	self->closeArg = closeArg;
 
 	if (!createTitlebarTexture(self, error)) {
 		return false;
@@ -318,11 +326,25 @@ static void updateHovering(Titlebar self)
 	}
 }
 
+static void updatePressed(Titlebar self)
+{
+	self->pressedClose = false;
+	self->pressedMaximize = false;
+	self->pressedMinimize = false;
+
+	if (self->hoveringClose) {
+		self->pressedClose = true;
+	} else if (self->hoveringMaximize) {
+		self->pressedMaximize = true;
+	} else if (self->hoveringMinimize) {
+		self->pressedMinimize = true;
+	}
+}
+
 bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 {
 	float hoverColor[] = {1.0f, 1.0f, 1.0f, 0.01f};
-
-	updateHovering(self);
+	float pressedColor[] = {1.0f, 1.0f, 1.0f, 0.05f};
 
 	TitlebarPushConstants pushConstants = {
 		.minimizeColor = {0.0f, 0.0f, 0.0f, 0.0f},
@@ -332,9 +354,17 @@ bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 		.height = self->height * VIEWPORT_HEIGHT
 	};
 
-	if (self->hoveringClose) vec4Copy(hoverColor, pushConstants.closeColor);
-	if (self->hoveringMaximize) vec4Copy(hoverColor, pushConstants.maximizeColor);
-	if (self->hoveringMinimize) vec4Copy(hoverColor, pushConstants.minimizeColor);
+	if (self->pressedClose) {
+		vec4Copy(pressedColor, pushConstants.closeColor);
+	} else if (self->pressedMaximize) {
+	} else if (self->pressedMinimize) {
+	} else if (self->hoveringClose) {
+		vec4Copy(hoverColor, pushConstants.closeColor);
+	} else if (self->hoveringMaximize) {
+		vec4Copy(hoverColor, pushConstants.maximizeColor);
+	} else if (self->hoveringMinimize) {
+		vec4Copy(hoverColor, pushConstants.minimizeColor);
+	}
 
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
@@ -353,15 +383,18 @@ void titlebarHandleInputEvent(void *titlebar, InputEvent *inputEvent)
 	case POINTER_LEAVE:
 		break;
 	case BUTTON_DOWN:
+		updatePressed(self);
+		break;
+	case BUTTON_UP:
 		if (self->hoveringClose) {
+			self->close(self->closeArg);
 		} else if (self->hoveringMaximize) {
 		} else if (self->hoveringMinimize) {
 		}
 		break;
-	case BUTTON_UP:
-		break;
 	case NORMALIZED_POINTER_MOVE:
 		self->pointerPosition = *(NormalizedPointerPosition *) inputEvent->data;
+		updateHovering(self);
 		break;
 	}
 }
