@@ -10,6 +10,7 @@
 #include "sampler.h"
 #include "synchronization.h"
 #include "utils.h"
+#include "matrix_utils.h"
 
 #ifdef EMBED_SHADERS
 #include "../shader_titlebar.vert.h"
@@ -53,12 +54,16 @@ struct titlebar_t {
 	NormalizedPointerPosition pointerPosition;
 	float aspectRatio;
 	float height;
+	bool hoveringMinimize;
+	bool hoveringMaximize;
+	bool hoveringClose;
 };
 
 static bool createTitlebarTexture(Titlebar self, char **error);
 static bool createTitlebarTextureSampler(Titlebar self, char **error);
 static bool createTitlebarDescriptors(Titlebar self, char **error);
 static bool createTitlebarPipeline(Titlebar self, char **error);
+static void updateHovering(Titlebar self);
 
 bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, float height, char **error)
 {
@@ -76,6 +81,9 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->resourcePath = resourcePath;
 	self->aspectRatio = aspectRatio;
 	self->height = height;
+	self->hoveringMinimize = false;
+	self->hoveringMaximize = false;
+	self->hoveringClose = false;
 
 	if (!createTitlebarTexture(self, error)) {
 		return false;
@@ -293,15 +301,40 @@ static bool createTitlebarPipeline(Titlebar self, char **error)
 	return true;
 }
 
+static void updateHovering(Titlebar self)
+{
+	self->hoveringClose = false;
+	self->hoveringMaximize = false;
+	self->hoveringMinimize = false;
+
+	if (self->pointerPosition.y < self->height) {
+		if (self->pointerPosition.x >= 1.0f - (self->height / self->aspectRatio)) {
+			self->hoveringClose = true;
+		} else if (self->pointerPosition.x >= 1.0f - (self->height * 2 / self->aspectRatio)) {
+			self->hoveringMaximize = true;
+		} else if (self->pointerPosition.x >= 1.0f - (self->height * 3 / self->aspectRatio)) {
+			self->hoveringMinimize = true;
+		}
+	}
+}
+
 bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 {
+	float hoverColor[] = {1.0f, 1.0f, 1.0f, 0.01f};
+
+	updateHovering(self);
+
 	TitlebarPushConstants pushConstants = {
-		.minimizeColor = {1.0f, 1.0f, 1.0f, 0.01f},
-		.maximizeColor = {1.0f, 1.0f, 1.0f, 0.01f},
-		.closeColor = {1.0f, 1.0f, 1.0f, 0.01f},
+		.minimizeColor = {0.0f, 0.0f, 0.0f, 0.0f},
+		.maximizeColor = {0.0f, 0.0f, 0.0f, 0.0f},
+		.closeColor = {0.0f, 0.0f, 0.0f, 0.0f},
 		.aspectRatio = self->aspectRatio,
-		.height = self->height
+		.height = self->height * VIEWPORT_HEIGHT
 	};
+
+	if (self->hoveringClose) vec4Copy(hoverColor, pushConstants.closeColor);
+	if (self->hoveringMaximize) vec4Copy(hoverColor, pushConstants.maximizeColor);
+	if (self->hoveringMinimize) vec4Copy(hoverColor, pushConstants.minimizeColor);
 
 	VkDeviceSize offsets[] = {0};
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);

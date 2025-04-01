@@ -111,12 +111,25 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};
+		VkViewport titlebarViewport = {
+			.x = windowDimensions->activeArea.offset.x,
+			.y = windowDimensions->activeArea.offset.y,
+			.width = extent.width,
+			.height = extent.height,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
 
 		Component components[] = {
 			{
 				.object = chessBoard,
 				.viewport = chessBoardViewport,
 				.handleInputEvent = &chessBoardHandleInputEvent
+			},
+			{
+				.object = titlebar,
+				.viewport = titlebarViewport,
+				.handleInputEvent = &titlebarHandleInputEvent
 			}
 		};
 
@@ -187,7 +200,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
-			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height * windowDimensions->scale;
+			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
 			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
@@ -209,7 +222,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
-			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height * windowDimensions->scale;
+			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
 			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
@@ -305,14 +318,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #endif /* ENABLE_IMGUI */
 
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
-		VkViewport titlebarViewport = {
-			.x = windowDimensions->activeArea.offset.x,
-			.y = windowDimensions->activeArea.offset.y,
-			.width = windowDimensions->activeArea.extent.width,
-			.height = windowDimensions->activeArea.extent.height,
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f
-		};
 		VkRect2D titlebarScissor = {
 			.offset = {
 				.x = titlebarViewport.x,
@@ -402,7 +407,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
-			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height * windowDimensions->scale;
+			float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
 			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
