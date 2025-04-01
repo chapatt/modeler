@@ -78,18 +78,6 @@ static bool createDepthBuffer(VkPhysicalDevice physicalDevice, VkDevice device, 
 static void destroyDepthBuffer(VkDevice device, VmaAllocator allocator, VkImage image, VmaAllocation imageAllocation, VkImageView imageView);
 static void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D savedExtent);
 
-static inline Orientation negateRotation(Orientation orientation)
-{
-	switch (orientation) {
-	case ROTATE_90:
-		return ROTATE_270;
-	case ROTATE_270:
-		return ROTATE_90;
-	case ROTATE_0: case ROTATE_180: default:
-		return orientation;
-	}
-}
-
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
 {
 	enqueueInputEvent(inputQueue, TERMINATE, NULL);
