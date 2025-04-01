@@ -326,7 +326,7 @@ static void updateHovering(Titlebar self)
 	}
 }
 
-static void updatePressed(Titlebar self)
+static void handleButtonDown(Titlebar self)
 {
 	self->pressedClose = false;
 	self->pressedMaximize = false;
@@ -339,6 +339,19 @@ static void updatePressed(Titlebar self)
 	} else if (self->hoveringMinimize) {
 		self->pressedMinimize = true;
 	}
+}
+
+static void handleButtonUp(Titlebar self)
+{
+	if (self->pressedClose) {
+		self->close(self->closeArg);
+	} else if (self->pressedMaximize) {
+	} else if (self->pressedMinimize) {
+	}
+
+	self->pressedClose = false;
+	self->pressedMaximize = false;
+	self->pressedMinimize = false;
 }
 
 bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
@@ -357,7 +370,9 @@ bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 	if (self->pressedClose) {
 		vec4Copy(pressedColor, pushConstants.closeColor);
 	} else if (self->pressedMaximize) {
+		vec4Copy(pressedColor, pushConstants.maximizeColor);
 	} else if (self->pressedMinimize) {
+		vec4Copy(pressedColor, pushConstants.minimizeColor);
 	} else if (self->hoveringClose) {
 		vec4Copy(hoverColor, pushConstants.closeColor);
 	} else if (self->hoveringMaximize) {
@@ -383,14 +398,10 @@ void titlebarHandleInputEvent(void *titlebar, InputEvent *inputEvent)
 	case POINTER_LEAVE:
 		break;
 	case BUTTON_DOWN:
-		updatePressed(self);
+		handleButtonDown(self);
 		break;
 	case BUTTON_UP:
-		if (self->hoveringClose) {
-			self->close(self->closeArg);
-		} else if (self->hoveringMaximize) {
-		} else if (self->hoveringMinimize) {
-		}
+		handleButtonUp(self);
 		break;
 	case NORMALIZED_POINTER_MOVE:
 		self->pointerPosition = *(NormalizedPointerPosition *) inputEvent->data;
