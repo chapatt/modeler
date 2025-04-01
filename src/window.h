@@ -28,4 +28,16 @@ typedef struct resize_info_t {
 	void *platformWindow;
 } ResizeInfo;
 
+static inline Orientation negateRotation(Orientation orientation)
+{
+	switch (orientation) {
+	case ROTATE_90:
+		return ROTATE_270;
+	case ROTATE_270:
+		return ROTATE_90;
+	case ROTATE_0: case ROTATE_180: default:
+		return orientation;
+	}
+}
+
 #endif /* MODELER_WINDOW_H */

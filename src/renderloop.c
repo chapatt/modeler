@@ -421,18 +421,6 @@ cancelMainLoop:
 	return true;
 }
 
-static inline Orientation negateRotation(Orientation orientation)
-{
-	switch (orientation) {
-	case ROTATE_90:
-		return ROTATE_270;
-	case ROTATE_270:
-		return ROTATE_90;
-	case ROTATE_0: case ROTATE_180: default:
-		return orientation;
-	}
-}
-
 static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, PointerPosition pointerPosition)
 {
 	InputEvent newInputEvent;
