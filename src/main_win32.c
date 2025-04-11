@@ -108,6 +108,9 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 	switch (uMsg) {
 	case THREAD_FAILURE_NOTIFICATION_MESSAGE:
 		handleFatalError(hWnd, error);
+	case CLOSE_NOTIFICATION_MESSAGE:
+		exit(0);
+		return 0;
 	case FULLSCREEN_NOTIFICATION_MESSAGE:
 		setFullscreen(hWnd);
 		return 0;
