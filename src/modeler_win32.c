@@ -74,6 +74,12 @@ void sendThreadFailureSignal(void *platformWindow)
 	pthread_exit(NULL);
 }
 
+void sendCloseSignal(void *platformWindow)
+{
+	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
+	PostMessageW(hWnd, CLOSE_NOTIFICATION_MESSAGE, 0, 0);
+}
+
 void sendFullscreenSignal(void *platformWindow)
 {
 	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
