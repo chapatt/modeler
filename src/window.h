@@ -5,7 +5,7 @@
 
 #include "vulkan_utils.h"
 
-#define CHROME_HEIGHT 50
+#define CHROME_HEIGHT 56
 
 typedef enum orientation_t {
 	ROTATE_0,

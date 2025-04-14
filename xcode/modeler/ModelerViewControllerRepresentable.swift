@@ -1,10 +1,14 @@
 import SwiftUI
 
 struct ModelerViewControllerRepresentable: NSViewControllerRepresentable {
+    @State var titlebarHeight: Float
     typealias NSViewControllerType = ModelerViewController
     
     func makeNSViewController(context: Context) -> ModelerViewController {
-        ModelerViewController()
+        let viewController = ModelerViewController()
+        viewController.titlebarHeight = titlebarHeight
+        
+        return viewController
     }
     
     func updateNSViewController(_ nsViewController: ModelerViewController, context: Context) {

@@ -2,6 +2,7 @@ import AppKit
 import SwiftUICore
 
 class ModelerView: NSView, NSViewLayerContentScaleDelegate {
+    var titlebarHeight: Float = 0
     private var trackingArea: NSTrackingArea!
     private var inputQueue: UnsafeMutablePointer<Queue>
     private var thread: pthread_t?
@@ -59,7 +60,7 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
         let resourcePath = Bundle.main.resourcePath!
 
         resourcePath.withCString { resourcePathCString in
-            thread = initVulkanMetal(layerPointer, width, height, scale, resourcePathCString, inputQueue, errorPointerPointer)
+            thread = initVulkanMetal(layerPointer, width, height, scale, titlebarHeight, resourcePathCString, inputQueue, errorPointerPointer)
             
             if (thread == nil) {
                 if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
