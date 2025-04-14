@@ -289,7 +289,17 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		ImGui_ImplModeler_NewFrame();
 		ImGui_NewFrame();
 		ImGui_PushFont(currentFont);
-		ImGui_Begin("Debug", NULL, 0);
+		ImVec2 imguiWindowPos = {
+			.x = 0.0f,
+			.y = 0.0f
+		};
+		ImGui_SetNextWindowPos(imguiWindowPos, 0);
+		ImVec2 imguiWindowSize = {
+			.x = windowDimensions->activeArea.extent.width,
+			.y = windowDimensions->activeArea.extent.height,
+		};
+		ImGui_SetNextWindowSize(imguiWindowSize, 0);
+		ImGui_Begin("Debug", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 		ImGui_Text("fps: %ld", 1000000000 / elapsed);
 		if (ImGui_Button("Close")) {
 			sendCloseSignal(platformWindow);
