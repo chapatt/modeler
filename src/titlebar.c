@@ -62,6 +62,10 @@ struct titlebar_t {
 	bool pressedClose;
 	void (*close)(void *);
 	void *closeArg;
+	void (*maximize)(void *);
+	void *maximizeArg;
+	void (*minimize)(void *);
+	void *minimizeArg;
 };
 
 static bool createTitlebarTexture(Titlebar self, char **error);
@@ -71,7 +75,7 @@ static bool createTitlebarPipeline(Titlebar self, char **error);
 static void updateHovering(Titlebar self);
 static void updatePressed(Titlebar self);
 
-bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, float height, void (*close)(void *), void *closeArg, char **error)
+bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, float height, void (*close)(void *), void *closeArg, void (*maximize)(void *), void *maximizeArg, void (*minimize)(void *), void *minimizeArg, char **error)
 {
 	*titlebar = malloc(sizeof(**titlebar));
 
@@ -92,6 +96,10 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->hoveringClose = false;
 	self->close = close;
 	self->closeArg = closeArg;
+	self->maximize = maximize;
+	self->maximizeArg = maximizeArg;
+	self->minimize = minimize;
+	self->minimizeArg = minimizeArg;
 
 	if (!createTitlebarTexture(self, error)) {
 		return false;
@@ -346,7 +354,9 @@ static void handleButtonUp(Titlebar self)
 	if (self->pressedClose) {
 		self->close(self->closeArg);
 	} else if (self->pressedMaximize) {
+		self->maximize(self->maximizeArg);
 	} else if (self->pressedMinimize) {
+		self->minimize(self->minimizeArg);
 	}
 
 	self->pressedClose = false;

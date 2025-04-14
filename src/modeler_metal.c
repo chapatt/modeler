@@ -73,6 +73,16 @@ void sendCloseSignal(void *platformWindow)
 	sendNSNotification(CLOSE_NOTIFICATION_NAME);
 }
 
+void sendMaximizeSignal(void *platformWindow)
+{
+	sendNSNotification(MAXIMIZE_NOTIFICATION_NAME);
+}
+
+void sendMinimizeSignal(void *platformWindow)
+{
+	sendNSNotification(MINIMIZE_NOTIFICATION_NAME);
+}
+
 void sendFullscreenSignal(void *platformWindow)
 {
 	sendNSNotification(FULLSCREEN_NOTIFICATION_NAME);
