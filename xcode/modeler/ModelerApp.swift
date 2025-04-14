@@ -4,8 +4,10 @@ import SwiftUI
 struct ModelerApp: App {
     var body: some Scene {
         WindowGroup {
-            ModelerViewControllerRepresentable()
-                .ignoresSafeArea()
+            GeometryReader { geometry in
+                ModelerViewControllerRepresentable(titlebarHeight: Float(geometry.safeAreaInsets.top))
+                    .ignoresSafeArea()
+            }
         }.windowStyle(.hiddenTitleBar)
     }
 }
