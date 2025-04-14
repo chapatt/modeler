@@ -14,13 +14,17 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
         self.wantsLayer = true
         let layer = CAMetalLayer()
         self.layer = layer
-        
+
         errorPointerPointer = UnsafeMutablePointer.allocate(capacity: 1)
-        
+
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleErrorNotification), name: Notification.Name("THREAD_FAILURE"), object: nil)
-        
+
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleCloseNotification), name: Notification.Name("CLOSE"), object: nil)
-        
+
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleMaximizeNotification), name: Notification.Name("MAXIMIZE"), object: nil)
+
+        NotificationCenter.default.addObserver(self, selector: #selector(self.handleMinimizeNotification), name: Notification.Name("MINIMIZE"), object: nil)
+
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleExitFullscreenNotification), name: Notification.Name("EXIT_FULLSCREEN"), object: nil)
 
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleFullscreenNotification), name: Notification.Name("FULLSCREEN"), object: nil)
@@ -102,10 +106,22 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
             }
         }
     }
-    
+
     @objc func handleCloseNotification(notification: NSNotification) {
         DispatchQueue.main.async {
             self.window?.close()
+        }
+    }
+    
+    @objc func handleMaximizeNotification(notification: NSNotification) {
+        DispatchQueue.main.async {
+            self.window?.zoom(self)
+        }
+    }
+    
+    @objc func handleMinimizeNotification(notification: NSNotification) {
+        DispatchQueue.main.async {
+            self.window?.miniaturize(self)
         }
     }
 
