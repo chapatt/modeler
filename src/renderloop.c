@@ -64,7 +64,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	long elapsed = 1;
 	PointerPosition pointerPosition;
 	bool enable3d = chessBoardGetEnable3d(chessBoard);
-	Projection projection = chessBoardGetProjection(chessBoard);
+	bool enablePerspectiveProjection = chessBoardGetProjection(chessBoard) == PERSPECTIVE;
 
 #ifdef ENABLE_IMGUI
 	if (!rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath, error)) {
@@ -319,10 +319,15 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 		}
-		const char *projectionLabels[] = {"Orthographic", "Perspective"};
-   		if (ImGui_ComboChar("Projection", (int *) &projection, projectionLabels, sizeof(projectionLabels) / sizeof(projectionLabels[0]))) {
-			chessBoardSetProjection(chessBoard, projection);
+		ImGui_BeginDisabled(!enable3d);
+		if (ImGui_Checkbox("Perspective", &enablePerspectiveProjection)) {
+			if (enablePerspectiveProjection) {
+				chessBoardSetProjection(chessBoard, PERSPECTIVE);
+			} else {
+				chessBoardSetProjection(chessBoard, ORTHOGRAPHIC);
+			}
 		}
+		ImGui_EndDisabled();
 		ImGui_End();
 		ImGui_PopFont();
 		ImGui_Render();
