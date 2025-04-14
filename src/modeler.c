@@ -364,7 +364,8 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		sendThreadFailureSignal(platformWindow);
 	}
 
-	ImGui_CreateContext(NULL);
+	ImGuiContext *imguiContext = ImGui_CreateContext(NULL);
+	ImGui_SetCurrentContext(imguiContext);
 	ImGuiIO *io = ImGui_GetIO();
 	io->IniFilename = NULL;
 	ImGui_ImplModeler_Init(swapchainInfo);
