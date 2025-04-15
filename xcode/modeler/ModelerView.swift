@@ -55,8 +55,8 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
         let bounds: CGRect = convertToBacking(layer!.bounds)
         let width = Int32(bounds.size.width)
         let height = Int32(bounds.size.height)
-        let scale = Float(window?.backingScaleFactor ?? 1);
-        
+        let scale = Float(window?.backingScaleFactor ?? 1)
+        let titlebarHeight = Int32(titlebarHeight * scale)
         let resourcePath = Bundle.main.resourcePath!
 
         resourcePath.withCString { resourcePathCString in
@@ -153,6 +153,7 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
                 activeArea: rect,
                 cornerRadius: 0,
                 scale: scale,
+                titlebarHeight: Int32(titlebarHeight * scale),
                 fullscreen: false,
                 orientation: ROTATE_0
             )

@@ -19,6 +19,7 @@ typedef struct window_dimensions_t {
 	VkRect2D activeArea;
 	int cornerRadius;
 	float scale;
+	int titlebarHeight;
 	bool fullscreen;
 	Orientation orientation;
 } WindowDimensions;

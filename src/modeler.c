@@ -218,7 +218,7 @@ void *threadProc(void *arg)
 	}
 
 	float aspectRatio = (float) windowDimensions.activeArea.extent.width / windowDimensions.activeArea.extent.height;
-	float titlebarHeight = (float) CHROME_HEIGHT / windowDimensions.activeArea.extent.height;
+	float titlebarHeight = (float) windowDimensions.titlebarHeight / windowDimensions.activeArea.extent.height;
 	Titlebar titlebar;
 	if (!createTitlebar(&titlebar, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 2, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, aspectRatio, titlebarHeight, &sendCloseSignal, platformWindow, &sendMaximizeSignal, platformWindow, &sendMinimizeSignal, platformWindow, error)) {
 		sendThreadFailureSignal(platformWindow);
