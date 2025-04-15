@@ -52,6 +52,7 @@ pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, cha
 		},
 		.cornerRadius = 0,
 		.scale = scale,
+		.titlebarHeight = CHROME_HEIGHT,
 		.fullscreen = false
 	};
 
@@ -78,6 +79,18 @@ void sendCloseSignal(void *platformWindow)
 {
 	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
 	PostMessageW(hWnd, CLOSE_NOTIFICATION_MESSAGE, 0, 0);
+}
+
+void sendMaximizeSignal(void *platformWindow)
+{
+	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
+	PostMessageW(hWnd, MAXIMIZE_NOTIFICATION_MESSAGE, 0, 0);
+}
+
+void sendMinimizeSignal(void *platformWindow)
+{
+	HWND hWnd = ((Win32Window *) platformWindow)->hWnd;
+	PostMessageW(hWnd, MINIMIZE_NOTIFICATION_MESSAGE, 0, 0);
 }
 
 void sendFullscreenSignal(void *platformWindow)
