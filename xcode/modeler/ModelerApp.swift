@@ -6,7 +6,7 @@ struct ModelerApp: App {
         WindowGroup {
             GeometryReader { geometry in
                 ModelerViewControllerRepresentable(titlebarHeight: Float(geometry.safeAreaInsets.top))
-                    .edgesIgnoringSafeArea(.all)
+                    .ignoresSafeArea()
             }
         }.windowStyle(.hiddenTitleBar)
     }
