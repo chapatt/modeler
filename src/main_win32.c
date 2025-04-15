@@ -111,6 +111,16 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 	case CLOSE_NOTIFICATION_MESSAGE:
 		exit(0);
 		return 0;
+	case MAXIMIZE_NOTIFICATION_MESSAGE:
+		if (isMaximized(hWnd)) {
+			ShowWindow(hWnd, SW_RESTORE);
+		} else {
+			ShowWindow(hWnd, SW_MAXIMIZE);
+		}
+		return 0;
+	case MINIMIZE_NOTIFICATION_MESSAGE:
+		ShowWindow(hWnd, SW_MINIMIZE);
+		return 0;
 	case FULLSCREEN_NOTIFICATION_MESSAGE:
 		setFullscreen(hWnd);
 		return 0;
@@ -162,7 +172,8 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 					.offset = {0, 0}
 				},
 				.cornerRadius = 0,
-				.scale = scale
+				.scale = scale,
+				.titlebarHeight = CHROME_HEIGHT
 			};
 			enqueueResizeEvent(inputQueue, windowDimensions, hInstance, hWnd);
 		}
@@ -215,7 +226,7 @@ static bool isMaximized(HWND hWnd)
 	if (!GetWindowPlacement(hWnd, &windowPlacement)) {
 		return -1;
 	}
-	return windowPlacement.showCmd == SW_SHOWMAXIMIZED;
+	return windowPlacement.showCmd == SW_MAXIMIZE;
 }
 
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -265,7 +276,7 @@ static LRESULT hitTest(HWND hWnd, int x, int y)
 	}
 
 	if (isMaximized(hWnd)) {
-		if (y < (windowRect.top + CHROME_HEIGHT)) {
+		if (y < (windowRect.top + CHROME_HEIGHT) && x < (windowRect.right - CHROME_HEIGHT * 3)) {
 			return HTCAPTION;
 		}
 
@@ -306,7 +317,9 @@ static LRESULT hitTest(HWND hWnd, int x, int y)
 	}
 
 	if (!(result & (LEFT | RIGHT | TOP | BOTTOM)) && y < (windowRect.top + CHROME_HEIGHT)) {
-		result |= CHROME;
+		if (x < (windowRect.right - CHROME_HEIGHT * 3)) {
+			result |= CHROME;
+		}
 	}
 
 	if (result & TOP)
