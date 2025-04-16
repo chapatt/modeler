@@ -32,6 +32,7 @@ static char *error = NULL;
 static pthread_t thread = 0;
 static DWORD initialDwStyle = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 static WINDOWPLACEMENT lastWindowPlacement = {sizeof(lastWindowPlacement)};
+static bool isFullscreen = false;
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
 {
@@ -173,7 +174,9 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 				},
 				.cornerRadius = 0,
 				.scale = scale,
-				.titlebarHeight = CHROME_HEIGHT
+				.titlebarHeight = CHROME_HEIGHT,
+				.fullscreen = isFullscreen,
+				.orientation = ROTATE_0
 			};
 			enqueueResizeEvent(inputQueue, windowDimensions, hInstance, hWnd);
 		}
@@ -392,6 +395,7 @@ static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, 
 
 static void setFullscreen(HWND hWnd)
 {
+	isFullscreen = true;
 	MONITORINFO mi = {sizeof(mi)};
 	if (GetWindowPlacement(hWnd, &lastWindowPlacement) && GetMonitorInfo(MonitorFromWindow(hWnd, MONITOR_DEFAULTTOPRIMARY), &mi)) {
 		SetWindowLong(hWnd, GWL_STYLE, initialDwStyle & ~WS_OVERLAPPEDWINDOW);
@@ -401,6 +405,7 @@ static void setFullscreen(HWND hWnd)
 
 static void exitFullscreen(HWND hWnd)
 {
+	isFullscreen = false;
 	SetWindowLong(hWnd, GWL_STYLE, initialDwStyle);
 	SetWindowPlacement(hWnd, &lastWindowPlacement);
 	SetWindowPos(hWnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED);

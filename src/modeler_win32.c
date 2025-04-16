@@ -53,7 +53,8 @@ pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, cha
 		.cornerRadius = 0,
 		.scale = scale,
 		.titlebarHeight = CHROME_HEIGHT,
-		.fullscreen = false
+		.fullscreen = false,
+		.orientation = ROTATE_0
 	};
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
