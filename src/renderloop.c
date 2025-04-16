@@ -336,6 +336,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #endif /* ENABLE_IMGUI */
 
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
+		if (!windowDimensions->fullscreen) {
 		VkRect2D titlebarScissor = {
 			.offset = {
 				.x = titlebarViewport.x,
@@ -351,6 +352,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
 			return false;
 		}
+	}
 
 #if DRAW_WINDOW_BORDER
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
