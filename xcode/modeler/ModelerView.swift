@@ -33,6 +33,10 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleExitFullscreenNotification), name: Notification.Name("EXIT_FULLSCREEN"), object: nil)
         
         NotificationCenter.default.addObserver(self, selector: #selector(self.handleFrameDidChange), name: NSView.frameDidChangeNotification, object: nil)
+        
+//        NotificationCenter.default.addObserver(self, selector: #selector(self.handleDidEnterFullScreen), name: NSWindow.didEnterFullScreenNotification, object: nil)
+//        
+//        NotificationCenter.default.addObserver(self, selector: #selector(self.handleDidExitFullScreen), name: NSWindow.didExitFullScreenNotification, object: nil)
     }
     
     convenience init(frame: NSRect, scale: CGFloat) {
@@ -142,6 +146,18 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
         }
     }
     
+//    @objc func handleDidEnterFullScreen(object: NSWindow) {
+//        print("did enter fullscreen")
+//    }
+//    
+//    @objc func handleDidExitFullScreen(object: NSWindow) {
+//        print("did exit fullscreen")
+//    }
+    
+    func isFullscreen() -> Bool {
+        return ((self.window?.styleMask.rawValue ?? 0) & NSWindow.StyleMask.fullScreen.rawValue) != 0;
+    }
+
     @objc func handleFrameDidChange(object: NSView) {
         if let layer = self.layer {
             let bounds: CGRect = convertToBacking(layer.bounds)
@@ -154,7 +170,7 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
                 cornerRadius: 0,
                 scale: scale,
                 titlebarHeight: Int32(titlebarHeight * scale),
-                fullscreen: false,
+                fullscreen: isFullscreen(),
                 orientation: ROTATE_0
             )
             let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
