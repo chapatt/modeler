@@ -234,7 +234,7 @@ static bool isMaximized(HWND hWnd)
 
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (isMaximized(hWnd)) {
+	if (isMaximized(hWnd) || isFullscreen) {
 		return 0;
 	}
 
@@ -276,6 +276,10 @@ static LRESULT hitTest(HWND hWnd, int x, int y)
 	RECT windowRect;
 	if (!GetWindowRect(hWnd, &windowRect)) {
 		return HTNOWHERE;
+	}
+
+	if (isFullscreen) {
+		return HTCLIENT;
 	}
 
 	if (isMaximized(hWnd)) {
