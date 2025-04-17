@@ -129,10 +129,10 @@ static bool createTitlebarTexture(Titlebar self, char **error)
 #ifndef EMBED_TEXTURES
 	char *texturePath;
 	asprintf(&texturePath, "%s/%s", self->resourcePath, "titlebar.png");
-	char *textureBytes;
-	uint32_t textureSize = 0;
+	char *titlebarTextureBytes;
+	uint32_t titlebarTextureSize = 0;
 
-	if ((textureSize = readFileToString(texturePath, &textureBytes)) == -1) {
+	if ((titlebarTextureSize = readFileToString(texturePath, &titlebarTextureBytes)) == -1) {
 		asprintf(error, "Failed to open texture for reading.\n");
 		return false;
 	}
@@ -143,7 +143,7 @@ static bool createTitlebarTexture(Titlebar self, char **error)
 	unsigned textureDecodedWidth;
 	unsigned textureDecodedHeight;
 
-	if (lodepngResult = lodepng_decode32(&textureDecodedBytes, &textureDecodedWidth, &textureDecodedHeight, textureBytes, textureSize)) {
+	if (lodepngResult = lodepng_decode32(&textureDecodedBytes, &textureDecodedWidth, &textureDecodedHeight, titlebarTextureBytes, titlebarTextureSize)) {
 		asprintf(error, "Failed to decode PNG: %s\n", lodepng_error_text(lodepngResult));
 		return false;
 	}
@@ -155,7 +155,7 @@ static bool createTitlebarTexture(Titlebar self, char **error)
 	unsigned textureDecodedSize = (textureDecodedWidth * textureDecodedHeight) * (32 / sizeof(textureDecodedBytes));
 
 #ifndef EMBED_TEXTURES
-	free(textureBytes);
+	free(titlebarTextureBytes);
 #endif /* EMBED_TEXTURES */
 
 	VkBuffer stagingBuffer;
