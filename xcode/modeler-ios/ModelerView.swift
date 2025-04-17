@@ -45,7 +45,7 @@ class ModelerView: UIView {
             let resourcePath = Bundle.main.resourcePath!
             
             resourcePath.withCString { resourcePathCString in
-                thread = initVulkanMetal(layerPointer, width, height, scale, resourcePathCString, inputQueue, errorPointerPointer)
+                thread = initVulkanMetal(layerPointer, width, height, scale, 0, resourcePathCString, inputQueue, errorPointerPointer)
                 
                 if (thread == nil) {
                     if let pointerPointer = errorPointerPointer, let pointer = pointerPointer.pointee {
@@ -91,6 +91,7 @@ class ModelerView: UIView {
             activeArea: rect,
             cornerRadius: 0,
             scale: Float(contentScaleFactor),
+            titlebarHeight: 0,
             fullscreen: false,
             orientation: orientation
         )
