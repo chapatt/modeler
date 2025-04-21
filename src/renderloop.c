@@ -337,22 +337,22 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
 		if (!windowDimensions->fullscreen) {
-		VkRect2D titlebarScissor = {
-			.offset = {
-				.x = titlebarViewport.x,
-				.y = titlebarViewport.y
-			},
-			.extent = (VkExtent2D) {
-				.width = titlebarViewport.width,
-				.height = titlebarViewport.height
+			VkRect2D titlebarScissor = {
+				.offset = {
+					.x = titlebarViewport.x,
+					.y = titlebarViewport.y
+				},
+				.extent = (VkExtent2D) {
+					.width = titlebarViewport.width,
+					.height = titlebarViewport.height
+				}
+			};
+			vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
+			vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
+			if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
+				return false;
 			}
-		};
-		vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
-		vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
-		if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
-			return false;
 		}
-	}
 
 #if DRAW_WINDOW_BORDER
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
