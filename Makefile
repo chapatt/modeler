@@ -156,9 +156,6 @@ main_wayland.o: src/main_wayland.c xdg-shell-client-protocol.h
 %.ttf: src/fonts/%.ttf
 	$(CP) $< $@
 
-msdf.png: src/textures/msdf.svg
-	msdfgen.exe msdf -svg msdf.svg -o msdf.png -dimensions 64 64 -pxrange 4 -scale 3.77952
-
 $(HEADER_SHADERS): shader_%.h: %.spv
 	./hexdump_include.sh "`echo $(basename $<)ShaderBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)ShaderSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 

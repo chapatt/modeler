@@ -15,11 +15,8 @@ float median(float r, float g, float b) {
 
 void main() {
 	if (drawTexture == 1) {
-		vec3 msd = texture(texSampler, fragTexCoord).rgb;
-		float sd = median(msd.r, msd.g, msd.b);
-		float screenPxDistance = 3.125 * (sd - 0.5);
-		float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
-		outColor = mix(backgroundColor, fragColor, opacity);
+		vec4 texture = texture(texSampler, fragTexCoord);
+		outColor = mix(backgroundColor, fragColor, texture.a);
 	} else {
 		outColor = backgroundColor;
 	}
