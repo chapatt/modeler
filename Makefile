@@ -10,7 +10,7 @@ ifeq ($(OS),Windows_NT)
 	SED=sed
 	ANDROID_NDK=/Android/Sdk/ndk/28.0.12674087
 	ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/windows-x86_64
-	VULKAN_SDK=/VulkanSDK/1.3.296.0
+	VULKAN_SDK=/VulkanSDK/1.4.328.1
 	GLSLC=$(VULKAN_SDK)/Bin/glslc
 else
 	UNAME_S := $(shell uname -s)
@@ -26,7 +26,7 @@ else
 		SED=gsed
 		ANDROID_NDK=$${HOME}/Library/Android/sdk/ndk/28.0.12674087
 		ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/darwin-x86_64
-		VULKAN_SDK=$${HOME}/VulkanSDK/1.3.296.0
+		VULKAN_SDK=$${HOME}/VulkanSDK/1.4.328.1
 		GLSLC=$(VULKAN_SDK)/macOS/bin/glslc
 	endif
 endif

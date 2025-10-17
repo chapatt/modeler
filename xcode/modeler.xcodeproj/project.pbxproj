@@ -7,11 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB15CAE12EA30B5900DAAAF3 /* MoltenVK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AB15CAE02EA30B5900DAAAF3 /* MoltenVK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB2363092D3755FC0066094F /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		AB23630A2D3756010066094F /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
 		AB2363102D382E7B0066094F /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = AB23630F2D382E7B0066094F /* libc++.tbd */; };
-		AB2363222D3835D70066094F /* MoltenVK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = AB23631F2D3835A40066094F /* MoltenVK.xcframework */; };
-		AB2363232D3835D70066094F /* MoltenVK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AB23631F2D3835A40066094F /* MoltenVK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB330ED92BD9920800FC06CE /* libVkLayer_khronos_profiles.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EDA2BD9920800FC06CE /* libvulkan.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330ED12BD9920700FC06CE /* libvulkan.dylib */; };
 		AB330EDB2BD9920800FC06CE /* libVkLayer_khronos_synchronization2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -21,7 +20,7 @@
 		AB330EE12BD9920800FC06CE /* libVkLayer_screenshot.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE32BD9929000FC06CE /* libvulkan.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED42BD9920800FC06CE /* libvulkan.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE42BD9929000FC06CE /* libvulkan.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED12BD9920700FC06CE /* libvulkan.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EE52BD992AD00FC06CE /* libvulkan.1.3.296.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EE52BD992AD00FC06CE /* libvulkan.1.4.328.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.4.328.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE72BD993E600FC06CE /* libMoltenVK.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; };
 		AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB37D74A2D415FC1006A6613 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = AB37D7492D415FC1006A6613 /* teapot.obj */; };
@@ -62,7 +61,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */,
-				AB330EE52BD992AD00FC06CE /* libvulkan.1.3.296.dylib in CopyFiles */,
+				AB330EE52BD992AD00FC06CE /* libvulkan.1.4.328.dylib in CopyFiles */,
 				AB330EE32BD9929000FC06CE /* libvulkan.1.dylib in CopyFiles */,
 				AB330EE42BD9929000FC06CE /* libvulkan.dylib in CopyFiles */,
 				AB330ED92BD9920800FC06CE /* libVkLayer_khronos_profiles.dylib in CopyFiles */,
@@ -80,7 +79,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				AB2363232D3835D70066094F /* MoltenVK.xcframework in Embed Frameworks */,
+				AB15CAE12EA30B5900DAAAF3 /* MoltenVK.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -89,9 +88,9 @@
 
 /* Begin PBXFileReference section */
 		AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modeler-Bridging-Header.h"; sourceTree = "<group>"; };
+		AB15CAE02EA30B5900DAAAF3 /* MoltenVK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MoltenVK.xcframework; path = iOS/lib/MoltenVK.xcframework; sourceTree = VULKAN_SDK; };
 		AB23630F2D382E7B0066094F /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.2.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
-		AB23631F2D3835A40066094F /* MoltenVK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MoltenVK.xcframework; path = ../../MoltenVK/Package/Release/MoltenVK/dynamic/MoltenVK.xcframework; sourceTree = "<group>"; };
-		AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.3.296.dylib; path = macOS/lib/libvulkan.1.3.296.dylib; sourceTree = VULKAN_SDK; };
+		AB330ECE2BD9919400FC06CE /* libvulkan.1.4.328.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.4.328.dylib; path = macOS/lib/libvulkan.1.4.328.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_profiles.dylib; path = macOS/lib/libVkLayer_khronos_profiles.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED12BD9920700FC06CE /* libvulkan.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.dylib; path = macOS/lib/libvulkan.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_synchronization2.dylib; path = macOS/lib/libVkLayer_khronos_synchronization2.dylib; sourceTree = VULKAN_SDK; };
@@ -180,7 +179,6 @@
 				AB2363102D382E7B0066094F /* libc++.tbd in Frameworks */,
 				AB2363092D3755FC0066094F /* imgui.a in Frameworks */,
 				AB23630A2D3756010066094F /* modeler.a in Frameworks */,
-				AB2363222D3835D70066094F /* MoltenVK.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -201,11 +199,11 @@
 		AB1511E92A3505B800A6D87E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				AB23631F2D3835A40066094F /* MoltenVK.xcframework */,
+				AB15CAE02EA30B5900DAAAF3 /* MoltenVK.xcframework */,
 				AB23630F2D382E7B0066094F /* libc++.tbd */,
 				AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */,
 				AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */,
-				AB330ECE2BD9919400FC06CE /* libvulkan.1.3.296.dylib */,
+				AB330ECE2BD9919400FC06CE /* libvulkan.1.4.328.dylib */,
 				AB4D1BEB2B384AC500717FEC /* imgui.a */,
 				AB4D1BE92B384A0200717FEC /* modeler.a */,
 				AB330ED62BD9920800FC06CE /* libVkLayer_api_dump.dylib */,
