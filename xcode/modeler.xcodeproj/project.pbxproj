@@ -7,22 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		AB15CAE12EA30B5900DAAAF3 /* MoltenVK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AB15CAE02EA30B5900DAAAF3 /* MoltenVK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AB2363092D3755FC0066094F /* imgui.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BEB2B384AC500717FEC /* imgui.a */; };
 		AB23630A2D3756010066094F /* modeler.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AB4D1BE92B384A0200717FEC /* modeler.a */; };
-		AB2363102D382E7B0066094F /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = AB23630F2D382E7B0066094F /* libc++.tbd */; };
-		AB330ED92BD9920800FC06CE /* libVkLayer_khronos_profiles.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330ED92BD9920800FC06CE /* libVkLayer_khronos_profiles.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EDA2BD9920800FC06CE /* libvulkan.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330ED12BD9920700FC06CE /* libvulkan.dylib */; };
-		AB330EDB2BD9920800FC06CE /* libVkLayer_khronos_synchronization2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EDC2BD9920800FC06CE /* libVkLayer_khronos_validation.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED32BD9920700FC06CE /* libVkLayer_khronos_validation.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EDF2BD9920800FC06CE /* libVkLayer_api_dump.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED62BD9920800FC06CE /* libVkLayer_api_dump.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EE02BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED72BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EE12BD9920800FC06CE /* libVkLayer_screenshot.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EE32BD9929000FC06CE /* libvulkan.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED42BD9920800FC06CE /* libvulkan.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EE42BD9929000FC06CE /* libvulkan.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ED12BD9920700FC06CE /* libvulkan.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		AB330EE52BD992AD00FC06CE /* libvulkan.1.4.328.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.4.328.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EDB2BD9920800FC06CE /* libVkLayer_khronos_synchronization2.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ED22BD9920700FC06CE /* libVkLayer_khronos_synchronization2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EDC2BD9920800FC06CE /* libVkLayer_khronos_validation.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ED32BD9920700FC06CE /* libVkLayer_khronos_validation.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EDF2BD9920800FC06CE /* libVkLayer_api_dump.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ED62BD9920800FC06CE /* libVkLayer_api_dump.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EE02BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ED72BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EE12BD9920800FC06CE /* libVkLayer_screenshot.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EE32BD9929000FC06CE /* libvulkan.1.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ED42BD9920800FC06CE /* libvulkan.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EE42BD9929000FC06CE /* libvulkan.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ED12BD9920700FC06CE /* libvulkan.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EE52BD992AD00FC06CE /* libvulkan.1.4.328.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330ECE2BD9919400FC06CE /* libvulkan.1.4.328.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB330EE72BD993E600FC06CE /* libMoltenVK.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; };
-		AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in Copy Files */ = {isa = PBXBuildFile; fileRef = AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		AB37D74A2D415FC1006A6613 /* teapot.obj in Resources */ = {isa = PBXBuildFile; fileRef = AB37D7492D415FC1006A6613 /* teapot.obj */; };
 		AB37D74D2D41602F006A6613 /* phong.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB37D74B2D41602F006A6613 /* phong.frag.spv */; };
 		AB37D74E2D41602F006A6613 /* phong.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = AB37D74C2D41602F006A6613 /* phong.vert.spv */; };
@@ -48,38 +46,42 @@
 		ABF1623B2A34E3A7007655F7 /* ModelerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF1623A2A34E3A7007655F7 /* ModelerView.swift */; };
 		ABF1623D2A34E3AC007655F7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABF1623C2A34E3AC007655F7 /* Assets.xcassets */; };
 		ABF162402A34E3AC007655F7 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ABF1623F2A34E3AC007655F7 /* Preview Assets.xcassets */; };
+		ABF77DF52EA313FF0046209F /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = ABF77DF42EA313FF0046209F /* libc++.tbd */; };
+		ABF77DFC2EA319C70046209F /* MoltenVK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = ABF77DFA2EA318F00046209F /* MoltenVK.xcframework */; };
+		ABF77DFD2EA319C70046209F /* MoltenVK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = ABF77DFA2EA318F00046209F /* MoltenVK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		ABF7EC312D95D1B80060B8B1 /* titlebar.frag.spv in Resources */ = {isa = PBXBuildFile; fileRef = ABF7EC2F2D95D1B80060B8B1 /* titlebar.frag.spv */; };
 		ABF7EC322D95D1B80060B8B1 /* titlebar.vert.spv in Resources */ = {isa = PBXBuildFile; fileRef = ABF7EC302D95D1B80060B8B1 /* titlebar.vert.spv */; };
 		ABF7EC362D9AF4D30060B8B1 /* titlebar.png in Resources */ = {isa = PBXBuildFile; fileRef = ABF7EC352D9AF4D30060B8B1 /* titlebar.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		AB1511F12A35145900A6D87E /* CopyFiles */ = {
+		AB1511F12A35145900A6D87E /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in CopyFiles */,
-				AB330EE52BD992AD00FC06CE /* libvulkan.1.4.328.dylib in CopyFiles */,
-				AB330EE32BD9929000FC06CE /* libvulkan.1.dylib in CopyFiles */,
-				AB330EE42BD9929000FC06CE /* libvulkan.dylib in CopyFiles */,
-				AB330ED92BD9920800FC06CE /* libVkLayer_khronos_profiles.dylib in CopyFiles */,
-				AB330EDB2BD9920800FC06CE /* libVkLayer_khronos_synchronization2.dylib in CopyFiles */,
-				AB330EDC2BD9920800FC06CE /* libVkLayer_khronos_validation.dylib in CopyFiles */,
-				AB330EDF2BD9920800FC06CE /* libVkLayer_api_dump.dylib in CopyFiles */,
-				AB330EE12BD9920800FC06CE /* libVkLayer_screenshot.dylib in CopyFiles */,
-				AB330EE02BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib in CopyFiles */,
+				AB330EE82BD993F500FC06CE /* libMoltenVK.dylib in Copy Files */,
+				AB330EE52BD992AD00FC06CE /* libvulkan.1.4.328.dylib in Copy Files */,
+				AB330EE32BD9929000FC06CE /* libvulkan.1.dylib in Copy Files */,
+				AB330EE42BD9929000FC06CE /* libvulkan.dylib in Copy Files */,
+				AB330ED92BD9920800FC06CE /* libVkLayer_khronos_profiles.dylib in Copy Files */,
+				AB330EDB2BD9920800FC06CE /* libVkLayer_khronos_synchronization2.dylib in Copy Files */,
+				AB330EDC2BD9920800FC06CE /* libVkLayer_khronos_validation.dylib in Copy Files */,
+				AB330EDF2BD9920800FC06CE /* libVkLayer_api_dump.dylib in Copy Files */,
+				AB330EE12BD9920800FC06CE /* libVkLayer_screenshot.dylib in Copy Files */,
+				AB330EE02BD9920800FC06CE /* libVkLayer_khronos_shader_object.dylib in Copy Files */,
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AB23630E2D375C350066094F /* Embed Frameworks */ = {
+		ABF77DFE2EA319C70046209F /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				AB15CAE12EA30B5900DAAAF3 /* MoltenVK.xcframework in Embed Frameworks */,
+				ABF77DFD2EA319C70046209F /* MoltenVK.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -88,8 +90,6 @@
 
 /* Begin PBXFileReference section */
 		AB1511E62A34F6B000A6D87E /* modeler-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "modeler-Bridging-Header.h"; sourceTree = "<group>"; };
-		AB15CAE02EA30B5900DAAAF3 /* MoltenVK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MoltenVK.xcframework; path = iOS/lib/MoltenVK.xcframework; sourceTree = VULKAN_SDK; };
-		AB23630F2D382E7B0066094F /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.2.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
 		AB330ECE2BD9919400FC06CE /* libvulkan.1.4.328.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.4.328.dylib; path = macOS/lib/libvulkan.1.4.328.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED02BD9920700FC06CE /* libVkLayer_khronos_profiles.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = libVkLayer_khronos_profiles.dylib; path = macOS/lib/libVkLayer_khronos_profiles.dylib; sourceTree = VULKAN_SDK; };
 		AB330ED12BD9920700FC06CE /* libvulkan.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.dylib; path = macOS/lib/libvulkan.dylib; sourceTree = VULKAN_SDK; };
@@ -152,6 +152,8 @@
 		ABF1623C2A34E3AC007655F7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		ABF1623F2A34E3AC007655F7 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		ABF162412A34E3AC007655F7 /* modeler.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = modeler.entitlements; sourceTree = "<group>"; };
+		ABF77DF42EA313FF0046209F /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.4.sdk/usr/lib/libc++.tbd"; sourceTree = DEVELOPER_DIR; };
+		ABF77DFA2EA318F00046209F /* MoltenVK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MoltenVK.xcframework; path = ../../../VulkanSDK/1.4.328.1/iOS/lib/MoltenVK.xcframework; sourceTree = "<group>"; };
 		ABF7EC2F2D95D1B80060B8B1 /* titlebar.frag.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = titlebar.frag.spv; path = ../titlebar.frag.spv; sourceTree = "<group>"; };
 		ABF7EC302D95D1B80060B8B1 /* titlebar.vert.spv */ = {isa = PBXFileReference; lastKnownFileType = file; name = titlebar.vert.spv; path = ../titlebar.vert.spv; sourceTree = "<group>"; };
 		ABF7EC352D9AF4D30060B8B1 /* titlebar.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = titlebar.png; path = ../titlebar.png; sourceTree = "<group>"; };
@@ -176,9 +178,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AB2363102D382E7B0066094F /* libc++.tbd in Frameworks */,
+				ABF77DF52EA313FF0046209F /* libc++.tbd in Frameworks */,
 				AB2363092D3755FC0066094F /* imgui.a in Frameworks */,
 				AB23630A2D3756010066094F /* modeler.a in Frameworks */,
+				ABF77DFC2EA319C70046209F /* MoltenVK.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -199,8 +202,8 @@
 		AB1511E92A3505B800A6D87E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				AB15CAE02EA30B5900DAAAF3 /* MoltenVK.xcframework */,
-				AB23630F2D382E7B0066094F /* libc++.tbd */,
+				ABF77DFA2EA318F00046209F /* MoltenVK.xcframework */,
+				ABF77DF42EA313FF0046209F /* libc++.tbd */,
 				AB330EE62BD993E600FC06CE /* libMoltenVK.dylib */,
 				AB330ED82BD9920800FC06CE /* libVkLayer_screenshot.dylib */,
 				AB330ECE2BD9919400FC06CE /* libvulkan.1.4.328.dylib */,
@@ -375,7 +378,7 @@
 				ABC4BB9A2D37331D00A9D2CF /* Sources */,
 				ABC4BB9B2D37331D00A9D2CF /* Frameworks */,
 				ABC4BB9C2D37331D00A9D2CF /* Resources */,
-				AB23630E2D375C350066094F /* Embed Frameworks */,
+				ABF77DFE2EA319C70046209F /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -399,7 +402,7 @@
 				ABF162312A34E3A7007655F7 /* Sources */,
 				ABF162322A34E3A7007655F7 /* Frameworks */,
 				ABF162332A34E3A7007655F7 /* Resources */,
-				AB1511F12A35145900A6D87E /* CopyFiles */,
+				AB1511F12A35145900A6D87E /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -418,7 +421,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1410;
+				LastUpgradeCheck = 1630;
 				TargetAttributes = {
 					ABC4BB9D2D37331D00A9D2CF = {
 						CreatedOnToolsVersion = 16.2;
@@ -564,7 +567,6 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -609,7 +611,6 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -677,7 +678,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -737,7 +740,9 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -769,8 +774,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"modeler/Preview Content\"";
-				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
@@ -807,8 +812,8 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"modeler/Preview Content\"";
-				DEVELOPMENT_TEAM = 7HFW7BP6VZ;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GCC_C_LANGUAGE_STANDARD = c99;
