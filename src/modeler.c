@@ -294,7 +294,7 @@ void *threadProc(void *arg)
 		.depthStencilState = depthStencilState,
 		.sampleCount = VK_SAMPLE_COUNT_1_BIT
 	};
-	bool pipelineCreateSuccessWindowDecoration = createPipeline(pipelineCreateInfoWindowDecoration, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, blend, error);
+	bool pipelineCreateSuccessWindowDecoration = createPipeline(pipelineCreateInfoWindowDecoration, &pipelineLayoutWindowDecoration, &pipelineWindowDecoration, false, error);
 #ifndef EMBED_SHADERS
 	free(windowBorderFragShaderBytes);
 	free(windowBorderVertShaderBytes);

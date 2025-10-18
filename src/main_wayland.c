@@ -18,7 +18,7 @@
 
 #include "modeler_wayland.h"
 
-#define CHROME_HEIGHT 20
+#define CHROME_HEIGHT 35
 #define RESIZE_BORDER 10
 #define MARGIN 25
 #define DEFAULT_SURFACE_WIDTH 600 /* DEFAULT_ACTIVE_WIDTH + MARGIN * 2 */
@@ -152,7 +152,10 @@ int main(int argc, char **argv)
 			.extent.height = DEFAULT_ACTIVE_HEIGHT
 		},
 		.cornerRadius = CORNER_RADIUS,
-		.scale = 1.0f
+		.scale = 1.0f,
+		.titlebarHeight = CHROME_HEIGHT,
+		.fullscreen = false,
+		.orientation = ROTATE_0
 	};
 
 	initializeQueue(&display.inputQueue);
@@ -521,6 +524,7 @@ void setSurfaceScale(struct display *display)
 	display->pointerRegion = UNKNOWN_REGION;
 
 	display->windowDimensions.scale = scale;
+	display->windowDimensions.titlebarHeight = CHROME_HEIGHT * scale;
 
 	loadCursorTheme(display);
 
@@ -854,6 +858,7 @@ static WindowRegion hitTest(struct display *display, int x, int y)
 	enum regionMask result = _CLIENT;
 	VkExtent2D extent = display->windowDimensions.activeArea.extent;
 	VkOffset2D offset = display->windowDimensions.activeArea.offset;
+	float scale = display->windowDimensions.scale;
 
 	if (x < offset.x) {
 		result |= _LEFT;
@@ -872,7 +877,9 @@ static WindowRegion hitTest(struct display *display, int x, int y)
 	}
 
 	if (!(result & (_LEFT | _RIGHT | _TOP | _BOTTOM)) && y < (offset.y + CHROME_HEIGHT)) {
-		result |= _CHROME;
+		if (x < (extent.width - CHROME_HEIGHT * scale * 3)) {
+			result |= _CHROME;
+		}
 	}
 
 	if (result & _TOP)
