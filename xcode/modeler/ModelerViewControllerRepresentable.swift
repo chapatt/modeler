@@ -6,7 +6,7 @@ struct ModelerViewControllerRepresentable: NSViewControllerRepresentable {
     
     func makeNSViewController(context: Context) -> ModelerViewController {
         let viewController = ModelerViewController()
-        viewController.titlebarHeight = titlebarHeight
+        viewController.titlebarHeight = titlebarHeight + 7
         
         return viewController
     }
