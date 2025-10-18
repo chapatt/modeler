@@ -49,7 +49,7 @@ else ifdef IOS
 	LDLIBS+=-lvulkan
 	ALL_TARGET=modeler.a
 	CFLAGS+=-DVK_USE_PLATFORM_METAL_EXT
-	CFLAGS+=--target=arm64-apple-ios-simulator
+	CFLAGS+=--target=arm64-apple-ios
 else ifeq ($(OS),Windows_NT)
 	CC=/msys64/mingw64/bin/gcc
 	CXX=/msys64/mingw64/bin/g++
