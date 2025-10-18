@@ -73,6 +73,21 @@ void sendThreadFailureSignal(void *platformWindow)
 	sendSignal(platformWindow, 'f');
 }
 
+void sendCloseSignal(void *platformWindow)
+{
+	sendSignal(platformWindow, 'i');
+}
+
+void sendMaximizeSignal(void *platformWindow)
+{
+	sendSignal(platformWindow, 'j');
+}
+
+void sendMinimizeSignal(void *platformWindow)
+{
+	sendSignal(platformWindow, 'k');
+}
+
 void sendFullscreenSignal(void *platformWindow)
 {
 	sendSignal(platformWindow, 'g');

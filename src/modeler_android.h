@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include "queue.h"
+#include "input_event.h"
 #include "vulkan_utils.h"
 
 typedef struct android_window_t {
