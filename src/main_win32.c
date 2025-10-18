@@ -174,7 +174,7 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 				},
 				.cornerRadius = 0,
 				.scale = scale,
-				.titlebarHeight = CHROME_HEIGHT,
+				.titlebarHeight = CHROME_HEIGHT * scale,
 				.fullscreen = isFullscreen,
 				.orientation = ROTATE_0
 			};
@@ -216,6 +216,36 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 			newWindowRect->bottom - newWindowRect->top,
 			0
 		);
+
+		if (inputQueue) {
+			HINSTANCE hInstance = GetModuleHandle(NULL);
+			Win32Window window = {
+				.hInstance = hInstance,
+				.hWnd = hWnd
+			};
+			float scale = getWindowScale(&window);
+			uint32_t width = LOWORD(lParam);
+			uint32_t height = HIWORD(lParam);
+			WindowDimensions windowDimensions = {
+				.surfaceArea = {
+					.width = width,
+					.height = height
+				},
+				.activeArea = {
+					.extent = {
+						.width = width,
+						.height = height
+					},
+					.offset = {0, 0}
+				},
+				.cornerRadius = 0,
+				.scale = scale,
+				.titlebarHeight = CHROME_HEIGHT * scale,
+				.fullscreen = isFullscreen,
+				.orientation = ROTATE_0
+			};
+			enqueueResizeEvent(inputQueue, windowDimensions, hInstance, hWnd);
+		}
 
 		return 0;
 	default:
@@ -304,6 +334,12 @@ static LRESULT hitTest(HWND hWnd, int x, int y)
 	int padding = _GetSystemMetricsForDpi(SM_CXPADDEDBORDER, dpi);
 	int borderX = _GetSystemMetricsForDpi(SM_CXFRAME, dpi) + padding;
 	int borderY = _GetSystemMetricsForDpi(SM_CYFRAME, dpi) + padding;
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+	Win32Window window = {
+		.hInstance = hInstance,
+		.hWnd = hWnd
+	};
+	float scale = getWindowScale(&window);
 
 	enum regionMask result = CLIENT;
 
@@ -323,8 +359,8 @@ static LRESULT hitTest(HWND hWnd, int x, int y)
 		result |= BOTTOM;
 	}
 
-	if (!(result & (LEFT | RIGHT | TOP | BOTTOM)) && y < (windowRect.top + CHROME_HEIGHT)) {
-		if (x < (windowRect.right - CHROME_HEIGHT * 3)) {
+	if (!(result & (LEFT | RIGHT | TOP | BOTTOM)) && y < (windowRect.top + CHROME_HEIGHT * scale)) {
+		if (x < (windowRect.right - CHROME_HEIGHT * scale * 3)) {
 			result |= CHROME;
 		}
 	}
