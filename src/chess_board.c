@@ -875,7 +875,7 @@ static void updateBoardMesh(ChessBoard self)
 
 bool updateChessBoard(ChessBoard self, char **error)
 {
-	if (!updateMutableBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardVertexBuffer, self->boardVertices, CHESS_VERTEX_COUNT, sizeof(*self->boardVertices), error)) {
+	if (!updateMutableBufferWithStaging(self->device, self->allocator, self->commandPool, self->queue, self->boardStagingVertexBufferMappedMemory, &self->boardStagingVertexBuffer, &self->boardVertexBuffer, self->boardVertices, CHESS_VERTEX_COUNT + (self->enable3d ? 32 : 0), sizeof(*self->boardVertices), error)) {
 		return false;
 	}
 
@@ -1253,10 +1253,10 @@ void chessBoardSetEnable3d(ChessBoard self, bool enable3d)
 
 	self->enable3d = enable3d;
 
-	updateBoardMesh(self);
 	updateUniformBuffers(self);
 	updateBoardUniformBuffer(self);
 	updatePiecesUniformBuffer(self);
+	updateBoardMesh(self);
 }
 
 Projection chessBoardGetProjection(ChessBoard self)
