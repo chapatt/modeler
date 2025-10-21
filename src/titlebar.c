@@ -117,10 +117,6 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 		return false;
 	}
 
-	if (!createTitlebarPipeline(self, error)) {
-		return false;
-	}
-
 	return true;
 }
 
