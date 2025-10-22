@@ -401,7 +401,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.pWaitSemaphores = synchronizationInfo.imageAvailableSemaphores + currentFrame,
 			.pWaitDstStageMask = waitStages,
 			.signalSemaphoreCount = 1,
-			.pSignalSemaphores = synchronizationInfo.renderFinishedSemaphores + currentFrame,
+			.pSignalSemaphores = synchronizationInfo.renderFinishedSemaphores + imageIndex,
 			.commandBufferCount = 1,
 			.pCommandBuffers = commandBuffers + currentFrame
 		};
@@ -415,7 +415,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.pNext = NULL,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = synchronizationInfo.renderFinishedSemaphores + currentFrame,
+			.pWaitSemaphores = synchronizationInfo.renderFinishedSemaphores + imageIndex,
 			.swapchainCount = 1,
 			.pSwapchains = &swapchainInfo->swapchain,
 			.pImageIndices = &imageIndex,

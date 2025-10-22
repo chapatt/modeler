@@ -205,7 +205,7 @@ void *threadProc(void *arg)
 	}
 
 	SynchronizationInfo synchronizationInfo;
-	if (!createSynchronization(device, &synchronizationInfo, error)) {
+	if (!createSynchronization(device, swapchainCreateInfo.swapchainInfo->imageCount, &synchronizationInfo, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -595,7 +595,7 @@ static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCal
 #endif /* ENABLE_IMGUI */
 	destroyChessBoard(chessBoard);
 	destroyTitlebar(titlebar);
-	destroySynchronization(device, synchronizationInfo);
+	destroySynchronization(device, swapchainCreateInfo->swapchainInfo->imageCount, synchronizationInfo);
 	freeCommandBuffers(device, commandPool, commandBuffers, commandBufferCount);
 	destroyCommandPool(device, commandPool);
 	for (size_t i = 0; i < pipelineCount; ++i) {
