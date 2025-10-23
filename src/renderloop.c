@@ -120,7 +120,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.x = windowDimensions->activeArea.offset.x,
 			.y = windowDimensions->activeArea.offset.y,
 			.width = extent.width,
-			.height = extent.height,
+			.height = windowDimensions->titlebarHeight,
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
 		};
@@ -204,10 +204,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
-			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
+			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->titlebarHeight;
 			float titlebarHeight = (float) windowDimensions->titlebarHeight / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
-			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
@@ -226,10 +225,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
-			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
+			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->titlebarHeight;
 			float titlebarHeight = (float) windowDimensions->titlebarHeight / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
-			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
@@ -434,7 +432,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->activeArea.extent.height;
 			float titlebarHeight = (float) windowDimensions->titlebarHeight / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
-			titlebarSetHeight(titlebar, titlebarHeight);
 			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;

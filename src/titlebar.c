@@ -29,7 +29,6 @@ typedef struct titlebar_push_constants_t {
 	float maximizeColor[4];
 	float closeColor[4];
 	float aspectRatio;
-	float height;
 } TitlebarPushConstants;
 
 struct titlebar_t {
@@ -53,7 +52,6 @@ struct titlebar_t {
 	VkDescriptorSetLayout descriptorSetLayouts[MAX_FRAMES_IN_FLIGHT];
 	NormalizedPointerPosition pointerPosition;
 	float aspectRatio;
-	float height;
 	bool hoveringMinimize;
 	bool hoveringMaximize;
 	bool hoveringClose;
@@ -75,7 +73,7 @@ static bool createTitlebarPipeline(Titlebar self, char **error);
 static void updateHovering(Titlebar self);
 static void updatePressed(Titlebar self);
 
-bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, float height, void (*close)(void *), void *closeArg, void (*maximize)(void *), void *maximizeArg, void (*minimize)(void *), void *minimizeArg, char **error)
+bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, void (*close)(void *), void *closeArg, void (*maximize)(void *), void *maximizeArg, void (*minimize)(void *), void *minimizeArg, char **error)
 {
 	*titlebar = malloc(sizeof(**titlebar));
 
@@ -90,7 +88,6 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->sampleCount = sampleCount;
 	self->resourcePath = resourcePath;
 	self->aspectRatio = aspectRatio;
-	self->height = height;
 	self->hoveringMinimize = false;
 	self->hoveringMaximize = false;
 	self->hoveringClose = false;
@@ -319,14 +316,12 @@ static void updateHovering(Titlebar self)
 	self->hoveringMaximize = false;
 	self->hoveringMinimize = false;
 
-	if (self->pointerPosition.y < self->height) {
-		if (self->pointerPosition.x >= 1.0f - (self->height / self->aspectRatio)) {
-			self->hoveringClose = true;
-		} else if (self->pointerPosition.x >= 1.0f - (self->height * 2 / self->aspectRatio)) {
-			self->hoveringMaximize = true;
-		} else if (self->pointerPosition.x >= 1.0f - (self->height * 3 / self->aspectRatio)) {
-			self->hoveringMinimize = true;
-		}
+	if (self->pointerPosition.x >= 1.0f - (1.0f / self->aspectRatio)) {
+		self->hoveringClose = true;
+	} else if (self->pointerPosition.x >= 1.0f - (2.0f / self->aspectRatio)) {
+		self->hoveringMaximize = true;
+	} else if (self->pointerPosition.x >= 1.0f - (3.0f / self->aspectRatio)) {
+		self->hoveringMinimize = true;
 	}
 }
 
@@ -369,8 +364,7 @@ bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 		.minimizeColor = {0.0f, 0.0f, 0.0f, 0.0f},
 		.maximizeColor = {0.0f, 0.0f, 0.0f, 0.0f},
 		.closeColor = {0.0f, 0.0f, 0.0f, 0.0f},
-		.aspectRatio = self->aspectRatio,
-		.height = self->height * VIEWPORT_HEIGHT
+		.aspectRatio = self->aspectRatio
 	};
 
 	if (self->pressedClose) {
@@ -436,9 +430,4 @@ void destroyTitlebar(Titlebar self)
 void titlebarSetAspectRatio(Titlebar self, float aspectRatio)
 {
 	self->aspectRatio = aspectRatio;
-}
-
-void titlebarSetHeight(Titlebar self, float height)
-{
-	self->height = height;
 }

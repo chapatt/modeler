@@ -5,7 +5,6 @@ layout (push_constant) uniform _push_constants {
 	vec4 maximizeColor;
 	vec4 closeColor;
 	float aspectRatio;
-	float height;
 } PushConstants;
 
 layout(location = 0) out vec2 fragTexCoord;
@@ -14,14 +13,13 @@ layout(location = 2) out vec4 backgroundColor;
 layout(location = 3) out flat int drawTexture;
 
 float aspectRatio = PushConstants.aspectRatio;
-float height = PushConstants.height;
-float width = height / aspectRatio;
+float buttonWidth = 2.0 / aspectRatio;
 
 vec2 positions[] = vec2[](
-	vec2(-1, -1), vec2(-1, height - 1.0), vec2(1, height - 1.0), vec2(1, -1),
-	vec2(1.0 - width, -1), vec2(1.0 - width, height - 1.0), vec2(1, height - 1.0), vec2(1, -1),
-	vec2(1.0 - width * 2, -1), vec2(1.0 - width * 2, height - 1.0), vec2(1 - width, height - 1.0), vec2(1 - width, -1),
-	vec2(1.0 - width * 3, -1), vec2(1.0 - width * 3, height - 1.0), vec2(1 - width * 2, height - 1.0), vec2(1 - width * 2, -1)
+	vec2(-1, -1), vec2(-1, 1), vec2(1, 1), vec2(1, -1),
+	vec2(1.0 - buttonWidth, -1), vec2(1.0 - buttonWidth, 1), vec2(1, 1), vec2(1, -1),
+	vec2(1.0 - buttonWidth * 2, -1), vec2(1.0 - buttonWidth * 2, 1), vec2(1 - buttonWidth, 1), vec2(1 - buttonWidth, -1),
+	vec2(1.0 - buttonWidth * 3, -1), vec2(1.0 - buttonWidth * 3, 1), vec2(1 - buttonWidth * 2, 1), vec2(1 - buttonWidth * 2, -1)
 );
 
 int indices[] = int[](
