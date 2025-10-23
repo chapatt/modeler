@@ -264,7 +264,7 @@ static bool isMaximized(HWND hWnd)
 
 static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (isMaximized(hWnd) || isFullscreen) {
+	if (isFullscreen) {
 		return 0;
 	}
 
@@ -287,6 +287,17 @@ static LRESULT calcSize(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		clientRect = params->rgrc;
 	}
 
+	if (isMaximized(hWnd)) {
+		int expandX = _GetSystemMetricsForDpi(SM_CXFRAME, dpi) + padding;
+		int expandY = _GetSystemMetricsForDpi(SM_CYFRAME, dpi) + padding;
+
+		clientRect->right -= expandX;
+		clientRect->left += expandX;
+		clientRect->bottom -= expandY;
+		clientRect->top += expandY;
+
+		return 0;
+	}
 
 	clientRect->right -= expandX;
 	clientRect->left += expandX;
