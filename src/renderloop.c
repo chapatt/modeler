@@ -292,17 +292,35 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		ImGui_ImplModeler_NewFrame();
 		ImGui_NewFrame();
 		ImGui_PushFont(currentFont);
+		ImGui_PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImVec2 windowPadding = {
+			.x = 20.0f * windowDimensions->scale,
+			.y = 20.0f * windowDimensions->scale
+		};
+		ImGui_PushStyleVarImVec2(ImGuiStyleVar_WindowPadding, windowPadding);
+		ImVec2 framePadding = {
+			.x = 5.0f * windowDimensions->scale,
+			.y = 5.0f * windowDimensions->scale
+		};
+		ImGui_PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+		ImGui_PushStyleVarImVec2(ImGuiStyleVar_FramePadding, framePadding);
+		ImVec2 itemSpacing = {
+			.x = 10.0f * windowDimensions->scale,
+			.y = 10.0f * windowDimensions->scale
+		};
+		ImGui_PushStyleVarImVec2(ImGuiStyleVar_ItemSpacing, itemSpacing);
+		float optionsWindowWidth = 400;
 		ImVec2 imguiWindowPos = {
-			.x = 0.0f,
-			.y = 0.0f
+			.x = windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
+			.y = windowDimensions->titlebarHeight
 		};
 		ImGui_SetNextWindowPos(imguiWindowPos, 0);
 		ImVec2 imguiWindowSize = {
-			.x = windowDimensions->activeArea.extent.width,
-			.y = windowDimensions->activeArea.extent.height,
+			.x = optionsWindowWidth * windowDimensions->scale,
+			.y = windowDimensions->activeArea.extent.height
 		};
 		ImGui_SetNextWindowSize(imguiWindowSize, 0);
-		ImGui_Begin("Debug", NULL, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
+		ImGui_Begin("Debug", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 		ImGui_Text("fps: %ld", 1000000000 / elapsed);
 		if (ImGui_Button("Close")) {
 			sendCloseSignal(platformWindow);
@@ -332,6 +350,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		}
 		ImGui_EndDisabled();
 		ImGui_End();
+		ImGui_PopStyleVar();
+		ImGui_PopStyleVar();
+		ImGui_PopStyleVar();
+		ImGui_PopStyleVar();
+		ImGui_PopStyleVar();
 		ImGui_PopFont();
 		ImGui_Render();
 		ImDrawData *drawData = ImGui_GetDrawData();
