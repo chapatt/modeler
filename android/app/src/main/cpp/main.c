@@ -129,6 +129,9 @@ static void handleAppCmd(struct android_app *pApp, int32_t cmd)
 		break;
 	case APP_CMD_WINDOW_RESIZED:
 		ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+        ARect insets;
+        GameActivity_getWindowInsets(pApp->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &insets);
+        __android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "insets: %d, %d, %d, %d\n", insets.top, insets.right, insets.bottom, insets.left);
 		int width = ANativeWindow_getWidth(pApp->window);
 		int height = ANativeWindow_getHeight(pApp->window);
 		WindowDimensions windowDimensions = {
@@ -138,10 +141,13 @@ static void handleAppCmd(struct android_app *pApp, int32_t cmd)
 			},
 			.activeArea = {
 				.extent = {
-					.width = width,
-					.height = height
+					.width = width - (insets.left + insets.right),
+					.height = height - (insets.top + insets.bottom)
 				},
-				.offset = {0, 0}
+                .offset = {
+                        .x = insets.left,
+                        .y = insets.top
+                }
 			},
 			.cornerRadius = 0,
 			.scale = 1

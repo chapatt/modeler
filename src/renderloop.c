@@ -311,8 +311,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		ImGui_PushStyleVarImVec2(ImGuiStyleVar_ItemSpacing, itemSpacing);
 		float optionsWindowWidth = 400;
 		ImVec2 imguiWindowPos = {
-			.x = windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
-			.y = windowDimensions->titlebarHeight
+			.x = windowDimensions->activeArea.offset.x + windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
+			.y = windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight
 		};
 		ImGui_SetNextWindowPos(imguiWindowPos, 0);
 		ImVec2 imguiWindowSize = {
