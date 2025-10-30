@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <vulkan/vulkan.h>
 
-#include "imgui/cimgui_impl_vulkan.h"
+#include "imgui/dcimgui_impl_vulkan.h"
 
 #include "modeler.h"
 #include "swapchain.h"

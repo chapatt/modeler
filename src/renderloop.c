@@ -11,8 +11,8 @@
 
 
 #ifdef ENABLE_IMGUI
-#include "imgui/cimgui.h"
-#include "imgui/cimgui_impl_vulkan.h"
+#include "imgui/dcimgui.h"
+#include "imgui/dcimgui_impl_vulkan.h"
 #include "imgui/imgui_impl_modeler.h"
 #endif /* ENABLE_IMGUI */
 
@@ -534,7 +534,6 @@ static bool rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, 
 		ImFont *font = ImFontAtlas_AddFontFromMemoryTTF(io->Fonts, robotoFontBytes, robotoFontSize, 16 * scale, NULL, NULL);
 		pushFont(fonts, fontCount, font, scale);
 		ImFontAtlas_Build(io->Fonts);
-		cImGui_ImplVulkan_CreateFontsTexture();
 		*currentFont = font;
 	}
 

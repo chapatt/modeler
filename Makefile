@@ -168,12 +168,12 @@ $(HEADER_MESHES): mesh_%.h: %.obj
 $(HEADER_FONTS): font_%.h: %.ttf
 	./hexdump_include.sh "`echo $(basename $<)FontBytes | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" "`echo $(basename $<)FontSize | $(SED) -r 's/(_|-|\.)(\w)/\U\2/g'`" $< > $@
 
-imgui.a: cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
-	$(AR) rvs $@ cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
-cimgui.o:
-	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/cimgui.cpp
-cimgui_impl_vulkan.o:
-	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/cimgui_impl_vulkan.cpp
+imgui.a: dcimgui.o dcimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
+	$(AR) rvs $@ dcimgui.o dcimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
+dcimgui.o:
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/dcimgui.cpp
+dcimgui_impl_vulkan.o:
+	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/dcimgui_impl_vulkan.cpp
 imgui.o:
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c src/imgui/imgui.cpp
 imgui_demo.o:
@@ -217,4 +217,4 @@ clean-app:
 clean-vendor:
 	$(RM) -rf $(VENDOR_LIBS) \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
-		imgui.a cimgui.o cimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
+		imgui.a dcimgui.o dcimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o

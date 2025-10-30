@@ -4,8 +4,8 @@
 #include <pthread.h>
 
 #ifdef ENABLE_IMGUI
-#include "imgui/cimgui.h"
-#include "imgui/cimgui_impl_vulkan.h"
+#include "imgui/dcimgui.h"
+#include "imgui/dcimgui_impl_vulkan.h"
 #include "imgui/imgui_impl_modeler.h"
 #endif /* ENABLE_IMGUI */
 
@@ -383,14 +383,15 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		.Queue = queueInfo.graphicsQueue,
 		.PipelineCache = VK_NULL_HANDLE,
 		.DescriptorPool = *descriptorPool,
-		.Subpass = 1,
 		.MinImageCount = surfaceCharacteristics.capabilities.minImageCount,
 		.ImageCount = swapchainInfo->imageCount,
-		.MSAASamples = getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties),
 		.Allocator = NULL,
-		.CheckVkResultFn = imVkCheck
+		.CheckVkResultFn = imVkCheck,
+		.PipelineInfoMain.RenderPass = renderPass,
+		.PipelineInfoMain.Subpass = 1,
+		.PipelineInfoMain.MSAASamples = getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties)
 	};
-	cImGui_ImplVulkan_Init(&imVulkanInitInfo, renderPass);
+	cImGui_ImplVulkan_Init(&imVulkanInitInfo);
 }
 #endif /* ENABLE_IMGUI */
 
