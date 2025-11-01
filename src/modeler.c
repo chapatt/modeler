@@ -443,15 +443,13 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 {
 	VkExtent2D requestedExtent = swapchainCreateInfo->windowDimensions->surfaceArea;
 
-	if (swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
-		swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
-	) {
+	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
+	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR || transform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR) {
 		uint32_t width = requestedExtent.width;
 		requestedExtent.width = requestedExtent.height;
 		requestedExtent.height = width;
 	}
 
-	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
 	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR) {
 		swapchainCreateInfo->windowDimensions->orientation = ROTATE_90;
 	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR) {
