@@ -98,6 +98,7 @@
 //  2016-10-18: Vulkan: Add location decorators & change to use structs as in/out in glsl, update embedded spv (produced with glslangValidator -x). Null the released resources.
 //  2016-08-27: Vulkan: Fix Vulkan example for use when a depth buffer is active.
 
+#include "../../shader_imgui.vert.h"
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
 #include "imgui_impl_vulkan.h"
@@ -627,12 +628,36 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
-                // Apply scissor/clipping rectangle
-                VkRect2D scissor;
-                scissor.offset.x = (int32_t)(clip_min.x);
-                scissor.offset.y = (int32_t)(clip_min.y);
-                scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
-                scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
+                // // Apply scissor/clipping rectangle
+                // VkRect2D scissor;
+                // switch (orientation) {
+                // case ROTATE_0:
+                //     scissor.offset.x = (int32_t)(clip_min.x);
+                //     scissor.offset.y = (int32_t)(clip_min.y);
+                //     scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
+                //     scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
+                //     break;
+                // case ROTATE_90:
+                //     scissor.offset.x = (int32_t)(clip_min.y);
+                //     scissor.offset.y = (int32_t)(clip_min.x);
+                //     scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
+                //     scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
+                //     break;
+                // case ROTATE_270:
+                //     scissor.offset.x = (int32_t)(clip_max.y);
+                //     scissor.offset.y = (int32_t)(clip_max.x);
+                //     scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
+                //     scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
+                //     break;
+                // case ROTATE_180:
+                //     scissor.offset.x = (int32_t)(clip_max.x);
+                //     scissor.offset.y = (int32_t)(clip_max.y);
+                //     scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
+                //     scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
+                //     break;
+                // }
+                // vkCmdSetScissor(command_buffer, 0, 1, &scissor);
+                VkRect2D scissor = { { 0, 0 }, { (uint32_t)fb_width, (uint32_t)fb_height } };
                 vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
                 // Bind DescriptorSet with font or user texture
@@ -897,8 +922,8 @@ static void ImGui_ImplVulkan_CreateShaderModules(VkDevice device, const VkAlloca
     {
         VkShaderModuleCreateInfo default_vert_info = {};
         default_vert_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        default_vert_info.codeSize = sizeof(__glsl_shader_vert_spv);
-        default_vert_info.pCode = (uint32_t*)__glsl_shader_vert_spv;
+        default_vert_info.codeSize = imguiVertShaderSize;
+        default_vert_info.pCode = (uint32_t*) imguiVertShaderBytes;
         VkShaderModuleCreateInfo* p_vert_info = (v->CustomShaderVertCreateInfo.sType == VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO) ? &v->CustomShaderVertCreateInfo : &default_vert_info;
         VkResult err = vkCreateShaderModule(device, p_vert_info, allocator, &bd->ShaderModuleVert);
         check_vk_result(err);
