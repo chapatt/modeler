@@ -311,13 +311,17 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		ImGui_PushStyleVarImVec2(ImGuiStyleVar_ItemSpacing, itemSpacing);
 		float optionsWindowWidth = 400;
 		ImVec2 imguiWindowPos = {
-			.x = windowDimensions->activeArea.offset.x + windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
-			.y = windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight
+			// .x = windowDimensions->activeArea.offset.x + windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
+			// .y = windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight
+			.x = windowDimensions->activeArea.extent.height / 2 - 200,
+			.y = windowDimensions->activeArea.extent.width / 2 - 200
 		};
 		ImGui_SetNextWindowPos(imguiWindowPos, 0);
 		ImVec2 imguiWindowSize = {
-			.x = optionsWindowWidth * windowDimensions->scale,
-			.y = windowDimensions->activeArea.extent.height
+			// .x = optionsWindowWidth * windowDimensions->scale,
+			// .y = windowDimensions->activeArea.extent.height
+			.x = 400,
+			.y = 400
 		};
 		ImGui_SetNextWindowSize(imguiWindowSize, 0);
 		ImGui_Begin("Debug", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
@@ -356,12 +360,15 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		ImGui_PopStyleVar();
 		ImGui_PopStyleVar();
 		ImGui_PopFont();
+		int show;
+		ImGui_ShowMetricsWindow(&show);
 		ImGui_Render();
 		ImDrawData *drawData = ImGui_GetDrawData();
 		cImGui_ImplVulkan_RenderDrawData(drawData, commandBuffers[currentFrame]);
 #endif /* ENABLE_IMGUI */
 
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
+#if 0
 		if (!windowDimensions->fullscreen) {
 			VkRect2D titlebarScissor = {
 				.offset = {
@@ -379,6 +386,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 		}
+#endif
 
 #if DRAW_WINDOW_BORDER
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
