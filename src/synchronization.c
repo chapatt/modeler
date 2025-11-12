@@ -48,18 +48,18 @@ bool createSynchronization(VkDevice device, uint32_t swapchainImageCount, Synchr
 	return true;
 }
 
-void destroySynchronization(VkDevice device, uint32_t swapchainImageCount, SynchronizationInfo synchronizationInfo)
+void destroySynchronization(VkDevice device, uint32_t swapchainImageCount, SynchronizationInfo *synchronizationInfo)
 {
 	for (uint32_t i = 0; i < swapchainImageCount; i++) {
-		vkDestroySemaphore(device, synchronizationInfo.renderFinishedSemaphores[i], NULL);
+		vkDestroySemaphore(device, synchronizationInfo->renderFinishedSemaphores[i], NULL);
 	}
 
 	for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-		vkDestroySemaphore(device, synchronizationInfo.imageAvailableSemaphores[i], NULL);
-		vkDestroyFence(device, synchronizationInfo.frameInFlightFences[i], NULL);
+		vkDestroySemaphore(device, synchronizationInfo->imageAvailableSemaphores[i], NULL);
+		vkDestroyFence(device, synchronizationInfo->frameInFlightFences[i], NULL);
 	}
 
-	free(synchronizationInfo.imageAvailableSemaphores);
-	free(synchronizationInfo.renderFinishedSemaphores);
-	free(synchronizationInfo.frameInFlightFences);
+	free(synchronizationInfo->imageAvailableSemaphores);
+	free(synchronizationInfo->renderFinishedSemaphores);
+	free(synchronizationInfo->frameInFlightFences);
 }

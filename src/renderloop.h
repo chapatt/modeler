@@ -14,6 +14,6 @@
 #include "chess_board.h"
 #include "titlebar.h"
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet *descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, Titlebar titlebar, char **error);
+bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet *descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo *synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, Titlebar titlebar, char **error);
 
 #endif /* MODELER_RENDERLOOP_H */
