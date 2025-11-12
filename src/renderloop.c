@@ -41,7 +41,7 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static bool rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath, char **error);
 #endif /* ENABLE_IMGUI */
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet *descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, Titlebar titlebar, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet *descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo *synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, Titlebar titlebar, char **error)
 {
 #ifdef ENABLE_IMGUI
 	Font *fonts = NULL;
@@ -214,13 +214,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			windowResized = false;
 		}
 
-		if ((result = vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
+		if ((result = vkWaitForFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
 			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
 			return false;
 		}
 
 		uint32_t imageIndex = 0;
-		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo->imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
@@ -238,7 +238,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			return false;
 		}
 
-		if ((result = vkResetFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame)) != VK_SUCCESS) {
+		if ((result = vkResetFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame)) != VK_SUCCESS) {
 			asprintf(error, "Failed to reset fences: %s", string_VkResult(result));
 			return false;
 		}
@@ -427,15 +427,15 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 			.pNext = NULL,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = synchronizationInfo.imageAvailableSemaphores + currentFrame,
+			.pWaitSemaphores = synchronizationInfo->imageAvailableSemaphores + currentFrame,
 			.pWaitDstStageMask = waitStages,
 			.signalSemaphoreCount = 1,
-			.pSignalSemaphores = synchronizationInfo.renderFinishedSemaphores + imageIndex,
+			.pSignalSemaphores = synchronizationInfo->renderFinishedSemaphores + imageIndex,
 			.commandBufferCount = 1,
 			.pCommandBuffers = commandBuffers + currentFrame
 		};
 
-		if ((result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, synchronizationInfo.frameInFlightFences[currentFrame])) != VK_SUCCESS) {
+		if ((result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, synchronizationInfo->frameInFlightFences[currentFrame])) != VK_SUCCESS) {
 			asprintf(error, "Failed to submit render queue: %s", string_VkResult(result));
 			return false;
 		}
@@ -444,7 +444,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.pNext = NULL,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = synchronizationInfo.renderFinishedSemaphores + imageIndex,
+			.pWaitSemaphores = synchronizationInfo->renderFinishedSemaphores + imageIndex,
 			.swapchainCount = 1,
 			.pSwapchains = &swapchainInfo->swapchain,
 			.pImageIndices = &imageIndex,
