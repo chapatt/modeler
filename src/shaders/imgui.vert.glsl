@@ -6,6 +6,7 @@ layout(location = 2) in vec4 aColor;
 layout(push_constant) uniform uPushConstant {
     vec2 uScale;
     vec2 uTranslate;
+    mat2 uRotate;
 } pc;
 
 out gl_PerVertex {
@@ -19,8 +20,7 @@ layout(location = 0) out struct {
 
 void main()
 {
-    mat2 rotation = {{0, 1}, {-1, 0}};
     Out.Color = aColor;
     Out.UV = aUV;
-    gl_Position = vec4((aPos * vec2(pc.uScale.y, pc.uScale.x) + vec2(pc.uTranslate.y, pc.uTranslate.x)) * rotation, 0, 1);
+    gl_Position = vec4((aPos * pc.uScale + pc.uTranslate) * pc.uRotate, 0, 1);
 }

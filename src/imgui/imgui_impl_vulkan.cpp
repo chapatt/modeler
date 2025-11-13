@@ -99,6 +99,7 @@
 //  2016-08-27: Vulkan: Fix Vulkan example for use when a depth buffer is active.
 
 #include "../../shader_imgui.vert.h"
+#include "../window.h"
 #include "imgui.h"
 #ifndef IMGUI_DISABLE
 #include "imgui_impl_vulkan.h"
@@ -467,6 +468,7 @@ static void CreateOrResizeBuffer(VkBuffer& buffer, VkDeviceMemory& buffer_memory
 static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline pipeline, VkCommandBuffer command_buffer, ImGui_ImplVulkan_FrameRenderBuffers* rb, int fb_width, int fb_height)
 {
     ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
+    ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
 
     // Bind pipeline:
     {
@@ -498,13 +500,61 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline 
     // Our visible imgui space lies from draw_data->DisplayPps (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
     {
         float scale[2];
-        scale[0] = 2.0f / draw_data->DisplaySize.x;
-        scale[1] = 2.0f / draw_data->DisplaySize.y;
         float translate[2];
-        translate[0] = -1.0f - draw_data->DisplayPos.x * scale[0];
-        translate[1] = -1.0f - draw_data->DisplayPos.y * scale[1];
+        float rotate[4];
+        switch (v->WindowDimensions->orientation) {
+        case ROTATE_0:
+            rotate[0] = 1.0f;
+            rotate[1] = 0;
+            rotate[2] = 0;
+            rotate[3] = 1.0f;
+
+            scale[0] = 2.0f / draw_data->DisplaySize.x;
+            scale[1] = 2.0f / draw_data->DisplaySize.y;
+
+            translate[0] = -1.0f - draw_data->DisplayPos.x * scale[0];
+            translate[1] = -1.0f - draw_data->DisplayPos.y * scale[1];
+            break;
+        case ROTATE_90:
+            rotate[0] = 0;
+            rotate[1] = 1.0f;
+            rotate[2] = -1.0f;
+            rotate[3] = 0;
+
+            scale[0] = 2.0f / draw_data->DisplaySize.y;
+            scale[1] = 2.0f / draw_data->DisplaySize.x;
+
+            translate[0] = -1.0f - draw_data->DisplayPos.x * scale[0];
+            translate[1] = -1.0f - draw_data->DisplayPos.y * scale[1];
+            break;
+        case ROTATE_270:
+            rotate[0] = 0;
+            rotate[1] = -1.0f;
+            rotate[2] = 1.0f;
+            rotate[3] = 0;
+
+            scale[0] = 2.0f / draw_data->DisplaySize.y;
+            scale[1] = 2.0f / draw_data->DisplaySize.x;
+
+            translate[0] = -1.0f - draw_data->DisplayPos.x * scale[0];
+            translate[1] = -1.0f - draw_data->DisplayPos.y * scale[1];
+            break;
+        case ROTATE_180:
+            rotate[0] = -1.0f;
+            rotate[1] = 0;
+            rotate[2] = 0;
+            rotate[3] = -1.0f;
+
+            scale[0] = 2.0f / draw_data->DisplaySize.x;
+            scale[1] = 2.0f / draw_data->DisplaySize.y;
+
+            translate[0] = -1.0f - draw_data->DisplayPos.x * scale[0];
+            translate[1] = -1.0f - draw_data->DisplayPos.y * scale[1];
+            break;
+        }
         vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 0, sizeof(float) * 2, scale);
         vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 2, sizeof(float) * 2, translate);
+        vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 4, sizeof(float) * 4, rotate);
     }
 }
 
@@ -628,36 +678,36 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
-                // // Apply scissor/clipping rectangle
-                // VkRect2D scissor;
-                // switch (orientation) {
-                // case ROTATE_0:
-                //     scissor.offset.x = (int32_t)(clip_min.x);
-                //     scissor.offset.y = (int32_t)(clip_min.y);
-                //     scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
-                //     scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
-                //     break;
-                // case ROTATE_90:
-                //     scissor.offset.x = (int32_t)(clip_min.y);
-                //     scissor.offset.y = (int32_t)(clip_min.x);
-                //     scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
-                //     scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
-                //     break;
-                // case ROTATE_270:
-                //     scissor.offset.x = (int32_t)(clip_max.y);
-                //     scissor.offset.y = (int32_t)(clip_max.x);
-                //     scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
-                //     scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
-                //     break;
-                // case ROTATE_180:
-                //     scissor.offset.x = (int32_t)(clip_max.x);
-                //     scissor.offset.y = (int32_t)(clip_max.y);
-                //     scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
-                //     scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
-                //     break;
-                // }
-                // vkCmdSetScissor(command_buffer, 0, 1, &scissor);
-                VkRect2D scissor = { { 0, 0 }, { (uint32_t)fb_width, (uint32_t)fb_height } };
+                // Apply scissor/clipping rectangle
+                VkRect2D scissor;
+                ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
+                ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
+                switch (v->WindowDimensions->orientation) {
+                case ROTATE_0:
+                    scissor.offset.x = (int32_t)(clip_min.x);
+                    scissor.offset.y = (int32_t)(clip_min.y);
+                    scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
+                    scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
+                    break;
+                case ROTATE_90:
+                    scissor.offset.x = (int32_t)(clip_min.y);
+                    scissor.offset.y = (int32_t)(clip_min.x);
+                    scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
+                    scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
+                    break;
+                case ROTATE_270:
+                    scissor.offset.x = (int32_t)(clip_max.y);
+                    scissor.offset.y = (int32_t)(clip_max.x);
+                    scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
+                    scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
+                    break;
+                case ROTATE_180:
+                    scissor.offset.x = (int32_t)(clip_max.x);
+                    scissor.offset.y = (int32_t)(clip_max.y);
+                    scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
+                    scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
+                    break;
+                }
                 vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
                 // Bind DescriptorSet with font or user texture
@@ -1119,7 +1169,7 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
         VkPushConstantRange push_constants[1] = {};
         push_constants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         push_constants[0].offset = sizeof(float) * 0;
-        push_constants[0].size = sizeof(float) * 4;
+        push_constants[0].size = sizeof(float) * 8;
         VkDescriptorSetLayout set_layout[1] = { bd->DescriptorSetLayout };
         VkPipelineLayoutCreateInfo layout_info = {};
         layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
