@@ -95,12 +95,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 
 		VkExtent2D extent = windowDimensions->activeArea.extent;
 
-		if (windowDimensions->orientation == ROTATE_90 || windowDimensions->orientation == ROTATE_270) {
-			uint32_t width = extent.width;
-			extent.width = extent.height;
-			extent.height = width;
-		}
-
 		VkExtent2D contentExtent = {
 			.height = extent.height - windowDimensions->titlebarHeight,
 			.width = extent.width
@@ -119,7 +113,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		VkViewport titlebarViewport = {
 			.x = windowDimensions->activeArea.offset.x,
 			.y = windowDimensions->activeArea.offset.y,
-			.width = extent.width,
+			.width = contentExtent.width,
 			.height = windowDimensions->titlebarHeight,
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
@@ -221,7 +215,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 
 		uint32_t imageIndex = 0;
 		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo->imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+#ifdef __APPLE__
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+#else /* __APPLE__ */
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+#endif /* __APPLE__ */
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
@@ -233,7 +231,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 			continue;
+#ifdef __APPLE__
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+#else /* __APPLE__ */
+        } else if (result != VK_SUCCESS) {
+#endif /* __APPLE__ */
 			asprintf(error, "Failed to acquire swapchain image: %s", string_VkResult(result));
 			return false;
 		}
@@ -311,17 +313,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		ImGui_PushStyleVarImVec2(ImGuiStyleVar_ItemSpacing, itemSpacing);
 		float optionsWindowWidth = 400;
 		ImVec2 imguiWindowPos = {
-			// .x = windowDimensions->activeArea.offset.x + windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
-			// .y = windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight
-			.x = windowDimensions->activeArea.extent.height / 2 - 200,
-			.y = windowDimensions->activeArea.extent.width / 2 - 200
+			.x = windowDimensions->activeArea.offset.x + windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
+			.y = windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight
 		};
 		ImGui_SetNextWindowPos(imguiWindowPos, 0);
 		ImVec2 imguiWindowSize = {
-			// .x = optionsWindowWidth * windowDimensions->scale,
-			// .y = windowDimensions->activeArea.extent.height
-			.x = 400,
-			.y = 400
+			.x = optionsWindowWidth * windowDimensions->scale,
+			.y = windowDimensions->activeArea.extent.height
 		};
 		ImGui_SetNextWindowSize(imguiWindowSize, 0);
 		ImGui_Begin("Debug", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
@@ -360,33 +358,29 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		ImGui_PopStyleVar();
 		ImGui_PopStyleVar();
 		ImGui_PopFont();
-		int show;
-		ImGui_ShowMetricsWindow(&show);
 		ImGui_Render();
 		ImDrawData *drawData = ImGui_GetDrawData();
 		cImGui_ImplVulkan_RenderDrawData(drawData, commandBuffers[currentFrame]);
 #endif /* ENABLE_IMGUI */
 
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
-#if 0
-		if (!windowDimensions->fullscreen) {
-			VkRect2D titlebarScissor = {
-				.offset = {
-					.x = titlebarViewport.x,
-					.y = titlebarViewport.y
-				},
-				.extent = (VkExtent2D) {
-					.width = titlebarViewport.width,
-					.height = titlebarViewport.height
-				}
-			};
-			vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
-			vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
-			if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
-				return false;
-			}
-		}
-#endif
+		// if (!windowDimensions->fullscreen) {
+		// 	VkRect2D titlebarScissor = {
+		// 		.offset = {
+		// 			.x = titlebarViewport.x,
+		// 			.y = titlebarViewport.y
+		// 		},
+		// 		.extent = (VkExtent2D) {
+		// 			.width = titlebarViewport.width,
+		// 			.height = titlebarViewport.height
+		// 		}
+		// 	};
+		// 	vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
+		// 	vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
+		// 	if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
+		// 		return false;
+		// 	}
+		// }
 
 #if DRAW_WINDOW_BORDER
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
@@ -456,7 +450,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			TODO: macOS sends this on every frame
 			if (result == VK_SUBOPTIMAL_KHR) { }
 		*/
+#ifdef __APPLE__
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+#else /* __APPLE__ */
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+#endif /* __APPLE__ */
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
