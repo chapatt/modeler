@@ -41,7 +41,7 @@ static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
 static bool rescaleImGui(Font **fonts, size_t *fontCount, ImFont **currentFont, float scale, const char *resourcePath, char **error);
 #endif /* ENABLE_IMGUI */
 
-bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet *descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, Titlebar titlebar, char **error)
+bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensions, VkDescriptorSet *descriptorSets, VkRenderPass *renderPass, VkPipeline *pipelines, VkPipelineLayout *pipelineLayouts, VkFramebuffer **framebuffers, VkCommandBuffer *commandBuffers, SynchronizationInfo *synchronizationInfo, SwapchainInfo *swapchainInfo, VkQueue graphicsQueue, VkQueue presentationQueue, uint32_t graphicsQueueFamilyIndex, const char *resourcePath, Queue *inputQueue, SwapchainCreateInfo swapchainCreateInfo, ChessBoard chessBoard, ChessEngine chessEngine, Titlebar titlebar, char **error)
 {
 #ifdef ENABLE_IMGUI
 	Font *fonts = NULL;
@@ -95,12 +95,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 
 		VkExtent2D extent = windowDimensions->activeArea.extent;
 
-		if (windowDimensions->orientation == ROTATE_90 || windowDimensions->orientation == ROTATE_270) {
-			uint32_t width = extent.width;
-			extent.width = extent.height;
-			extent.height = width;
-		}
-
 		VkExtent2D contentExtent = {
 			.height = extent.height - windowDimensions->titlebarHeight,
 			.width = extent.width
@@ -119,7 +113,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		VkViewport titlebarViewport = {
 			.x = windowDimensions->activeArea.offset.x,
 			.y = windowDimensions->activeArea.offset.y,
-			.width = extent.width,
+			.width = contentExtent.width,
 			.height = windowDimensions->titlebarHeight,
 			.minDepth = 0.0f,
 			.maxDepth = 1.0f
@@ -207,38 +201,46 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->titlebarHeight;
 			float titlebarHeight = (float) windowDimensions->titlebarHeight / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
-			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
+			chessBoardSetOrientation(chessBoard, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}
 			windowResized = false;
 		}
 
-		if ((result = vkWaitForFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
+		if ((result = vkWaitForFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
 			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
 			return false;
 		}
 
 		uint32_t imageIndex = 0;
-		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+		result = vkAcquireNextImageKHR(device, swapchainInfo->swapchain, UINT64_MAX, synchronizationInfo->imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+#ifdef __APPLE__
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+#else /* __APPLE__ */
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+#endif /* __APPLE__ */
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
 			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->titlebarHeight;
 			float titlebarHeight = (float) windowDimensions->titlebarHeight / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
-			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
+			chessBoardSetOrientation(chessBoard, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}
 			continue;
+#ifdef __APPLE__
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+#else /* __APPLE__ */
+        } else if (result != VK_SUCCESS) {
+#endif /* __APPLE__ */
 			asprintf(error, "Failed to acquire swapchain image: %s", string_VkResult(result));
 			return false;
 		}
 
-		if ((result = vkResetFences(device, 1, synchronizationInfo.frameInFlightFences + currentFrame)) != VK_SUCCESS) {
+		if ((result = vkResetFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame)) != VK_SUCCESS) {
 			asprintf(error, "Failed to reset fences: %s", string_VkResult(result));
 			return false;
 		}
@@ -362,23 +364,23 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #endif /* ENABLE_IMGUI */
 
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
-		if (!windowDimensions->fullscreen) {
-			VkRect2D titlebarScissor = {
-				.offset = {
-					.x = titlebarViewport.x,
-					.y = titlebarViewport.y
-				},
-				.extent = (VkExtent2D) {
-					.width = titlebarViewport.width,
-					.height = titlebarViewport.height
-				}
-			};
-			vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
-			vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
-			if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
-				return false;
-			}
-		}
+		// if (!windowDimensions->fullscreen) {
+		// 	VkRect2D titlebarScissor = {
+		// 		.offset = {
+		// 			.x = titlebarViewport.x,
+		// 			.y = titlebarViewport.y
+		// 		},
+		// 		.extent = (VkExtent2D) {
+		// 			.width = titlebarViewport.width,
+		// 			.height = titlebarViewport.height
+		// 		}
+		// 	};
+		// 	vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
+		// 	vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
+		// 	if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
+		// 		return false;
+		// 	}
+		// }
 
 #if DRAW_WINDOW_BORDER
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
@@ -419,15 +421,15 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 			.pNext = NULL,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = synchronizationInfo.imageAvailableSemaphores + currentFrame,
+			.pWaitSemaphores = synchronizationInfo->imageAvailableSemaphores + currentFrame,
 			.pWaitDstStageMask = waitStages,
 			.signalSemaphoreCount = 1,
-			.pSignalSemaphores = synchronizationInfo.renderFinishedSemaphores + imageIndex,
+			.pSignalSemaphores = synchronizationInfo->renderFinishedSemaphores + imageIndex,
 			.commandBufferCount = 1,
 			.pCommandBuffers = commandBuffers + currentFrame
 		};
 
-		if ((result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, synchronizationInfo.frameInFlightFences[currentFrame])) != VK_SUCCESS) {
+		if ((result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, synchronizationInfo->frameInFlightFences[currentFrame])) != VK_SUCCESS) {
 			asprintf(error, "Failed to submit render queue: %s", string_VkResult(result));
 			return false;
 		}
@@ -436,7 +438,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
 			.pNext = NULL,
 			.waitSemaphoreCount = 1,
-			.pWaitSemaphores = synchronizationInfo.renderFinishedSemaphores + imageIndex,
+			.pWaitSemaphores = synchronizationInfo->renderFinishedSemaphores + imageIndex,
 			.swapchainCount = 1,
 			.pSwapchains = &swapchainInfo->swapchain,
 			.pImageIndices = &imageIndex,
@@ -448,14 +450,18 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			TODO: macOS sends this on every frame
 			if (result == VK_SUBOPTIMAL_KHR) { }
 		*/
+#ifdef __APPLE__
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+#else /* __APPLE__ */
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+#endif /* __APPLE__ */
 			if (!recreateSwapchain(swapchainCreateInfo, error)) {
 				return false;
 			}
 			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->titlebarHeight;
 			float titlebarHeight = (float) windowDimensions->titlebarHeight / windowDimensions->activeArea.extent.height;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
-			chessBoardSetDimensions(chessBoard, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions->orientation));
+			chessBoardSetOrientation(chessBoard, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}

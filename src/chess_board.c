@@ -112,9 +112,6 @@ struct chess_board_t {
 	uint32_t subpass;
 	VkSampleCountFlagBits sampleCount;
 	const char *resourcePath;
-	float width;
-	float originX;
-	float originY;
 	Orientation orientation;
 	bool enable3d;
 	Projection projection;
@@ -187,7 +184,7 @@ static void parseTinyobjIntoBuffers(tinyobj_attrib_t attrib, size_t vertexOffset
 static void basicSetMove(ChessBoard self, MoveBoard8x8 move);
 static void basicSetBoard(ChessBoard self, Board8x8 board);
 
-bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, Projection projection, char **error)
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, Orientation orientation, bool enable3d, Projection projection, char **error)
 {
 	*chessBoard = malloc(sizeof(**chessBoard));
 
@@ -202,9 +199,6 @@ bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice devic
 	self->subpass = subpass;
 	self->sampleCount = sampleCount;
 	self->resourcePath = resourcePath;
-	self->width = width;
-	self->originX = originX;
-	self->originY = originY;
 	self->orientation = orientation;
 	self->enable3d = enable3d;
 	self->projection = projection;
@@ -1187,11 +1181,8 @@ void destroyChessBoard(ChessBoard self)
 	free(self);
 }
 
-void chessBoardSetDimensions(ChessBoard self, float width, float originX, float originY, Orientation orientation)
+void chessBoardSetOrientation(ChessBoard self, Orientation orientation)
 {
-	self->width = width;
-	self->originX = originX;
-	self->originY = originY;
 	self->orientation = orientation;
 
 	updateUniformBuffers(self);

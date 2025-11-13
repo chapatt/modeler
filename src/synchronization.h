@@ -17,6 +17,6 @@ typedef struct synchronization_info_t {
 
 bool createSynchronization(VkDevice device, uint32_t swapchainImageCount, SynchronizationInfo *synchronizationInfo, char **error);
 
-void destroySynchronization(VkDevice device, uint32_t swapchainImageCount, SynchronizationInfo synchronizationInfo);
+void destroySynchronization(VkDevice device, uint32_t swapchainImageCount, SynchronizationInfo *synchronizationInfo);
 
 #endif /* MODELER_SYNCHRONIZATION_H */

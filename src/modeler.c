@@ -65,11 +65,12 @@ struct swapchain_create_info_t {
 	VmaAllocation *depthImageAllocation;
 	VkFormat *depthImageFormat;
 	VkImageView *depthImageView;
+	SynchronizationInfo *synchronizationInfo;
 };
 
-static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard, Titlebar titlebar, VkImage depthImage, VmaAllocation depthImageAllocation, VkImageView depthImageView, VkImage multisampleImage, VkImageView multisampleImageView, VmaAllocation multisampleImageAllocation, SwapchainCreateInfo swapchainCreateInfo, VkDescriptorPool imDescriptorPool);
+static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard, Titlebar titlebar, VkImage depthImage, VmaAllocation depthImageAllocation, VkImageView depthImageView, VkImage multisampleImage, VkImageView multisampleImageView, VmaAllocation multisampleImageAllocation, SwapchainCreateInfo swapchainCreateInfo, VkDescriptorPool imDescriptorPool);
 #ifdef ENABLE_IMGUI
-void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceCharacteristics physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkDescriptorPool *descriptorPool, char **error);
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, WindowDimensions *windowDimensions, PhysicalDeviceCharacteristics physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkDescriptorPool *descriptorPool, char **error);
 static void imVkCheck(VkResult result);
 #endif /* ENABLE_IMGUI */
 static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
@@ -114,8 +115,13 @@ void *threadProc(void *arg)
 	}
 
 #ifdef ANDROID
+	enum VkSurfaceTransformFlagBitsKHR transform = surfaceCharacteristics.capabilities.currentTransform;
 	uint32_t width = surfaceCharacteristics.capabilities.currentExtent.width;
 	uint32_t height = surfaceCharacteristics.capabilities.currentExtent.height;
+	if (transform & (VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR | VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR)) {
+		width = surfaceCharacteristics.capabilities.currentExtent.height;
+		height = surfaceCharacteristics.capabilities.currentExtent.width;
+	}
 	windowDimensions.surfaceArea.width = width;
 	windowDimensions.surfaceArea.height = height;
 	windowDimensions.activeArea.extent.width = width;
@@ -162,6 +168,7 @@ void *threadProc(void *arg)
 	VmaAllocation depthImageAllocation;
 	VkFormat depthImageFormat;
 	VkImageView depthImageView;
+	SynchronizationInfo synchronizationInfo;
 
 	struct swapchain_create_info_t swapchainCreateInfo = {
 		.device = device,
@@ -184,6 +191,7 @@ void *threadProc(void *arg)
 		.multisampleImage = &multisampleImage,
 		.multisampleImageView = &multisampleImageView,
 		.multisampleImageAllocation = &multisampleImageAllocation,
+		.synchronizationInfo = &synchronizationInfo,
 #ifdef DRAW_WINDOW_BORDER
 		.descriptorPool = &descriptorPool,
 		.imageDescriptorSetLayouts = &imageDescriptorSetLayout,
@@ -204,16 +212,11 @@ void *threadProc(void *arg)
 		sendThreadFailureSignal(platformWindow);
 	}
 
-	SynchronizationInfo synchronizationInfo;
-	if (!createSynchronization(device, swapchainCreateInfo.swapchainInfo->imageCount, &synchronizationInfo, error)) {
-		sendThreadFailureSignal(platformWindow);
-	}
-
 	ChessBoard chessBoard;
 	ChessEngine chessEngine;
 	createChessEngine(&chessEngine, &chessBoard);
 
-	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, 1.0f, -0.5f, -0.5f, negateRotation(windowDimensions.orientation), false, PERSPECTIVE, error)) {
+	if (!createChessBoard(&chessBoard, chessEngine, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, 0, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, negateRotation(windowDimensions.orientation), false, PERSPECTIVE, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -307,7 +310,7 @@ void *threadProc(void *arg)
 	VkDescriptorPool imDescriptorPool;
 #ifdef ENABLE_IMGUI
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
-	initializeImgui(platformWindow, &swapchainInfo, physicalDeviceCharacteristics, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, &imDescriptorPool, error);
+	initializeImgui(platformWindow, &swapchainInfo, &windowDimensions, physicalDeviceCharacteristics, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, &imDescriptorPool, error);
 #endif /* ENABLE_IMGUI */
 
 #if DRAW_WINDOW_BORDER
@@ -322,7 +325,7 @@ void *threadProc(void *arg)
 	VkDescriptorSet *drawDescriptorSets = NULL;
 #endif /* DRAW_WINDOW_BORDER */
 
-	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, commandBuffers, synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, &swapchainCreateInfo, chessBoard, chessEngine, titlebar, error)) {
+	if (!draw(device, platformWindow, &windowDimensions, drawDescriptorSets, &renderPass, pipelines, pipelineLayouts, &framebuffers, commandBuffers, &synchronizationInfo, &swapchainInfo, queueInfo.graphicsQueue, queueInfo.presentationQueue, queueInfo.graphicsQueueFamilyIndex, resourcePath, inputQueue, &swapchainCreateInfo, chessBoard, chessEngine, titlebar, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -338,7 +341,7 @@ void *threadProc(void *arg)
 	VkImageView *offscreenImageViews = NULL;
 #endif /* DRAW_WINDOW_BORDER */
 
-	cleanupVulkan(instance, debugCallback, surface, &physicalDeviceCharacteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayouts, pipelines, pipelineCount, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, MAX_FRAMES_IN_FLIGHT, synchronizationInfo, descriptorPool, &imageDescriptorSet, &imageDescriptorSetLayout, chessBoard, titlebar, depthImage, depthImageAllocation, depthImageView, multisampleImage, multisampleImageView, multisampleImageAllocation, &swapchainCreateInfo, imDescriptorPool);
+	cleanupVulkan(instance, debugCallback, surface, &physicalDeviceCharacteristics, &surfaceCharacteristics, device, allocator, swapchainInfo.swapchain, offscreenImages, offscreenImageAllocations, offscreenImageCount, offscreenImageViews, imageViews, swapchainInfo.imageCount, renderPass, pipelineLayouts, pipelines, pipelineCount, framebuffers, swapchainInfo.imageCount, commandPool, commandBuffers, MAX_FRAMES_IN_FLIGHT, descriptorPool, &imageDescriptorSet, &imageDescriptorSetLayout, chessBoard, titlebar, depthImage, depthImageAllocation, depthImageView, multisampleImage, multisampleImageView, multisampleImageAllocation, &swapchainCreateInfo, imDescriptorPool);
 
 	return NULL;
 }
@@ -351,7 +354,7 @@ static void imVkCheck(VkResult result)
 	}
 }
 
-void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceCharacteristics physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkDescriptorPool *descriptorPool, char **error)
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, WindowDimensions *windowDimensions, PhysicalDeviceCharacteristics physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkDescriptorPool *descriptorPool, char **error)
 {
 	VkDescriptorPoolSize pool_sizes[] = {
 		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}
@@ -373,7 +376,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 	ImGui_SetCurrentContext(imguiContext);
 	ImGuiIO *io = ImGui_GetIO();
 	io->IniFilename = NULL;
-	ImGui_ImplModeler_Init(swapchainInfo);
+	ImGui_ImplModeler_Init(windowDimensions);
 	ImGui_StyleColorsDark(NULL);
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo = {
 		.Instance = instance,
@@ -389,7 +392,8 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		.CheckVkResultFn = imVkCheck,
 		.PipelineInfoMain.RenderPass = renderPass,
 		.PipelineInfoMain.Subpass = 1,
-		.PipelineInfoMain.MSAASamples = getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties)
+		.PipelineInfoMain.MSAASamples = getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties),
+		.WindowDimensions = windowDimensions
 	};
 	cImGui_ImplVulkan_Init(&imVulkanInitInfo);
 }
@@ -412,6 +416,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 
 void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 {
+	destroySynchronization(swapchainCreateInfo->device, swapchainCreateInfo->swapchainInfo->imageCount, swapchainCreateInfo->synchronizationInfo);
 	destroyFramebuffers(swapchainCreateInfo->device, *swapchainCreateInfo->framebuffers, swapchainCreateInfo->swapchainInfo->imageCount);
 	destroyRenderPass(swapchainCreateInfo->device, *swapchainCreateInfo->renderPass);
 #ifdef DRAW_WINDOW_BORDER
@@ -444,10 +449,9 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 	VkExtent2D requestedExtent = swapchainCreateInfo->windowDimensions->surfaceArea;
 
 	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
-	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR || transform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR) {
-		uint32_t width = requestedExtent.width;
-		requestedExtent.width = requestedExtent.height;
-		requestedExtent.height = width;
+
+	if (!createSwapchain(swapchainCreateInfo->device, swapchainCreateInfo->surface, *swapchainCreateInfo->surfaceCharacteristics, swapchainCreateInfo->queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo->queueInfo.presentationQueueFamilyIndex, requestedExtent, swapchainCreateInfo->swapchainInfo->swapchain, swapchainCreateInfo->swapchainInfo, error)) {
+		return false;
 	}
 
 	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR) {
@@ -460,21 +464,7 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		swapchainCreateInfo->windowDimensions->orientation = ROTATE_0;
 	}
 
-	if (!createSwapchain(swapchainCreateInfo->device, swapchainCreateInfo->surface, *swapchainCreateInfo->surfaceCharacteristics, swapchainCreateInfo->queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo->queueInfo.presentationQueueFamilyIndex, requestedExtent, swapchainCreateInfo->swapchainInfo->swapchain, swapchainCreateInfo->swapchainInfo, error)) {
-		return false;
-	}
-
-	VkExtent2D savedExtent = swapchainCreateInfo->swapchainInfo->extent;
-
-	if (swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
-		swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR
-	) {
-		uint32_t width = savedExtent.width;
-		savedExtent.width = savedExtent.height;
-		savedExtent.height = width;
-	}
-
-	updateWindowDimensionsExtent(swapchainCreateInfo->windowDimensions, savedExtent);
+	updateWindowDimensionsExtent(swapchainCreateInfo->windowDimensions, requestedExtent);
 
 	*swapchainCreateInfo->imageViews = malloc(sizeof(*swapchainCreateInfo->imageViews) * swapchainCreateInfo->swapchainInfo->imageCount);
 	if (!createImageViews(swapchainCreateInfo->device, swapchainCreateInfo->swapchainInfo->images, swapchainCreateInfo->swapchainInfo->imageCount, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, *swapchainCreateInfo->imageViews, error)) {
@@ -551,6 +541,10 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		}
 	}
 
+	if (!createSynchronization(swapchainCreateInfo->device, swapchainCreateInfo->swapchainInfo->imageCount, swapchainCreateInfo->synchronizationInfo, error)) {
+		return false;
+	}
+
 	return true;
 }
 
@@ -586,7 +580,7 @@ static void destroyDepthBuffer(VkDevice device, VmaAllocator allocator, VkImage 
 	destroyImage(allocator, image, imageAllocation);
 }
 
-static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, SynchronizationInfo synchronizationInfo, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard, Titlebar titlebar, VkImage depthImage, VmaAllocation depthImageAllocation, VkImageView depthImageView, VkImage multisampleImage, VkImageView multisampleImageView, VmaAllocation multisampleImageAllocation, SwapchainCreateInfo swapchainCreateInfo, VkDescriptorPool imDescriptorPool)
+static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard, Titlebar titlebar, VkImage depthImage, VmaAllocation depthImageAllocation, VkImageView depthImageView, VkImage multisampleImage, VkImageView multisampleImageView, VmaAllocation multisampleImageAllocation, SwapchainCreateInfo swapchainCreateInfo, VkDescriptorPool imDescriptorPool)
 {
 #ifdef ENABLE_IMGUI
 	cImGui_ImplVulkan_Shutdown();
@@ -594,7 +588,6 @@ static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCal
 #endif /* ENABLE_IMGUI */
 	destroyChessBoard(chessBoard);
 	destroyTitlebar(titlebar);
-	destroySynchronization(device, swapchainCreateInfo->swapchainInfo->imageCount, synchronizationInfo);
 	freeCommandBuffers(device, commandPool, commandBuffers, commandBufferCount);
 	destroyCommandPool(device, commandPool);
 	for (size_t i = 0; i < pipelineCount; ++i) {

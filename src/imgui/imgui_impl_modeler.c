@@ -4,12 +4,12 @@
 
 #include "imgui_impl_modeler.h"
 
-CIMGUI_IMPL_API bool ImGui_ImplModeler_Init(SwapchainInfo *swapchainInfo)
+CIMGUI_IMPL_API bool ImGui_ImplModeler_Init(WindowDimensions *windowDimensions)
 {
 	ImGuiIO *io = ImGui_GetIO();
 	ImGui_ImplModeler_Data* bd = (ImGui_ImplModeler_Data *) ImGui_MemAlloc(sizeof(ImGui_ImplModeler_Data));
 	bd->time = 0;
-	bd->swapchainInfo = swapchainInfo;
+	bd->windowDimensions = windowDimensions;
 	io->BackendPlatformUserData = bd;
 
 	return true;
@@ -20,15 +20,19 @@ CIMGUI_IMPL_API void ImGui_ImplModeler_NewFrame(void)
 	struct timespec spec;
 	ImGuiIO *io = ImGui_GetIO();
 	ImGui_ImplModeler_Data *bd = ImGui_GetCurrentContext() ? (ImGui_ImplModeler_Data *) io->BackendPlatformUserData : NULL;
-	const float scaleX = 1;
-	const float scaleY = 1;
 	ImVec2 size = {
-		bd->swapchainInfo->extent.width,
-		bd->swapchainInfo->extent.height
+		.x = bd->windowDimensions->surfaceArea.width,
+		.y = bd->windowDimensions->surfaceArea.height
 	};
+	if (bd->windowDimensions->orientation == ROTATE_90 || bd->windowDimensions->orientation == ROTATE_270) {
+		size = (ImVec2) {
+			.x = bd->windowDimensions->surfaceArea.height,
+			.y = bd->windowDimensions->surfaceArea.width
+		};
+	}
 	ImVec2 scale = {
-		scaleX,
-		scaleY
+		.x = 1.0f,
+		.y = 1.0f
 	};
 	io->DisplaySize = size;
 	io->DisplayFramebufferScale = scale;
@@ -42,12 +46,27 @@ CIMGUI_IMPL_API void ImGui_ImplModeler_NewFrame(void)
 CIMGUI_IMPL_API void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
 {
 	ImGuiIO *io = ImGui_GetIO();
+	ImGui_ImplModeler_Data *bd = ImGui_GetCurrentContext() ? (ImGui_ImplModeler_Data *) io->BackendPlatformUserData : NULL;
 	PointerPosition *data = inputEvent->data;
 
 	switch (inputEvent->type) {
 	case POINTER_MOVE:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
-		ImGuiIO_AddMousePosEvent(io, data->x, data->y);
+                ImGuiIO_AddMousePosEvent(io, data->x, data->y);
+                // switch (bd->windowDimensions->orientation) {
+                // case ROTATE_0:
+                //     ImGuiIO_AddMousePosEvent(io, data->x, data->y);
+                //     break;
+                // case ROTATE_90:
+                //      ImGuiIO_AddMousePosEvent(io, io->DisplaySize.y - data->y, data->x);
+                //     break;
+                // case ROTATE_270:
+                //      ImGuiIO_AddMousePosEvent(io, data->y, io->DisplaySize.x - data->x);
+                //     break;
+                // case ROTATE_180:
+                //     ImGuiIO_AddMousePosEvent(io, io->DisplaySize.x - data->x, io->DisplaySize.y - data->y);
+                //     break;
+                // }
 		break;
 	case BUTTON_DOWN:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);

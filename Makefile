@@ -8,7 +8,7 @@ ifeq ($(OS),Windows_NT)
 	RM=/msys64/usr/bin/rm
 	CP=/msys64/usr/bin/cp
 	SED=sed
-	ANDROID_NDK=/Android/Sdk/ndk/28.0.12674087
+	ANDROID_NDK=/Users/chapa/AppData/Local/Android/Sdk/ndk/28.0.12674087
 	ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/windows-x86_64
 	VULKAN_SDK=/VulkanSDK/1.4.328.1
 	GLSLC=$(VULKAN_SDK)/Bin/glslc
@@ -78,11 +78,11 @@ ifdef ENABLE_VSYNC
 	CFLAGS+=-DENABLE_VSYNC
 endif
 
-SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv phong.vert.spv phong.frag.spv titlebar.vert.spv titlebar.frag.spv
+SPIRV_SHADERS=window_border.vert.spv window_border.frag.spv chess_board.vert.spv chess_board.frag.spv phong.vert.spv phong.frag.spv titlebar.vert.spv titlebar.frag.spv imgui.vert.spv
 PNG_TEXTURES=pieces.png titlebar.png
 OBJ_MESHES=teapot.obj pawn.obj knight.obj bishop.obj rook.obj queen.obj king.obj
 TTF_FONTS=roboto.ttf
-HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h shader_phong.vert.h shader_phong.frag.h shader_titlebar.vert.h shader_titlebar.frag.h
+HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_chess_board.vert.h shader_chess_board.frag.h shader_phong.vert.h shader_phong.frag.h shader_titlebar.vert.h shader_titlebar.frag.h shader_imgui.vert.h
 HEADER_TEXTURES=texture_pieces.h texture_titlebar.h
 HEADER_MESHES=mesh_pawn.h mesh_knight.h mesh_bishop.h mesh_rook.h mesh_queen.h mesh_king.h
 HEADER_FONTS=font_roboto.h
@@ -204,7 +204,7 @@ vma_implementation.o: src/vk_mem_alloc.h
 tinyobj_implementation.o: src/tinyobj_loader_c.h
 	$(CC) $(CFLAGS) -c src/tinyobj_implementation.c
 
-.PHONY: clean clean-app clean-vendor
+.PHONY: clean clean-app clean-vendor clean-imgui-shader
 clean: clean-app clean-vendor
 
 clean-app:
@@ -218,3 +218,6 @@ clean-vendor:
 	$(RM) -rf $(VENDOR_LIBS) \
 		xdg-shell-protocol.o xdg-shell-client-protocol.h  xdg-shell-protocol.c \
 		imgui.a dcimgui.o dcimgui_impl_vulkan.o imgui.o imgui_demo.o imgui_draw.o imgui_impl_modeler.o imgui_impl_vulkan.o imgui_tables.o imgui_widgets.o
+
+clean-imgui-shader:
+	$(RM) -rf modeler_android.a imgui.o imgui.a imgui_impl_vulkan.o shader_imgui.vert.h imgui.vert.spv

@@ -65,6 +65,8 @@
 // Backend uses a small number of descriptors per font atlas + as many as additional calls done to ImGui_ImplVulkan_AddTexture().
 #define IMGUI_IMPL_VULKAN_MINIMUM_IMAGE_SAMPLER_POOL_SIZE   (8)     // Minimum per atlas
 
+#include "../window.h"
+
 // Specify settings to create pipeline and swapchain
 struct ImGui_ImplVulkan_PipelineInfo
 {
@@ -120,6 +122,8 @@ struct ImGui_ImplVulkan_InitInfo
     // - Shader inputs/outputs need to match ours. Code/data pointed to by the structure needs to survive for whole during of backend usage.
     VkShaderModuleCreateInfo        CustomShaderVertCreateInfo;
     VkShaderModuleCreateInfo        CustomShaderFragCreateInfo;
+
+    WindowDimensions *WindowDimensions;
 };
 
 // Follow "Getting Started" link and check examples/ folder to learn about using backends!
