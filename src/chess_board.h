@@ -18,12 +18,12 @@ typedef enum projection_t {
 	PERSPECTIVE
 } Projection;
 
-bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float width, float originX, float originY, Orientation orientation, bool enable3d, Projection projection, char **error);
+bool createChessBoard(ChessBoard *chessBoard, ChessEngine engine, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, Orientation orientation, bool enable3d, Projection projection, char **error);
 bool drawChessBoard(ChessBoard self, VkCommandBuffer commandBuffer, char **error);
 void destroyChessBoard(ChessBoard self);
 bool updateChessBoard(ChessBoard self, char **error);
 void chessBoardHandleInputEvent(void *chessBoard, InputEvent *inputEvent);
-void chessBoardSetDimensions(ChessBoard self, float width, float originX, float originY, Orientation orientation);
+void chessBoardSetOrientation(ChessBoard self, Orientation orientation);
 void chessBoardSetBoard(ChessBoard self, Board8x8 board);
 void chessBoardSetMove(ChessBoard self, MoveBoard8x8 move);
 void chessBoardSetSelected(ChessBoard self, ChessSquare selected);
