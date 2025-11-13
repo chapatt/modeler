@@ -666,43 +666,35 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
-                // // Apply scissor/clipping rectangle
-                // VkRect2D scissor;
-                // ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
-                // ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
-                // switch (v->WindowDimensions->orientation) {
-                // case ROTATE_0:
-                //     scissor.offset.x = (int32_t)(clip_min.x);
-                //     scissor.offset.y = (int32_t)(clip_min.y);
-                //     scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
-                //     scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
-                //     break;
-                // case ROTATE_90:
-                //     scissor.offset.x = (int32_t)(clip_min.y);
-                //     scissor.offset.y = (int32_t)(clip_min.x);
-                //     scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
-                //     scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
-                //     break;
-                // case ROTATE_270:
-                //     scissor.offset.x = (int32_t)(clip_max.y);
-                //     scissor.offset.y = (int32_t)(clip_max.x);
-                //     scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
-                //     scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
-                //     break;
-                // case ROTATE_180:
-                //     scissor.offset.x = (int32_t)(clip_max.x);
-                //     scissor.offset.y = (int32_t)(clip_max.y);
-                //     scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
-                //     scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
-                //     break;
-                // }
-                // vkCmdSetScissor(command_buffer, 0, 1, &scissor);
-                VkRect2D scissor = { { 0, 0 }, { (uint32_t)fb_width, (uint32_t)fb_height } };
+                // Apply scissor/clipping rectangle
+                VkRect2D scissor;
                 ImGui_ImplVulkan_Data* bd = ImGui_ImplVulkan_GetBackendData();
                 ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
-                if (v->WindowDimensions->orientation == ROTATE_90 || v->WindowDimensions->orientation == ROTATE_270) {
-                    scissor.extent.width = (uint32_t) fb_height;
-                    scissor.extent.height = (uint32_t) fb_width;
+                switch (v->WindowDimensions->orientation) {
+                case ROTATE_0:
+                    scissor.offset.x = (int32_t)(clip_min.x);
+                    scissor.offset.y = (int32_t)(clip_min.y);
+                    scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
+                    scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
+                    break;
+                case ROTATE_90:
+                    scissor.offset.x = (int32_t)(fb_height - clip_max.y);
+                    scissor.offset.y = (int32_t)(clip_min.x);
+                    scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
+                    scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
+                    break;
+                case ROTATE_180:
+                    scissor.offset.x = (int32_t)(fb_width - clip_max.x);
+                    scissor.offset.y = (int32_t)(fb_height - clip_max.y);
+                    scissor.extent.width = (uint32_t)(clip_max.x - clip_min.x);
+                    scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
+                    break;
+                case ROTATE_270:
+                    scissor.offset.x = (int32_t)(clip_min.y);
+                    scissor.offset.y = (int32_t)(fb_height - clip_max.x);
+                    scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
+                    scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
+                    break;
                 }
                 vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
