@@ -70,7 +70,7 @@ struct swapchain_create_info_t {
 
 static void cleanupVulkan(VkInstance instance, VkDebugReportCallbackEXT debugCallback, VkSurfaceKHR surface, PhysicalDeviceCharacteristics *physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics *surfaceCharacteristics, VkDevice device, VmaAllocator allocator, VkSwapchainKHR swapchain, VkImage *offscreenImages, VmaAllocation *offscreenImageAllocations, size_t offscreenImageCount, VkImageView *offscreenImageViews, VkImageView *imageViews, uint32_t imageViewCount, VkRenderPass renderPass, VkPipelineLayout *pipelineLayouts, VkPipeline *pipelines, size_t pipelineCount, VkFramebuffer *framebuffers, uint32_t framebufferCount, VkCommandPool commandPool, VkCommandBuffer *commandBuffers, uint32_t commandBufferCount, VkDescriptorPool descriptorPool, VkDescriptorSet *imageDescriptorSets, VkDescriptorSetLayout *imageDescriptorSetLayouts, ChessBoard chessBoard, Titlebar titlebar, VkImage depthImage, VmaAllocation depthImageAllocation, VkImageView depthImageView, VkImage multisampleImage, VkImageView multisampleImageView, VmaAllocation multisampleImageAllocation, SwapchainCreateInfo swapchainCreateInfo, VkDescriptorPool imDescriptorPool);
 #ifdef ENABLE_IMGUI
-void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceCharacteristics physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkDescriptorPool *descriptorPool, char **error);
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, WindowDimensions *windowDimensions, PhysicalDeviceCharacteristics physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkDescriptorPool *descriptorPool, char **error);
 static void imVkCheck(VkResult result);
 #endif /* ENABLE_IMGUI */
 static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
@@ -305,7 +305,7 @@ void *threadProc(void *arg)
 	VkDescriptorPool imDescriptorPool;
 #ifdef ENABLE_IMGUI
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo;
-	initializeImgui(platformWindow, &swapchainInfo, physicalDeviceCharacteristics, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, &imDescriptorPool, error);
+	initializeImgui(platformWindow, &swapchainInfo, &windowDimensions, physicalDeviceCharacteristics, surfaceCharacteristics, queueInfo, instance, physicalDevice, device, renderPass, &imDescriptorPool, error);
 #endif /* ENABLE_IMGUI */
 
 #if DRAW_WINDOW_BORDER
@@ -349,7 +349,7 @@ static void imVkCheck(VkResult result)
 	}
 }
 
-void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, PhysicalDeviceCharacteristics physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkDescriptorPool *descriptorPool, char **error)
+void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, WindowDimensions *windowDimensions, PhysicalDeviceCharacteristics physicalDeviceCharacteristics, PhysicalDeviceSurfaceCharacteristics surfaceCharacteristics, QueueInfo queueInfo, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkRenderPass renderPass, VkDescriptorPool *descriptorPool, char **error)
 {
 	VkDescriptorPoolSize pool_sizes[] = {
 		{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}
@@ -371,7 +371,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 	ImGui_SetCurrentContext(imguiContext);
 	ImGuiIO *io = ImGui_GetIO();
 	io->IniFilename = NULL;
-	ImGui_ImplModeler_Init(swapchainInfo);
+	ImGui_ImplModeler_Init(windowDimensions);
 	ImGui_StyleColorsDark(NULL);
 	ImGui_ImplVulkan_InitInfo imVulkanInitInfo = {
 		.Instance = instance,
@@ -387,7 +387,8 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, Physica
 		.CheckVkResultFn = imVkCheck,
 		.PipelineInfoMain.RenderPass = renderPass,
 		.PipelineInfoMain.Subpass = 1,
-		.PipelineInfoMain.MSAASamples = getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties)
+		.PipelineInfoMain.MSAASamples = getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties),
+		.WindowDimensions = windowDimensions
 	};
 	cImGui_ImplVulkan_Init(&imVulkanInitInfo);
 }
