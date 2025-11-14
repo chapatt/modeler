@@ -45,7 +45,7 @@ pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, Queue *inputQueu
 		},
 		.cornerRadius = 0,
 		.scale = 1.0f,
-		.titlebarHeight = 0,
+		.titlebarHeight = 100,
 		.fullscreen = false,
 		.orientation = ROTATE_0
 	};

@@ -312,15 +312,51 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		};
 		ImGui_PushStyleVarImVec2(ImGuiStyleVar_ItemSpacing, itemSpacing);
 		float optionsWindowWidth = 400;
-		ImVec2 imguiWindowPos = {
-			.x = windowDimensions->activeArea.offset.x + windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
-			.y = windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight
-		};
+		ImVec2 imguiWindowPos;
+		ImVec2 imguiWindowSize;
+		switch (windowDimensions->orientation) {
+		case ROTATE_0:
+			imguiWindowPos = (ImVec2) {
+				.x = windowDimensions->activeArea.offset.x + windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
+				.y = windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight
+			};
+			imguiWindowSize = (ImVec2) {
+				.x = optionsWindowWidth * windowDimensions->scale,
+				.y = windowDimensions->activeArea.extent.height - windowDimensions->titlebarHeight
+			};
+			break;
+		case ROTATE_90:
+			imguiWindowPos = (ImVec2) {
+				.x = windowDimensions->activeArea.offset.y + windowDimensions->activeArea.extent.height - optionsWindowWidth * windowDimensions->scale,
+				.y = (windowDimensions->surfaceArea.width - windowDimensions->activeArea.extent.width) - windowDimensions->activeArea.offset.x
+			};
+			imguiWindowSize = (ImVec2) {
+				.x = optionsWindowWidth * windowDimensions->scale,
+				.y = windowDimensions->activeArea.extent.width
+			};
+			break;
+		case ROTATE_180:
+			imguiWindowPos = (ImVec2) {
+				.x = windowDimensions->activeArea.offset.x + windowDimensions->activeArea.extent.width - optionsWindowWidth * windowDimensions->scale,
+				.y = windowDimensions->surfaceArea.height - (windowDimensions->activeArea.extent.height + windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight)
+			};
+			imguiWindowSize = (ImVec2) {
+				.x = optionsWindowWidth * windowDimensions->scale,
+				.y = windowDimensions->activeArea.extent.height - windowDimensions->titlebarHeight
+			};
+			break;
+		case ROTATE_270:
+			imguiWindowPos = (ImVec2) {
+				.x = windowDimensions->surfaceArea.height - (windowDimensions->activeArea.extent.height + windowDimensions->activeArea.offset.y),
+				.y = windowDimensions->activeArea.offset.x
+			};
+			imguiWindowSize = (ImVec2) {
+				.x = optionsWindowWidth * windowDimensions->scale,
+				.y = windowDimensions->activeArea.extent.width
+			};
+			break;
+		}
 		ImGui_SetNextWindowPos(imguiWindowPos, 0);
-		ImVec2 imguiWindowSize = {
-			.x = optionsWindowWidth * windowDimensions->scale,
-			.y = windowDimensions->activeArea.extent.height
-		};
 		ImGui_SetNextWindowSize(imguiWindowSize, 0);
 		ImGui_Begin("Debug", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
 		ImGui_Text("fps: %ld", 1000000000 / elapsed);
@@ -364,23 +400,23 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #endif /* ENABLE_IMGUI */
 
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
-		// if (!windowDimensions->fullscreen) {
-		// 	VkRect2D titlebarScissor = {
-		// 		.offset = {
-		// 			.x = titlebarViewport.x,
-		// 			.y = titlebarViewport.y
-		// 		},
-		// 		.extent = (VkExtent2D) {
-		// 			.width = titlebarViewport.width,
-		// 			.height = titlebarViewport.height
-		// 		}
-		// 	};
-		// 	vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
-		// 	vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
-		// 	if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
-		// 		return false;
-		// 	}
-		// }
+		if (!windowDimensions->fullscreen) {
+			VkRect2D titlebarScissor = {
+				.offset = {
+					.x = titlebarViewport.x,
+					.y = titlebarViewport.y
+				},
+				.extent = (VkExtent2D) {
+					.width = titlebarViewport.width,
+					.height = titlebarViewport.height
+				}
+			};
+			vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &titlebarViewport);
+			vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &titlebarScissor);
+			if (!drawTitlebar(titlebar, commandBuffers[currentFrame], error)) {
+				return false;
+			}
+		}
 
 #if DRAW_WINDOW_BORDER
 		vkCmdNextSubpass(commandBuffers[currentFrame], VK_SUBPASS_CONTENTS_INLINE);
