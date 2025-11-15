@@ -72,9 +72,10 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	}
 #endif /* ENABLE_IMGUI */
 
+    bool windowResized = false;
+
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
-		bool windowResized = false;
 
 		VkRenderPassBeginInfo renderPassBeginInfos[MAX_FRAMES_IN_FLIGHT];
 		VkCommandBufferBeginInfo commandBufferBeginInfos[MAX_FRAMES_IN_FLIGHT];
@@ -180,9 +181,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				}
 #endif /* ENABLE_IMGUI */
 				*windowDimensions = resizeInfo->windowDimensions;
-				if (swapchainInfo->extent.width != windowDimensions->surfaceArea.width || swapchainInfo->extent.height != windowDimensions->surfaceArea.height) {
-					windowResized = true;
-				}
+				windowResized = true;
 				ackResize(resizeInfo);
 				free(resizeInfo->platformWindow);
 				free(data);
@@ -220,16 +219,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #else /* __APPLE__ */
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 #endif /* __APPLE__ */
-			if (!recreateSwapchain(swapchainCreateInfo, error)) {
-				return false;
-			}
-			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->titlebarHeight;
-			float titlebarHeight = (float) windowDimensions->titlebarHeight / windowDimensions->activeArea.extent.height;
-			titlebarSetAspectRatio(titlebar, aspectRatio);
-			chessBoardSetOrientation(chessBoard, negateRotation(windowDimensions->orientation));
-			if (!updateChessBoard(chessBoard, error)) {
-				return false;
-			}
+			windowResized = true;
 			continue;
 #ifdef __APPLE__
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -491,16 +481,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #else /* __APPLE__ */
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 #endif /* __APPLE__ */
-			if (!recreateSwapchain(swapchainCreateInfo, error)) {
-				return false;
-			}
-			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->titlebarHeight;
-			float titlebarHeight = (float) windowDimensions->titlebarHeight / windowDimensions->activeArea.extent.height;
-			titlebarSetAspectRatio(titlebar, aspectRatio);
-			chessBoardSetOrientation(chessBoard, negateRotation(windowDimensions->orientation));
-			if (!updateChessBoard(chessBoard, error)) {
-				return false;
-			}
+			windowResized = true;
 			continue;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			asprintf(error, "Failed to present swapchain image: %s", string_VkResult(result));
