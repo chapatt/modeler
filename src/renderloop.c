@@ -73,7 +73,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #endif /* ENABLE_IMGUI */
 
 	bool windowResized = false;
-	bool swapchainOutOfDate = false;
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
@@ -194,7 +193,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			}
 		}
 
-		if (windowResized || swapchainOutOfDate) {
+		if (windowResized) {
 			if (!recreateSwapchain(swapchainCreateInfo, windowResized, error)) {
 				return false;
 			}
@@ -204,7 +203,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}
-			windowResized = swapchainOutOfDate = false;
+			windowResized = false;
 		}
 
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
@@ -219,7 +218,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #else /* __APPLE__ */
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 #endif /* __APPLE__ */
-			swapchainOutOfDate = true;
 			continue;
 #ifdef __APPLE__
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -481,7 +479,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #else /* __APPLE__ */
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 #endif /* __APPLE__ */
-			swapchainOutOfDate = true;
 			continue;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			asprintf(error, "Failed to present swapchain image: %s", string_VkResult(result));
