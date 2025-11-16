@@ -24,7 +24,7 @@ struct threadArguments {
 };
 
 void *threadProc(void *arg);
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, bool windowResized, char **error);
 void sendCloseSignal(void *platformWindow);
 void sendMaximizeSignal(void *platformWindow);
 void sendMinimizeSignal(void *platformWindow);

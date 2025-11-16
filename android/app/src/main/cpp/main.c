@@ -62,7 +62,7 @@ void android_main(struct android_app *pApp)
 		struct android_input_buffer *inputBuffer = android_app_swap_input_buffers(pApp);
 		if (inputBuffer && inputBuffer->motionEventsCount) {
 			for (uint64_t i = 0; i < inputBuffer->motionEventsCount; ++i) {
-				GameActivityMotionEvent* motionEvent = &inputBuffer->motionEvents[i];
+				GameActivityMotionEvent *motionEvent = &inputBuffer->motionEvents[i];
 
 				if (motionEvent->pointerCount > 0) {
 					int x = floor(GameActivityPointerAxes_getAxisValue(motionEvent->pointers, 0));
@@ -102,58 +102,56 @@ static void handleAppCmd(struct android_app *pApp, int32_t cmd)
 {
 	switch (cmd) {
 	case APP_CMD_INIT_WINDOW:
-		{
-			ModelerUserData *userData = malloc(sizeof(*userData));
+		ModelerUserData *initialUserData = malloc(sizeof(*initialUserData));
 
-			initializeQueue(&userData->inputQueue);
+		initializeQueue(&initialUserData->inputQueue);
 
-			if (pipe(userData->threadPipe)) {
-				handleFatalError("Failed to create pipe");
-			}
-
-			ALooper_addFd(
-				ALooper_forThread(),
-				userData->threadPipe[0],
-				ALOOPER_POLL_CALLBACK,
-				ALOOPER_EVENT_INPUT,
-				&handleCustomLooperEvent,
-				userData
-			);
-
-			if (!(userData->thread = initVulkanAndroid(pApp->window, &userData->inputQueue, userData->threadPipe[1], &userData->error))) {
-				break;
-			}
-
-			pApp->userData = userData;
+		if (pipe(initialUserData->threadPipe)) {
+			handleFatalError("Failed to create pipe");
 		}
+
+		ALooper_addFd(
+			ALooper_forThread(),
+			initialUserData->threadPipe[0],
+			ALOOPER_POLL_CALLBACK,
+			ALOOPER_EVENT_INPUT,
+			&handleCustomLooperEvent,
+			initialUserData
+		);
+
+		if (!(initialUserData->thread = initVulkanAndroid(pApp->window, &initialUserData->inputQueue, initialUserData->threadPipe[1], &initialUserData->error))) {
+			break;
+		}
+
+		pApp->userData = initialUserData;
 		break;
-	case APP_CMD_WINDOW_RESIZED:
-		ModelerUserData *userData = (ModelerUserData *) pApp->userData;
-		ARect insets;
-		GameActivity_getWindowInsets(pApp->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &insets);
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "insets: %d, %d, %d, %d\n", insets.top, insets.right, insets.bottom, insets.left);
-		int width = ANativeWindow_getWidth(pApp->window);
-		int height = ANativeWindow_getHeight(pApp->window);
-		WindowDimensions windowDimensions = {
-			.surfaceArea = {
-				.width = width,
-				.height = height
-			},
-			.activeArea = {
-				.extent = {
-					.width = width - (insets.left + insets.right),
-					.height = height - (insets.top + insets.bottom)
-				},
-                .offset = {
-                        .x = insets.left,
-                        .y = insets.top
-                }
-			},
-			.cornerRadius = 0,
-			.scale = 1
-		};
-		enqueueResizeEvent(&userData->inputQueue, windowDimensions, pApp->window);
-		break;
+	// case APP_CMD_WINDOW_RESIZED:
+	// 	ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+	// 	ARect insets;
+	// 	GameActivity_getWindowInsets(pApp->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &insets);
+	// 	__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "insets: %d, %d, %d, %d\n", insets.top, insets.right, insets.bottom, insets.left);
+	// 	int width = ANativeWindow_getWidth(pApp->window);
+	// 	int height = ANativeWindow_getHeight(pApp->window);
+	// 	WindowDimensions windowDimensions = {
+	// 		.surfaceArea = {
+	// 			.width = width,
+	// 			.height = height
+	// 		},
+	// 		.activeArea = {
+	// 			.extent = {
+	// 				.width = width - (insets.left + insets.right),
+	// 				.height = height - (insets.top + insets.bottom)
+	// 			},
+	// 			.offset = {
+	// 				.x = insets.left,
+	// 				.y = insets.top
+	// 			}
+	// 		},
+	// 		.cornerRadius = 0,
+	// 		.scale = 1
+	// 	};
+	// 	enqueueResizeEvent(&userData->inputQueue, windowDimensions, pApp->window);
+	// 	break;
 	case APP_CMD_START:
 		break;
 	case APP_CMD_RESUME:
