@@ -73,6 +73,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #endif /* ENABLE_IMGUI */
 
 	bool windowResized = false;
+	bool swapchainOutOfDate = false;
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
@@ -94,11 +95,9 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			};
 		}
 
-		VkExtent2D extent = windowDimensions->activeArea.extent;
-
 		VkExtent2D contentExtent = {
-			.height = extent.height - windowDimensions->titlebarHeight,
-			.width = extent.width
+			.height = windowDimensions->activeArea.extent.height - windowDimensions->titlebarHeight,
+			.width = windowDimensions->activeArea.extent.width
 		};
 
 		bool isLandscape = contentExtent.width >= contentExtent.height;
@@ -155,16 +154,16 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				int x = pointerPosition.x;
 				switch (windowDimensions->orientation) {
 				case ROTATE_90:
-					pointerPosition.x = extent.width - pointerPosition.y;
+					pointerPosition.x = windowDimensions->activeArea.extent.width - pointerPosition.y;
 					pointerPosition.y = x;
 					break;
 				case ROTATE_180:
-					pointerPosition.x = extent.width - pointerPosition.x;
-					pointerPosition.y = extent.height - pointerPosition.y;
+					pointerPosition.x = windowDimensions->activeArea.extent.width - pointerPosition.x;
+					pointerPosition.y = windowDimensions->activeArea.extent.height - pointerPosition.y;
 					break;
 				case ROTATE_270:
 					pointerPosition.x = pointerPosition.y;
-					pointerPosition.y = extent.height - x;
+					pointerPosition.y = windowDimensions->activeArea.extent.height - x;
 					break;
 				}
 				sendInputToComponent(components, sizeof(components) / sizeof(components[0]), inputEvent, pointerPosition);
@@ -193,7 +192,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			}
 		}
 
-		if (windowResized) {
+		if (windowResized || swapchainOutOfDate) {
 			if (!recreateSwapchain(swapchainCreateInfo, windowResized, error)) {
 				return false;
 			}
@@ -203,7 +202,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}
-			windowResized = false;
+			windowResized = swapchainOutOfDate = false;
 		}
 
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
@@ -218,6 +217,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #else /* __APPLE__ */
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 #endif /* __APPLE__ */
+			swapchainOutOfDate = true;
 			continue;
 #ifdef __APPLE__
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -479,6 +479,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 #else /* __APPLE__ */
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 #endif /* __APPLE__ */
+			swapchainOutOfDate = true;
 			continue;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			asprintf(error, "Failed to present swapchain image: %s", string_VkResult(result));
