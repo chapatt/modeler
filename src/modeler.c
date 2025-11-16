@@ -74,10 +74,11 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, WindowD
 static void imVkCheck(VkResult result);
 #endif /* ENABLE_IMGUI */
 static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
-static bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error);
+static void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D savedExtent);
+static void applyWindowDimensionsOrientation(WindowDimensions *windowDimensions);
+bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, bool windowResized, char **error);
 static bool createDepthBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkSampleCountFlagBits sampleCount, VkImage *image, VmaAllocation *imageAllocation, VkFormat *format, VkImageView *imageView, char **error);
 static void destroyDepthBuffer(VkDevice device, VmaAllocator allocator, VkImage image, VmaAllocation imageAllocation, VkImageView imageView);
-static void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D savedExtent);
 
 void terminateVulkan(Queue *inputQueue, pthread_t thread)
 {
@@ -118,10 +119,6 @@ void *threadProc(void *arg)
 	enum VkSurfaceTransformFlagBitsKHR transform = surfaceCharacteristics.capabilities.currentTransform;
 	uint32_t width = surfaceCharacteristics.capabilities.currentExtent.width;
 	uint32_t height = surfaceCharacteristics.capabilities.currentExtent.height;
-	if (transform & (VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR | VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR)) {
-		width = surfaceCharacteristics.capabilities.currentExtent.height;
-		height = surfaceCharacteristics.capabilities.currentExtent.width;
-	}
 	windowDimensions.surfaceArea.width = width;
 	windowDimensions.surfaceArea.height = height;
 	windowDimensions.activeArea.extent.width = width;
@@ -208,7 +205,7 @@ void *threadProc(void *arg)
 #endif /* DRAW_WINDOW_BORDER */
 	};
 
-	if (!createAppSwapchain(&swapchainCreateInfo, error)) {
+	if (!createAppSwapchain(&swapchainCreateInfo, true, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 
@@ -399,7 +396,7 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, WindowD
 }
 #endif /* ENABLE_IMGUI */
 
-bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
+bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, bool windowResized, char **error)
 {
 	vkDeviceWaitIdle(swapchainCreateInfo->device);
 
@@ -409,7 +406,7 @@ bool recreateSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		return false;
 	}
 
-	createAppSwapchain(swapchainCreateInfo, error);
+	createAppSwapchain(swapchainCreateInfo, windowResized, error);
 
 	return true;
 }
@@ -444,15 +441,41 @@ static void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkE
 	windowDimensions->activeArea.extent.height = savedExtent.height - verticalMargin;
 }
 
-bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
+static void applyWindowDimensionsOrientation(WindowDimensions *windowDimensions)
 {
-	VkExtent2D requestedExtent = swapchainCreateInfo->windowDimensions->surfaceArea;
+	uint32_t oldSurfaceAreaWidth = windowDimensions->surfaceArea.width;
+	uint32_t oldActiveAreaWidth = windowDimensions->activeArea.extent.width;
+	int32_t oldActiveAreaOffsetX = windowDimensions->activeArea.offset.x;
 
-	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
+	switch (windowDimensions->orientation) {
+		case ROTATE_90:
+			windowDimensions->surfaceArea.width = windowDimensions->surfaceArea.height;
+			windowDimensions->surfaceArea.height = oldSurfaceAreaWidth;
 
-	if (!createSwapchain(swapchainCreateInfo->device, swapchainCreateInfo->surface, *swapchainCreateInfo->surfaceCharacteristics, swapchainCreateInfo->queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo->queueInfo.presentationQueueFamilyIndex, requestedExtent, swapchainCreateInfo->swapchainInfo->swapchain, swapchainCreateInfo->swapchainInfo, error)) {
-		return false;
+			windowDimensions->activeArea.extent.width = windowDimensions->activeArea.extent.height;
+			windowDimensions->activeArea.extent.height = oldActiveAreaWidth;
+
+			windowDimensions->activeArea.offset.x = (windowDimensions->surfaceArea.width - windowDimensions->activeArea.extent.width) - windowDimensions->activeArea.offset.y;
+			windowDimensions->activeArea.offset.y = oldActiveAreaOffsetX;
+
+			break;
+		case ROTATE_270:
+			windowDimensions->surfaceArea.width = windowDimensions->surfaceArea.height;
+			windowDimensions->surfaceArea.height = oldSurfaceAreaWidth;
+
+			windowDimensions->activeArea.extent.width = windowDimensions->activeArea.extent.height;
+			windowDimensions->activeArea.extent.height = oldActiveAreaWidth;
+
+			windowDimensions->activeArea.offset.x = windowDimensions->activeArea.offset.y;
+			windowDimensions->activeArea.offset.y = (windowDimensions->surfaceArea.height - windowDimensions->activeArea.extent.height) - windowDimensions->activeArea.offset.x;
+
+			break;
 	}
+}
+
+bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, bool windowResized, char **error)
+{
+	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
 
 	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR) {
 		swapchainCreateInfo->windowDimensions->orientation = ROTATE_90;
@@ -464,7 +487,13 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, char **error)
 		swapchainCreateInfo->windowDimensions->orientation = ROTATE_0;
 	}
 
-	updateWindowDimensionsExtent(swapchainCreateInfo->windowDimensions, requestedExtent);
+	if (windowResized && transform & (VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR | VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR)) {
+		applyWindowDimensionsOrientation(swapchainCreateInfo->windowDimensions);
+	}
+
+	if (!createSwapchain(swapchainCreateInfo->device, swapchainCreateInfo->surface, *swapchainCreateInfo->surfaceCharacteristics, swapchainCreateInfo->queueInfo.graphicsQueueFamilyIndex, swapchainCreateInfo->queueInfo.presentationQueueFamilyIndex, swapchainCreateInfo->windowDimensions->surfaceArea, swapchainCreateInfo->swapchainInfo->swapchain, swapchainCreateInfo->swapchainInfo, error)) {
+		return false;
+	}
 
 	*swapchainCreateInfo->imageViews = malloc(sizeof(*swapchainCreateInfo->imageViews) * swapchainCreateInfo->swapchainInfo->imageCount);
 	if (!createImageViews(swapchainCreateInfo->device, swapchainCreateInfo->swapchainInfo->images, swapchainCreateInfo->swapchainInfo->imageCount, swapchainCreateInfo->swapchainInfo->surfaceFormat.format, VK_IMAGE_ASPECT_COLOR_BIT, *swapchainCreateInfo->imageViews, error)) {
