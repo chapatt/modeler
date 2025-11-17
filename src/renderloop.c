@@ -68,6 +68,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	bool enablePerspectiveProjection = chessBoardGetProjection(chessBoard) == PERSPECTIVE;
 	bool windowResized = false;
 	bool swapchainOutOfDate = false;
+	bool insetsChanged = false;
 
 #ifdef ENABLE_IMGUI
 	if (!rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath, error)) {
@@ -93,6 +94,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
+		insetsChanged = false;
 
 		VkRenderPassBeginInfo renderPassBeginInfos[MAX_FRAMES_IN_FLIGHT];
 		VkCommandBufferBeginInfo commandBufferBeginInfos[MAX_FRAMES_IN_FLIGHT];
@@ -151,6 +153,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				free(inputEvent);
 				break;
 			case RESIZE:
+				windowResized = true;
 				resizeInfo = (ResizeInfo *) data;
 #ifdef ENABLE_IMGUI
 				if (resizeInfo->windowDimensions.scale != windowDimensions->scale) {
@@ -160,13 +163,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				}
 #endif /* ENABLE_IMGUI */
 				*windowDimensions = resizeInfo->windowDimensions;
-				windowResized = true;
 				ackResize(resizeInfo);
 				free(resizeInfo->platformWindow);
 				free(data);
 				free(inputEvent);
 				break;
 			case INSET_CHANGE:
+				insetsChanged = true;
 				insets = *(Insets *) data;
 				free(data);
 				free(inputEvent);
@@ -183,16 +186,20 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, windowResized, error)) {
 				return false;
 			}
-			float aspectRatio = (float) windowDimensions->activeArea.extent.width / windowDimensions->titlebarHeight;
+
+			windowResized = swapchainOutOfDate = false;
+		}
+
+		if (windowResized || swapchainOutOfDate || insetsChanged) {
+			updateViewports(windowDimensions, &chessBoardViewport, &titlebarViewport);
+
+			float aspectRatio = (float) windowDimensions->surfaceArea.width / windowDimensions->titlebarHeight;
 			titlebarSetAspectRatio(titlebar, aspectRatio);
 			chessBoardSetOrientation(chessBoard, negateRotation(windowDimensions->orientation));
 			if (!updateChessBoard(chessBoard, error)) {
 				return false;
 			}
-			windowResized = swapchainOutOfDate = false;
 		}
-
-		updateViewports(windowDimensions, &chessBoardViewport, &titlebarViewport);
 
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
 			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
@@ -304,7 +311,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			break;
 		case ROTATE_90:
 			imguiWindowPos = (ImVec2) {
-				.x = windowDimensions->activeArea.offset.y + windowDimensions->activeArea.extent.height - optionsWindowWidth * windowDimensions->scale,
+				.x = windowDimensions->activeArea.offset.y + windowDimensions->activeArea.extent.height - (optionsWindowWidth * windowDimensions->scale + windowDimensions->titlebarHeight),
 				.y = (windowDimensions->surfaceArea.width - windowDimensions->activeArea.extent.width) - windowDimensions->activeArea.offset.x
 			};
 			imguiWindowSize = (ImVec2) {
@@ -324,7 +331,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			break;
 		case ROTATE_270:
 			imguiWindowPos = (ImVec2) {
-				.x = windowDimensions->surfaceArea.height - (windowDimensions->activeArea.extent.height + windowDimensions->activeArea.offset.y),
+				.x = windowDimensions->surfaceArea.height - (windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight + optionsWindowWidth * windowDimensions->scale),
 				.y = windowDimensions->activeArea.offset.x
 			};
 			imguiWindowSize = (ImVec2) {
@@ -526,14 +533,25 @@ static void updateViewports(WindowDimensions *windowDimensions, VkViewport *ches
 		.maxDepth = 1.0f
 	};
 
-	*titlebarViewport = (VkViewport) {
-		.x = windowDimensions->activeArea.offset.x,
-		.y = windowDimensions->activeArea.offset.y,
-		.width = contentExtent.width,
-		.height = windowDimensions->titlebarHeight,
-		.minDepth = 0.0f,
-		.maxDepth = 1.0f
-	};
+	if (windowDimensions->orientation == ROTATE_90) {
+		*titlebarViewport = (VkViewport) {
+			.x = windowDimensions->activeArea.offset.x,
+			.y = (windowDimensions->activeArea.offset.y + windowDimensions->activeArea.extent.height) - windowDimensions->titlebarHeight,
+			.width = contentExtent.width,
+			.height = windowDimensions->titlebarHeight,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+	} else {
+		*titlebarViewport = (VkViewport) {
+			.x = windowDimensions->activeArea.offset.x,
+			.y = windowDimensions->activeArea.offset.y,
+			.width = contentExtent.width,
+			.height = windowDimensions->titlebarHeight,
+			.minDepth = 0.0f,
+			.maxDepth = 1.0f
+		};
+	}
 }
 
 #ifdef ENABLE_IMGUI
