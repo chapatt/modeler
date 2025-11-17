@@ -31,6 +31,7 @@
 #include "chess_engine.h"
 #include "titlebar.h"
 #include "renderloop.h"
+#include "window.h"
 
 #ifdef EMBED_SHADERS
 #include "../shader_window_border.vert.h"
@@ -74,8 +75,6 @@ void initializeImgui(void *platformWindow, SwapchainInfo *swapchainInfo, WindowD
 static void imVkCheck(VkResult result);
 #endif /* ENABLE_IMGUI */
 static void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo);
-static void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D savedExtent);
-static void applyWindowDimensionsOrientation(WindowDimensions *windowDimensions);
 bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, bool windowResized, char **error);
 static bool createDepthBuffer(VkPhysicalDevice physicalDevice, VkDevice device, VmaAllocator allocator, VkExtent2D extent, VkSampleCountFlagBits sampleCount, VkImage *image, VmaAllocation *imageAllocation, VkFormat *format, VkImageView *imageView, char **error);
 static void destroyDepthBuffer(VkDevice device, VmaAllocator allocator, VkImage image, VmaAllocation imageAllocation, VkImageView imageView);
@@ -430,47 +429,6 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 	destroyImageViews(swapchainCreateInfo->device, *swapchainCreateInfo->imageViews, swapchainCreateInfo->swapchainInfo->imageCount);
 	free(*swapchainCreateInfo->imageViews);
 	freePhysicalDeviceSurfaceCharacteristics(swapchainCreateInfo->surfaceCharacteristics);
-}
-
-static void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D savedExtent)
-{
-	uint32_t horizontalMargin = windowDimensions->surfaceArea.width - windowDimensions->activeArea.extent.width;
-	uint32_t verticalMargin = windowDimensions->surfaceArea.height - windowDimensions->activeArea.extent.height;
-	windowDimensions->surfaceArea = savedExtent;
-	windowDimensions->activeArea.extent.width = savedExtent.width - horizontalMargin;
-	windowDimensions->activeArea.extent.height = savedExtent.height - verticalMargin;
-}
-
-static void applyWindowDimensionsOrientation(WindowDimensions *windowDimensions)
-{
-	uint32_t oldSurfaceAreaWidth = windowDimensions->surfaceArea.width;
-	uint32_t oldActiveAreaWidth = windowDimensions->activeArea.extent.width;
-	int32_t oldActiveAreaOffsetX = windowDimensions->activeArea.offset.x;
-
-	switch (windowDimensions->orientation) {
-		case ROTATE_90:
-			windowDimensions->surfaceArea.width = windowDimensions->surfaceArea.height;
-			windowDimensions->surfaceArea.height = oldSurfaceAreaWidth;
-
-			windowDimensions->activeArea.extent.width = windowDimensions->activeArea.extent.height;
-			windowDimensions->activeArea.extent.height = oldActiveAreaWidth;
-
-			windowDimensions->activeArea.offset.x = (windowDimensions->surfaceArea.width - windowDimensions->activeArea.extent.width) - windowDimensions->activeArea.offset.y;
-			windowDimensions->activeArea.offset.y = oldActiveAreaOffsetX;
-
-			break;
-		case ROTATE_270:
-			windowDimensions->surfaceArea.width = windowDimensions->surfaceArea.height;
-			windowDimensions->surfaceArea.height = oldSurfaceAreaWidth;
-
-			windowDimensions->activeArea.extent.width = windowDimensions->activeArea.extent.height;
-			windowDimensions->activeArea.extent.height = oldActiveAreaWidth;
-
-			windowDimensions->activeArea.offset.x = windowDimensions->activeArea.offset.y;
-			windowDimensions->activeArea.offset.y = (windowDimensions->surfaceArea.height - windowDimensions->activeArea.extent.height) - windowDimensions->activeArea.offset.x;
-
-			break;
-	}
 }
 
 bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, bool windowResized, char **error)

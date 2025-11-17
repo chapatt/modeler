@@ -86,7 +86,7 @@ HEADER_SHADERS=shader_window_border.vert.h shader_window_border.frag.h shader_ch
 HEADER_TEXTURES=texture_pieces.h texture_titlebar.h
 HEADER_MESHES=mesh_pawn.h mesh_knight.h mesh_bishop.h mesh_rook.h mesh_queen.h mesh_king.h
 HEADER_FONTS=font_roboto.h
-MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o titlebar.o matrix_utils.o
+MODELER_OBJS=modeler.o instance.o surface.o physical_device.o device.o swapchain.o image.o image_view.o render_pass.o descriptor.o framebuffer.o command_pool.o command_buffer.o synchronization.o allocator.o input_event.o queue.o utils.o vulkan_utils.o renderloop.o pipeline.o buffer.o sampler.o chess_board.o chess_engine.o titlebar.o matrix_utils.o window.o
 VENDOR_LIBS=vma_implementation.o lodepng.o tinyobj_implementation.o
 
 ifdef EMBED_RESOURCES

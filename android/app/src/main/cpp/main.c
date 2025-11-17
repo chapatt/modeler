@@ -26,6 +26,7 @@ static bool filterMotionEvents(const GameActivityMotionEvent *motionEvent);
 static int handleCustomLooperEvent(int fd, int events, void *data);
 static void handleFatalError(char *message);
 static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, struct ANativeWindow *nativeWindow);
+static void enqueueInsetChangeEvent(Queue *queue, Insets insets);
 
 void android_main(struct android_app *pApp)
 {
@@ -119,39 +120,57 @@ static void handleAppCmd(struct android_app *pApp, int32_t cmd)
 			initialUserData
 		);
 
-		if (!(initialUserData->thread = initVulkanAndroid(pApp->window, &initialUserData->inputQueue, initialUserData->threadPipe[1], &initialUserData->error))) {
+		if (!(initialUserData->thread = initVulkanAndroid(pApp->window, pApp->activity, &initialUserData->inputQueue, initialUserData->threadPipe[1], &initialUserData->error))) {
 			break;
 		}
 
 		pApp->userData = initialUserData;
 		break;
-	case APP_CMD_WINDOW_RESIZED:
-		ModelerUserData *userData = (ModelerUserData *) pApp->userData;
-		ARect insets;
-		GameActivity_getWindowInsets(pApp->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &insets);
-		__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "insets: %d, %d, %d, %d\n", insets.top, insets.right, insets.bottom, insets.left);
-		int width = ANativeWindow_getWidth(pApp->window);
-		int height = ANativeWindow_getHeight(pApp->window);
-		WindowDimensions windowDimensions = {
-			.surfaceArea = {
-				.width = width,
-				.height = height
-			},
-			.activeArea = {
-				.extent = {
-					.width = width - (insets.left + insets.right),
-					.height = height - (insets.top + insets.bottom)
-				},
-				.offset = {
-					.x = insets.left,
-					.y = insets.top
-				}
-			},
-			.cornerRadius = 0,
-			.scale = 1
-		};
-		enqueueResizeEvent(&userData->inputQueue, windowDimensions, pApp->window);
-		break;
+	// case APP_CMD_WINDOW_INSETS_CHANGED:
+	// 	ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+	// 	if (!userData) {
+	// 		break;
+	// 	}
+	// 	ARect androidInsets;
+	// 	GameActivity_getWindowInsets(pApp->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &androidInsets);
+	// 	Insets insets = {
+	// 		.top = androidInsets.top,
+	// 		.right = androidInsets.right,
+	// 		.bottom = androidInsets.bottom,
+	// 		.left = androidInsets.left
+	// 	};
+	// 	enqueueInsetChangeEvent(&userData->inputQueue, insets);
+	// 	break;
+	// case APP_CMD_WINDOW_RESIZED:
+	// 	ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+	// 	ARect insets;
+	// 	GameActivity_getWindowInsets(pApp->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &insets);
+	// 	__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "insets: %d, %d, %d, %d\n", insets.top, insets.right, insets.bottom, insets.left);
+	// 	int width = ANativeWindow_getWidth(pApp->window);
+	// 	int height = ANativeWindow_getHeight(pApp->window);
+	// 	WindowDimensions windowDimensions = {
+	// 		.surfaceArea = {
+	// 			.width = width,
+	// 			.height = height
+	// 		},
+	// 		.activeArea = {
+	// 			.extent = {
+	// 				.width = width - (insets.left + insets.right),
+	// 				.height = height - (insets.top + insets.bottom)
+	// 			},
+	// 			.offset = {
+	// 				.x = insets.left,
+	// 				.y = insets.top
+	// 			}
+	// 		},
+	// 		.cornerRadius = 0,
+	// 		.scale = 1,
+	// 		.titlebarHeight = 100,
+	// 		.fullscreen = false,
+	// 		.orientation = ROTATE_0
+	// 	};
+	// 	enqueueResizeEvent(&userData->inputQueue, windowDimensions, pApp->window);
+	// 	break;
 	case APP_CMD_START:
 		break;
 	case APP_CMD_RESUME:
@@ -197,18 +216,4 @@ static void handleFatalError(char *message)
 {
 	fprintf(stderr, "%s\n", message);
 	__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "%s\n", message);
-}
-
-static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, struct ANativeWindow *nativeWindow)
-{
-	AndroidWindow *window = malloc(sizeof(*window));
-	*window = (AndroidWindow) {
-		.nativeWindow = nativeWindow
-	};
-	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
-	*resizeInfo = (ResizeInfo) {
-		.windowDimensions = windowDimensions,
-		.platformWindow = window
-	};
-	enqueueInputEvent(queue, RESIZE, resizeInfo);
 }

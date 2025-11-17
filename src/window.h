@@ -22,6 +22,13 @@ typedef struct window_dimensions_t {
 	Orientation orientation;
 } WindowDimensions;
 
+typedef struct insets_t {
+	int top;
+	int right;
+	int bottom;
+	int left;
+} Insets;
+
 typedef struct resize_info_t {
 	WindowDimensions windowDimensions;
 	void *platformWindow;
@@ -38,5 +45,10 @@ static inline Orientation negateRotation(Orientation orientation)
 		return orientation;
 	}
 }
+
+void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D savedExtent);
+void applyWindowDimensionsOrientation(WindowDimensions *windowDimensions);
+void rotateInsets(Insets *insets, Orientation orientation);
+void updateWindowDimensionsInsets(WindowDimensions *windowDimensions, Insets insets);
 
 #endif /* MODELER_WINDOW_H */

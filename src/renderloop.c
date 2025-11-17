@@ -137,6 +137,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			InputEventType type = inputEvent->type;
 			void *data = inputEvent->data;
 			ResizeInfo *resizeInfo;
+			Insets insets;
 
 			switch(type) {
 			case POINTER_LEAVE: case BUTTON_DOWN: case BUTTON_UP:
@@ -185,6 +186,13 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				free(resizeInfo->platformWindow);
 				free(data);
 				free(inputEvent);
+				break;
+			case INSET_CHANGE:
+				insets = *(Insets *) data;
+				free(data);
+				free(inputEvent);
+				rotateInsets(&insets, negateRotation(windowDimensions->orientation));
+				updateWindowDimensionsInsets(windowDimensions, insets);
 				break;
 			case TERMINATE:
 				free(inputEvent);

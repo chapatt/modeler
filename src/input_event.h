@@ -13,7 +13,8 @@ typedef enum input_event_type_t {
 	NORMALIZED_POINTER_MOVE,
 	POINTER_LEAVE,
 	RESIZE,
-	TERMINATE
+	TERMINATE,
+	INSET_CHANGE
 } InputEventType;
 
 typedef struct input_event_t {
