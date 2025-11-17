@@ -3,3 +3,5 @@ src/vk_mem_alloc.h linguist-vendored
 src/lodepng.c linguist-vendored
 src/lodepng.h linguist-vendored
 src/tinyobj_loader_c.h linguist-vendored
+src/game-activity/* linguist-vendored
+src/game-text-input/* linguist-vendored
