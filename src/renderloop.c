@@ -35,6 +35,7 @@ typedef struct font_t {
 
 static inline Orientation negateRotation(Orientation orientation);
 static void sendInputToComponent(Component *components, size_t componentCount, InputEvent *inputEvent, PointerPosition pointerPosition);
+static void updateViewports(WindowDimensions *windowDimensions, VkViewport *chessBoardViewport, VkViewport *titlebarViewport);
 #ifdef ENABLE_IMGUI
 static void pushFont(Font **fonts, size_t *fontCount, ImFont *font, float scale);
 static ImFont *findFontWithScale(Font *fonts, size_t fontCount, float scale);
@@ -65,6 +66,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	PointerPosition pointerPosition;
 	bool enable3d = chessBoardGetEnable3d(chessBoard);
 	bool enablePerspectiveProjection = chessBoardGetProjection(chessBoard) == PERSPECTIVE;
+	bool windowResized = false;
+	bool swapchainOutOfDate = false;
 
 #ifdef ENABLE_IMGUI
 	if (!rescaleImGui(&fonts, &fontCount, &currentFont, windowDimensions->scale, resourcePath, error)) {
@@ -72,8 +75,21 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	}
 #endif /* ENABLE_IMGUI */
 
-	bool windowResized = false;
-	bool swapchainOutOfDate = false;
+	VkViewport chessBoardViewport;
+	VkViewport titlebarViewport;
+	Component components[] = {
+		{
+			.object = chessBoard,
+			.viewport = chessBoardViewport,
+			.handleInputEvent = &chessBoardHandleInputEvent
+		},
+		{
+			.object = titlebar,
+			.viewport = titlebarViewport,
+			.handleInputEvent = &titlebarHandleInputEvent
+		}
+	};
+	updateViewports(windowDimensions, &chessBoardViewport, &titlebarViewport);
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
@@ -94,43 +110,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				.pClearValues = clearValues
 			};
 		}
-
-		VkExtent2D contentExtent = {
-			.height = windowDimensions->activeArea.extent.height - windowDimensions->titlebarHeight,
-			.width = windowDimensions->activeArea.extent.width
-		};
-
-		bool isLandscape = contentExtent.width >= contentExtent.height;
-		int minorDimension = isLandscape ? contentExtent.height : contentExtent.width;
-		VkViewport chessBoardViewport = {
-			.x = (isLandscape ? (contentExtent.width - contentExtent.height) / 2 : 0) + windowDimensions->activeArea.offset.x,
-			.y = (isLandscape ? 0 : (contentExtent.height - contentExtent.width) / 2) + windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight,
-			.width = minorDimension,
-			.height = minorDimension,
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f
-		};
-		VkViewport titlebarViewport = {
-			.x = windowDimensions->activeArea.offset.x,
-			.y = windowDimensions->activeArea.offset.y,
-			.width = contentExtent.width,
-			.height = windowDimensions->titlebarHeight,
-			.minDepth = 0.0f,
-			.maxDepth = 1.0f
-		};
-
-		Component components[] = {
-			{
-				.object = chessBoard,
-				.viewport = chessBoardViewport,
-				.handleInputEvent = &chessBoardHandleInputEvent
-			},
-			{
-				.object = titlebar,
-				.viewport = titlebarViewport,
-				.handleInputEvent = &titlebarHandleInputEvent
-			}
-		};
 
 		InputEvent *inputEvent;
 		while (dequeue(inputQueue, (void **) &inputEvent)) {
@@ -212,6 +191,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			}
 			windowResized = swapchainOutOfDate = false;
 		}
+
+		updateViewports(windowDimensions, &chessBoardViewport, &titlebarViewport);
 
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
 			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
@@ -523,6 +504,36 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 			break;
 		}
 	}
+}
+
+static void updateViewports(WindowDimensions *windowDimensions, VkViewport *chessBoardViewport, VkViewport *titlebarViewport)
+{
+	VkExtent2D contentExtent = {
+		.height = windowDimensions->activeArea.extent.height - windowDimensions->titlebarHeight,
+		.width = windowDimensions->activeArea.extent.width
+	};
+
+	bool isLandscape = contentExtent.width >= contentExtent.height;
+
+	int minorDimension = isLandscape ? contentExtent.height : contentExtent.width;
+
+	*chessBoardViewport = (VkViewport) {
+		.x = (isLandscape ? (contentExtent.width - contentExtent.height) / 2 : 0) + windowDimensions->activeArea.offset.x,
+		.y = (isLandscape ? 0 : (contentExtent.height - contentExtent.width) / 2) + windowDimensions->activeArea.offset.y + windowDimensions->titlebarHeight,
+		.width = minorDimension,
+		.height = minorDimension,
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f
+	};
+
+	*titlebarViewport = (VkViewport) {
+		.x = windowDimensions->activeArea.offset.x,
+		.y = windowDimensions->activeArea.offset.y,
+		.width = contentExtent.width,
+		.height = windowDimensions->titlebarHeight,
+		.minDepth = 0.0f,
+		.maxDepth = 1.0f
+	};
 }
 
 #ifdef ENABLE_IMGUI
