@@ -22,7 +22,7 @@
 
 typedef struct component_t {
 	void *object;
-	VkViewport viewport;
+	VkViewport *viewport;
 	void (*handleInputEvent)(void *, InputEvent *);
 } Component;
 
@@ -81,12 +81,12 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 	Component components[] = {
 		{
 			.object = chessBoard,
-			.viewport = chessBoardViewport,
+			.viewport = &chessBoardViewport,
 			.handleInputEvent = &chessBoardHandleInputEvent
 		},
 		{
 			.object = titlebar,
-			.viewport = titlebarViewport,
+			.viewport = &titlebarViewport,
 			.handleInputEvent = &titlebarHandleInputEvent
 		}
 	};
@@ -94,7 +94,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 
 	for (uint32_t currentFrame = 0; true; currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT) {
 		VkResult result;
-		insetsChanged = false;
 
 		VkRenderPassBeginInfo renderPassBeginInfos[MAX_FRAMES_IN_FLIGHT];
 		VkCommandBufferBeginInfo commandBufferBeginInfos[MAX_FRAMES_IN_FLIGHT];
@@ -186,8 +185,6 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			if (!recreateSwapchain(swapchainCreateInfo, windowResized, error)) {
 				return false;
 			}
-
-			windowResized = swapchainOutOfDate = false;
 		}
 
 		if (windowResized || swapchainOutOfDate || insetsChanged) {
@@ -200,6 +197,8 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				return false;
 			}
 		}
+
+		windowResized = swapchainOutOfDate = insetsChanged = false;
 
 		if ((result = vkWaitForFences(device, 1, synchronizationInfo->frameInFlightFences + currentFrame, VK_TRUE, UINT64_MAX)) != VK_SUCCESS) {
 			asprintf(error, "Failed to wait for fences: %s", string_VkResult(result));
@@ -493,7 +492,7 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 	InputEvent newInputEvent;
 
 	for (size_t i = 0; i < componentCount; ++i) {
-		if (isPointerOnViewport(components[i].viewport, pointerPosition)) {
+		if (isPointerOnViewport(*components[i].viewport, pointerPosition)) {
 			NormalizedPointerPosition normalizedPointerPosition;
 
 			switch(inputEvent->type) {
@@ -501,7 +500,7 @@ static void sendInputToComponent(Component *components, size_t componentCount, I
 				newInputEvent.type = inputEvent->type;
 				break;
 			case POINTER_MOVE:
-				normalizedPointerPosition = normalizePointerPosition(components[i].viewport, pointerPosition);
+				normalizedPointerPosition = normalizePointerPosition(*components[i].viewport, pointerPosition);
 				newInputEvent.data = &normalizedPointerPosition;
 				newInputEvent.type = NORMALIZED_POINTER_MOVE;
 				break;
