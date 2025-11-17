@@ -691,7 +691,7 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
                     break;
                 case ROTATE_270:
                     scissor.offset.x = (int32_t)(clip_min.y);
-                    scissor.offset.y = (int32_t)(fb_height - clip_max.x);
+                    scissor.offset.y = (int32_t)(fb_width - clip_max.x);
                     scissor.extent.width = (uint32_t)(clip_max.y - clip_min.y);
                     scissor.extent.height = (uint32_t)(clip_max.x - clip_min.x);
                     break;
