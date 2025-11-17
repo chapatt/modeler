@@ -126,21 +126,21 @@ static void handleAppCmd(struct android_app *pApp, int32_t cmd)
 
 		pApp->userData = initialUserData;
 		break;
-	// case APP_CMD_WINDOW_INSETS_CHANGED:
-	// 	ModelerUserData *userData = (ModelerUserData *) pApp->userData;
-	// 	if (!userData) {
-	// 		break;
-	// 	}
-	// 	ARect androidInsets;
-	// 	GameActivity_getWindowInsets(pApp->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &androidInsets);
-	// 	Insets insets = {
-	// 		.top = androidInsets.top,
-	// 		.right = androidInsets.right,
-	// 		.bottom = androidInsets.bottom,
-	// 		.left = androidInsets.left
-	// 	};
-	// 	enqueueInsetChangeEvent(&userData->inputQueue, insets);
-	// 	break;
+	case APP_CMD_WINDOW_INSETS_CHANGED:
+		ModelerUserData *userData = (ModelerUserData *) pApp->userData;
+		if (!userData) {
+			break;
+		}
+		ARect androidInsets;
+		GameActivity_getWindowInsets(pApp->activity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &androidInsets);
+		Insets insets = {
+			.top = androidInsets.top,
+			.right = androidInsets.right,
+			.bottom = androidInsets.bottom,
+			.left = androidInsets.left
+		};
+		enqueueInsetChangeEvent(&userData->inputQueue, insets);
+		break;
 	// case APP_CMD_WINDOW_RESIZED:
 	// 	ModelerUserData *userData = (ModelerUserData *) pApp->userData;
 	// 	ARect insets;

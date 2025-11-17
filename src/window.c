@@ -57,10 +57,10 @@ void rotateInsets(Insets *insets, Orientation orientation)
 	case ROTATE_0:
 		break;
 	case ROTATE_90:
-		insets->right = oldInsets.top;
-		insets->bottom = oldInsets.right;
-		insets->left = oldInsets.bottom;
-		insets->top = oldInsets.left;
+		insets->right = oldInsets.bottom;
+		insets->bottom = oldInsets.left;
+		insets->left = oldInsets.top;
+		insets->top = oldInsets.right;
 		break;
 	case ROTATE_180:
 		insets->right = oldInsets.left;
@@ -69,10 +69,10 @@ void rotateInsets(Insets *insets, Orientation orientation)
 		insets->top = oldInsets.bottom;
 		break;
 	case ROTATE_270:
-		insets->right = oldInsets.bottom;
-		insets->bottom = oldInsets.left;
-		insets->left = oldInsets.top;
-		insets->top = oldInsets.right;
+		insets->right = oldInsets.top;
+		insets->bottom = oldInsets.right;
+		insets->left = oldInsets.bottom;
+		insets->top = oldInsets.left;
 		break;
 	}
 }
