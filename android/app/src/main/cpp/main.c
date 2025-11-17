@@ -217,3 +217,25 @@ static void handleFatalError(char *message)
 	fprintf(stderr, "%s\n", message);
 	__android_log_print(ANDROID_LOG_DEBUG, "MODELER_ERROR", "%s\n", message);
 }
+
+static void enqueueResizeEvent(Queue *queue, WindowDimensions windowDimensions, struct ANativeWindow *nativeWindow)
+{
+	AndroidWindow *window = malloc(sizeof(*window));
+	*window = (AndroidWindow) {
+		.nativeWindow = nativeWindow
+	};
+	ResizeInfo *resizeInfo = malloc(sizeof(*resizeInfo));
+	*resizeInfo = (ResizeInfo) {
+		.windowDimensions = windowDimensions,
+		.platformWindow = window
+	};
+	enqueueInputEvent(queue, RESIZE, resizeInfo);
+}
+
+static void enqueueInsetChangeEvent(Queue *queue, Insets insets)
+{
+	Insets *insetsPointer = malloc(sizeof(*insetsPointer));
+	*insetsPointer = insets;
+	enqueueInputEvent(queue, INSET_CHANGE, insetsPointer);
+}
+
