@@ -37,7 +37,6 @@ pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, struct ANativeAc
 	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
 	}
 
-
 	threadArgs->windowDimensions = (WindowDimensions) {
 		.surfaceArea = {
 			.width = 0,
