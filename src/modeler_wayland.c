@@ -105,3 +105,8 @@ void ackResize(ResizeInfo *resizeInfo)
 		resizeInfo->windowDimensions.activeArea.extent.height
 	);
 }
+
+Insets getInsets(void *platformWindow)
+{
+	/* Unnecessary on Wayland */
+}

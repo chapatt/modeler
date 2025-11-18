@@ -110,3 +110,8 @@ void ackResize(ResizeInfo *resizeInfo)
 {
 	/* Unnecessary on win32 */
 }
+
+Insets getInsets(void *platformWindow)
+{
+	/* Unnecessary on win32 */
+}
