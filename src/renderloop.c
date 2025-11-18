@@ -189,6 +189,11 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 		}
 
 		if (windowResized || swapchainOutOfDate || insetsChanged) {
+			Insets insets = getInsets(platformWindow);
+			rotateInsets(&insets, negateRotation(windowDimensions->orientation));
+			windowDimensions->insets = insets;
+			updateWindowDimensionsInsets(windowDimensions, insets);
+
 			updateViewports(windowDimensions, &chessBoardViewport, &titlebarViewport);
 
 			float aspectRatio = (float) windowDimensions->surfaceArea.width / windowDimensions->titlebarHeight;
