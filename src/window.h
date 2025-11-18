@@ -12,6 +12,13 @@ typedef enum orientation_t {
 	ROTATE_270
 } Orientation;
 
+typedef struct insets_t {
+	int top;
+	int right;
+	int bottom;
+	int left;
+} Insets;
+
 typedef struct window_dimensions_t {
 	VkExtent2D surfaceArea;
 	VkRect2D activeArea;
@@ -20,14 +27,8 @@ typedef struct window_dimensions_t {
 	int titlebarHeight;
 	bool fullscreen;
 	Orientation orientation;
+	Insets insets;
 } WindowDimensions;
-
-typedef struct insets_t {
-	int top;
-	int right;
-	int bottom;
-	int left;
-} Insets;
 
 typedef struct resize_info_t {
 	WindowDimensions windowDimensions;
@@ -50,5 +51,6 @@ void updateWindowDimensionsExtent(WindowDimensions *windowDimensions, VkExtent2D
 void applyWindowDimensionsOrientation(WindowDimensions *windowDimensions);
 void rotateInsets(Insets *insets, Orientation orientation);
 void updateWindowDimensionsInsets(WindowDimensions *windowDimensions, Insets insets);
+Orientation transformToOrientation(enum VkSurfaceTransformFlagBitsKHR transform);
 
 #endif /* MODELER_WINDOW_H */

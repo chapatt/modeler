@@ -10,9 +10,10 @@
 typedef struct android_window_t {
 	struct ANativeWindow *nativeWindow;
 	struct ANativeActivity *nativeActivity;
+	struct AConfiguration *nativeConfig;
 	int fd;
 } AndroidWindow;
 
-pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, struct ANativeActivity *nativeActivity, Queue *inputQueue, int fd, char **error);
+pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, struct ANativeActivity *nativeActivity, struct AConfiguration *nativeConfig, Queue *inputQueue, int fd, char **error);
 
 #endif /* MODELER_ANDROID_H */

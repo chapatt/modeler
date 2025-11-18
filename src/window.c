@@ -76,3 +76,16 @@ void rotateInsets(Insets *insets, Orientation orientation)
 		break;
 	}
 }
+
+Orientation transformToOrientation(enum VkSurfaceTransformFlagBitsKHR transform)
+{
+	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR) {
+		return ROTATE_90;
+	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR) {
+		return ROTATE_180;
+	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR) {
+		return ROTATE_270;
+	} else {
+		return ROTATE_0;
+	}
+}
