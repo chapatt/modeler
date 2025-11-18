@@ -438,8 +438,8 @@ bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, bool windowResi
 	swapchainCreateInfo->windowDimensions->orientation = transformToOrientation(swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform);
 
 	if (windowResized && 
-		(swapchainCreateInfo->windowDimensions->orientation == VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
-			swapchainCreateInfo->windowDimensions->orientation == VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR))
+		(swapchainCreateInfo->windowDimensions->orientation == ROTATE_90 ||
+			swapchainCreateInfo->windowDimensions->orientation == ROTATE_270))
 	{
 		applyWindowDimensionsOrientation(swapchainCreateInfo->windowDimensions);
 	}
