@@ -108,5 +108,5 @@ void ackResize(ResizeInfo *resizeInfo)
 
 Insets getInsets(void *platformWindow)
 {
-	/* Unnecessary on Wayland */
+	return (Insets) {0, 0, 0, 0};
 }

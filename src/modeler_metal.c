@@ -49,7 +49,10 @@ pthread_t initVulkanMetal(void *surfaceLayer, int width, int height, float scale
 		},
 		.cornerRadius = 0,
 		.scale = scale,
-		.titlebarHeight = titlebarHeight
+		.titlebarHeight = titlebarHeight,
+		.fullscreen = false,
+		.orientation = ROTATE_0,
+		.insets = {0, 0, 0, 0}
 	};
 	threadArgs->error = error;
 
@@ -138,5 +141,5 @@ void ackResize(ResizeInfo *resizeInfo)
 
 Insets getInsets(void *platformWindow)
 {
-	/* Unnecessary on Metal/Cocoa */
+	return (Insets) {0, 0, 0, 0};
 }

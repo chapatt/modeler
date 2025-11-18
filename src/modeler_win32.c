@@ -54,7 +54,8 @@ pthread_t initVulkanWin32(HINSTANCE hInstance, HWND hWnd, Queue *inputQueue, cha
 		.scale = scale,
 		.titlebarHeight = CHROME_HEIGHT * scale,
 		.fullscreen = false,
-		.orientation = ROTATE_0
+		.orientation = ROTATE_0,
+		.insets = {0, 0, 0, 0}
 	};
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
@@ -113,5 +114,5 @@ void ackResize(ResizeInfo *resizeInfo)
 
 Insets getInsets(void *platformWindow)
 {
-	/* Unnecessary on win32 */
+	return (Insets) {0, 0, 0, 0};
 }
