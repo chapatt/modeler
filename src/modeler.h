@@ -33,5 +33,6 @@ void sendExitFullscreenSignal(void *platformWindow);
 void sendThreadFailureSignal(void *platformWindow);
 void terminateVulkan(Queue *inputQueue, pthread_t thread);
 void ackResize(ResizeInfo *resizeInfo);
+Insets getInsets(void *platformWindow);
 
 #endif /* MODELER_H */

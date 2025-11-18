@@ -7,7 +7,6 @@
 #include "modeler.h"
 #include "utils.h"
 
-static void getSafeAreaInsets(void *platformWindow, ARect *insets);
 static int32_t getDensity(void *platformWindow);
 
 pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, struct ANativeActivity *nativeActivity, struct AConfiguration *nativeConfig, Queue *inputQueue, int fd, char **error)
@@ -38,14 +37,6 @@ pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, struct ANativeAc
 	    threadArgs->instanceExtensions[i] = instanceExtensions[i];
 	}
 
-	ARect androidInsets;
-	getSafeAreaInsets(window, &androidInsets);
-	Insets insets = {
-		.top = androidInsets.top,
-		.right = androidInsets.right,
-		.bottom = androidInsets.bottom,
-		.left = androidInsets.left
-	};
 
 	threadArgs->windowDimensions = (WindowDimensions) {
 		.surfaceArea = {
@@ -64,7 +55,7 @@ pthread_t initVulkanAndroid(struct ANativeWindow *nativeWindow, struct ANativeAc
 		.titlebarHeight = 100,
 		.fullscreen = false,
 		.orientation = ROTATE_0,
-		.insets = insets
+		.insets = getInsets(window)
 	};
 
 	if (pthread_create(&thread, NULL, threadProc, (void *) threadArgs) != 0) {
@@ -121,10 +112,17 @@ void ackResize(ResizeInfo *resizeInfo)
 {
 }
 
-static void getSafeAreaInsets(void *platformWindow, ARect *insets)
+Insets getInsets(void *platformWindow)
 {
 	AndroidWindow *window = (AndroidWindow *) platformWindow;
-	GameActivity_getWindowInsets((GameActivity*) window->nativeActivity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, insets);
+	ARect androidInsets;
+	GameActivity_getWindowInsets((GameActivity*) window->nativeActivity, GAMECOMMON_INSETS_TYPE_SYSTEM_BARS, &androidInsets);
+	return (Insets) {
+		.top = androidInsets.top,
+		.right = androidInsets.right,
+		.bottom = androidInsets.bottom,
+		.left = androidInsets.left
+	};
 }
 
 static int32_t getDensity(void *platformWindow)
