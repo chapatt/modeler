@@ -176,7 +176,8 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 				.scale = scale,
 				.titlebarHeight = CHROME_HEIGHT * scale,
 				.fullscreen = isFullscreen,
-				.orientation = ROTATE_0
+				.orientation = ROTATE_0,
+				.insets = {0, 0, 0, 0}
 			};
 			enqueueResizeEvent(inputQueue, windowDimensions, hInstance, hWnd);
 		}
@@ -242,7 +243,8 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 				.scale = scale,
 				.titlebarHeight = CHROME_HEIGHT * scale,
 				.fullscreen = isFullscreen,
-				.orientation = ROTATE_0
+				.orientation = ROTATE_0,
+				.insets = {0, 0, 0, 0}
 			};
 			enqueueResizeEvent(inputQueue, windowDimensions, hInstance, hWnd);
 		}

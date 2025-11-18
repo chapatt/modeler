@@ -155,7 +155,8 @@ int main(int argc, char **argv)
 		.scale = 1.0f,
 		.titlebarHeight = CHROME_HEIGHT,
 		.fullscreen = false,
-		.orientation = ROTATE_0
+		.orientation = ROTATE_0,
+		.insets = {0, 0, 0, 0}
 	};
 
 	initializeQueue(&display.inputQueue);
