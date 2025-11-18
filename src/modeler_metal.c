@@ -135,3 +135,8 @@ void ackResize(ResizeInfo *resizeInfo)
 {
 	/* Unnecessary on Metal/Cocoa */
 }
+
+Insets getInsets(void *platformWindow)
+{
+	/* Unnecessary on Metal/Cocoa */
+}

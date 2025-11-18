@@ -171,7 +171,8 @@ class ModelerView: NSView, NSViewLayerContentScaleDelegate {
                 scale: scale,
                 titlebarHeight: Int32(titlebarHeight * scale),
                 fullscreen: isFullscreen(),
-                orientation: ROTATE_0
+                orientation: ROTATE_0,
+                insets: Insets(top: 0, right: 0, bottom: 0, left: 0)
             )
             let layerPointer: UnsafeMutableRawPointer = Unmanaged.passUnretained(layer).toOpaque()
             
