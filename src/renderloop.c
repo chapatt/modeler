@@ -173,6 +173,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 				free(data);
 				free(inputEvent);
 				rotateInsets(&insets, negateRotation(windowDimensions->orientation));
+				windowDimensions->insets = insets;
 				updateWindowDimensionsInsets(windowDimensions, insets);
 				break;
 			case TERMINATE:
@@ -294,7 +295,7 @@ bool draw(VkDevice device, void *platformWindow, WindowDimensions *windowDimensi
 			.y = 10.0f * windowDimensions->scale
 		};
 		ImGui_PushStyleVarImVec2(ImGuiStyleVar_ItemSpacing, itemSpacing);
-		float optionsWindowWidth = 400;
+		float optionsWindowWidth = 200;
 		ImVec2 imguiWindowPos;
 		ImVec2 imguiWindowSize;
 		switch (windowDimensions->orientation) {

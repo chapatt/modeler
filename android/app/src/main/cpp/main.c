@@ -120,7 +120,7 @@ static void handleAppCmd(struct android_app *pApp, int32_t cmd)
 			initialUserData
 		);
 
-		if (!(initialUserData->thread = initVulkanAndroid(pApp->window, pApp->activity, &initialUserData->inputQueue, initialUserData->threadPipe[1], &initialUserData->error))) {
+		if (!(initialUserData->thread = initVulkanAndroid(pApp->window, pApp->activity, pApp->config, &initialUserData->inputQueue, initialUserData->threadPipe[1], &initialUserData->error))) {
 			break;
 		}
 

@@ -115,13 +115,15 @@ void *threadProc(void *arg)
 	}
 
 #ifdef ANDROID
-	enum VkSurfaceTransformFlagBitsKHR transform = surfaceCharacteristics.capabilities.currentTransform;
 	uint32_t width = surfaceCharacteristics.capabilities.currentExtent.width;
 	uint32_t height = surfaceCharacteristics.capabilities.currentExtent.height;
 	windowDimensions.surfaceArea.width = width;
 	windowDimensions.surfaceArea.height = height;
 	windowDimensions.activeArea.extent.width = width;
 	windowDimensions.activeArea.extent.height = height;
+	windowDimensions.orientation = transformToOrientation(surfaceCharacteristics.capabilities.currentTransform);
+	rotateInsets(&windowDimensions.insets, negateRotation(windowDimensions.orientation));
+	updateWindowDimensionsInsets(&windowDimensions, windowDimensions.insets);
 #endif /* ANDROID */
 
 	VkDevice device;
@@ -433,19 +435,12 @@ void destroyAppSwapchain(SwapchainCreateInfo swapchainCreateInfo)
 
 bool createAppSwapchain(SwapchainCreateInfo swapchainCreateInfo, bool windowResized, char **error)
 {
-	enum VkSurfaceTransformFlagBitsKHR transform = swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform;
+	swapchainCreateInfo->windowDimensions->orientation = transformToOrientation(swapchainCreateInfo->surfaceCharacteristics->capabilities.currentTransform);
 
-	if (transform & VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR) {
-		swapchainCreateInfo->windowDimensions->orientation = ROTATE_90;
-	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_180_BIT_KHR) {
-		swapchainCreateInfo->windowDimensions->orientation = ROTATE_180;
-	} else if (transform & VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR) {
-		swapchainCreateInfo->windowDimensions->orientation = ROTATE_270;
-	} else {
-		swapchainCreateInfo->windowDimensions->orientation = ROTATE_0;
-	}
-
-	if (windowResized && transform & (VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR | VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR)) {
+	if (windowResized && 
+		(swapchainCreateInfo->windowDimensions->orientation == VK_SURFACE_TRANSFORM_ROTATE_90_BIT_KHR ||
+			swapchainCreateInfo->windowDimensions->orientation == VK_SURFACE_TRANSFORM_ROTATE_270_BIT_KHR))
+	{
 		applyWindowDimensionsOrientation(swapchainCreateInfo->windowDimensions);
 	}
 
