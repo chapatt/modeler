@@ -122,7 +122,6 @@ void *threadProc(void *arg)
 	windowDimensions.activeArea.extent.width = width;
 	windowDimensions.activeArea.extent.height = height;
 	windowDimensions.orientation = transformToOrientation(surfaceCharacteristics.capabilities.currentTransform);
-	rotateInsets(&windowDimensions.insets, negateRotation(windowDimensions.orientation));
 	updateWindowDimensionsInsets(&windowDimensions, windowDimensions.insets);
 #endif /* ANDROID */
 
