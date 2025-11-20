@@ -506,12 +506,12 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline 
     // Our visible imgui space lies from draw_data->DisplayPps (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
     {
         float scale[] = {
-                2.0f / draw_data->DisplaySize.x,
-                2.0f / draw_data->DisplaySize.y
+            2.0f / draw_data->DisplaySize.x,
+            2.0f / draw_data->DisplaySize.y
         };
         float translate[] = {
-                -1.0f - draw_data->DisplayPos.x * scale[0],
-                -1.0f - draw_data->DisplayPos.y * scale[1]
+            -1.0f - draw_data->DisplayPos.x * scale[0],
+            -1.0f - draw_data->DisplayPos.y * scale[1]
         };
         float rotate[4];
         switch (v->WindowDimensions->orientation) {

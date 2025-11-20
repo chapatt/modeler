@@ -52,21 +52,21 @@ CIMGUI_IMPL_API void ImGui_ImplModeler_HandleInput(InputEvent *inputEvent)
 	switch (inputEvent->type) {
 	case POINTER_MOVE:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
-                ImGuiIO_AddMousePosEvent(io, data->x, data->y);
-                // switch (bd->windowDimensions->orientation) {
-                // case ROTATE_0:
-                //     ImGuiIO_AddMousePosEvent(io, data->x, data->y);
-                //     break;
-                // case ROTATE_90:
-                //      ImGuiIO_AddMousePosEvent(io, io->DisplaySize.y - data->y, data->x);
-                //     break;
-                // case ROTATE_270:
-                //      ImGuiIO_AddMousePosEvent(io, data->y, io->DisplaySize.x - data->x);
-                //     break;
-                // case ROTATE_180:
-                //     ImGuiIO_AddMousePosEvent(io, io->DisplaySize.x - data->x, io->DisplaySize.y - data->y);
-                //     break;
-                // }
+		ImGuiIO_AddMousePosEvent(io, data->x, data->y);
+		// switch (bd->windowDimensions->orientation) {
+		// case ROTATE_0:
+		//     ImGuiIO_AddMousePosEvent(io, data->x, data->y);
+		//     break;
+		// case ROTATE_90:
+		//      ImGuiIO_AddMousePosEvent(io, io->DisplaySize.y - data->y, data->x);
+		//     break;
+		// case ROTATE_270:
+		//      ImGuiIO_AddMousePosEvent(io, data->y, io->DisplaySize.x - data->x);
+		//     break;
+		// case ROTATE_180:
+		//     ImGuiIO_AddMousePosEvent(io, io->DisplaySize.x - data->x, io->DisplaySize.y - data->y);
+		//     break;
+		// }
 		break;
 	case BUTTON_DOWN:
 		ImGuiIO_AddMouseSourceEvent(io, ImGuiMouseSource_Mouse);
