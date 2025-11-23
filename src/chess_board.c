@@ -5,6 +5,7 @@
 #include "lodepng.h"
 
 #include "chess_board.h"
+#include "buffer.h"
 #include "descriptor.h"
 #include "image.h"
 #include "image_view.h"

@@ -3,6 +3,7 @@
 #include "lodepng.h"
 
 #include "titlebar.h"
+#include "buffer.h"
 #include "descriptor.h"
 #include "image.h"
 #include "image_view.h"
@@ -21,15 +22,35 @@
 #include "../texture_titlebar.h"
 #endif /* EMBED_TEXTURES */
 
+#define TITLEBAR_VERTEX_COUNT 5 * 4
+#define TITLEBAR_INDEX_COUNT 5 * 6
+
 static const float VIEWPORT_WIDTH = 2.0f;
 static const float VIEWPORT_HEIGHT = 2.0f;
 
 typedef struct titlebar_push_constants_t {
-	float minimizeColor[4];
-	float maximizeColor[4];
-	float closeColor[4];
 	float aspectRatio;
 } TitlebarPushConstants;
+
+typedef enum action_t {
+	TITLEBAR_ACTION_CLOSE,
+	TITLEBAR_ACTION_MAXIMIZE,
+	TITLEBAR_ACTION_MINIMIZE,
+	TITLEBAR_ACTION_MENU
+} TITLEBAR_ACTION;
+
+float iconSpriteOriginMap[4][2] = {
+	{0.0f, 0.0f},
+	{0.5f, 0.0f},
+	{0.0f, 0.5f},
+	{0.5f, 0.5f}
+};
+
+typedef struct board_vertex_t {
+	float pos[2];
+	float color[3];
+	float texCoord[2];
+} TitlebarVertex;
 
 struct titlebar_t {
 	VkDevice device;
@@ -52,9 +73,11 @@ struct titlebar_t {
 	VkDescriptorSetLayout descriptorSetLayouts[MAX_FRAMES_IN_FLIGHT];
 	NormalizedPointerPosition pointerPosition;
 	float aspectRatio;
+	bool hoveringMenu;
 	bool hoveringMinimize;
 	bool hoveringMaximize;
 	bool hoveringClose;
+	bool pressedMenu;
 	bool pressedMinimize;
 	bool pressedMaximize;
 	bool pressedClose;
@@ -64,11 +87,26 @@ struct titlebar_t {
 	void *maximizeArg;
 	void (*minimize)(void *);
 	void *minimizeArg;
+	VkRect2D buttonRectangles[4];
+	TitlebarVertex vertices[TITLEBAR_VERTEX_COUNT];
+	VkBuffer vertexBuffer;
+	VmaAllocation vertexBufferAllocation;
+	void *vertexBufferMappedMemory;
+	uint16_t indices[TITLEBAR_INDEX_COUNT];
+	VkBuffer indexBuffer;
+	VmaAllocation indexBufferAllocation;
+	void *indexBufferMappedMemory;
 };
 
 static bool createTitlebarTexture(Titlebar self, char **error);
 static bool createTitlebarTextureSampler(Titlebar self, char **error);
 static bool createTitlebarDescriptors(Titlebar self, char **error);
+static void updateMesh(Titlebar self);
+static bool createVertexBuffer(Titlebar self, char **error);
+static void updateVertexBuffer(Titlebar self);
+static void updateIndices(Titlebar self);
+static bool createIndexBuffer(Titlebar self, char **error);
+static void updateIndexBuffer(Titlebar self);
 static bool createTitlebarPipeline(Titlebar self, char **error);
 static void updateHovering(Titlebar self);
 static void updatePressed(Titlebar self);
@@ -88,8 +126,13 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->sampleCount = sampleCount;
 	self->resourcePath = resourcePath;
 	self->aspectRatio = aspectRatio;
+	self->hoveringMenu = false;
 	self->hoveringMinimize = false;
 	self->hoveringMaximize = false;
+	self->hoveringClose = false;
+	self->pressedMenu = false;
+	self->pressedMinimize = false;
+	self->pressedMaximize = false;
 	self->hoveringClose = false;
 	self->close = close;
 	self->closeArg = closeArg;
@@ -97,6 +140,17 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->maximizeArg = maximizeArg;
 	self->minimize = minimize;
 	self->minimizeArg = minimizeArg;
+
+	updateMesh(self);
+	updateIndices(self);
+
+	if (!createVertexBuffer(self, error)) {
+		return false;
+	}
+
+	if (!createIndexBuffer(self, error)) {
+		return false;
+	}
 
 	if (!createTitlebarTexture(self, error)) {
 		return false;
@@ -192,6 +246,113 @@ static bool createTitlebarTexture(Titlebar self, char **error)
 	return true;
 }
 
+static void updateButtonRectangles(Titlebar self)
+{
+	float buttonHeight = 2.0f;
+	float buttonWidth = 2.0f;
+
+	self->buttonRectangles[TITLEBAR_ACTION_CLOSE] = (VkRect2D) {
+		.offset = {
+			.x = 1.0 - buttonWidth,
+			.y = 1.0 - buttonHeight
+		},
+		.extent = {
+			.width = buttonWidth,
+			.height = buttonHeight
+		}
+	};
+
+	self->buttonRectangles[TITLEBAR_ACTION_MAXIMIZE] = (VkRect2D) {
+		.offset = {
+			.x = 1.0 - buttonWidth * 2,
+			.y = 1.0 - buttonHeight
+		},
+		.extent = {
+			.width = buttonWidth,
+			.height = buttonHeight
+		}
+	};
+
+	self->buttonRectangles[TITLEBAR_ACTION_MINIMIZE] = (VkRect2D) {
+		.offset = {
+			.x = 1.0 - buttonWidth * 3,
+			.y = 1.0 - buttonHeight
+		},
+		.extent = {
+			.width = buttonWidth,
+			.height = buttonHeight
+		}
+	};
+
+	self->buttonRectangles[TITLEBAR_ACTION_MENU] = (VkRect2D) {
+		.offset = {
+			.x = 1.0 - buttonWidth * 4,
+			.y = 1.0 - buttonHeight
+		},
+		.extent = {
+			.width = buttonWidth,
+			.height = buttonHeight
+		}
+	};
+}
+
+static void updateMesh(Titlebar self)
+{
+	float hoverColor[] = {1.0f, 1.0f, 1.0f, 0.01f};
+	float pressedColor[] = {1.0f, 1.0f, 1.0f, 0.05f};
+
+	float buttonHeight = 2.0f;
+	float buttonWidth = 2.0f;
+
+	float barColor[] = {0.0f, 0.5f, 0.5f};
+	srgbToLinear(barColor);
+	float defaultBackground[] = {0.71f, 0.533f, 0.388f};
+	srgbToLinear(defaultBackground);
+	float hoverBackground[] = {0.71f, 0.533f, 0.388f};
+	srgbToLinear(hoverBackground);
+
+	bool hovering[] = {self->hoveringClose, self->hoveringMaximize, self->hoveringMinimize, self->hoveringMenu};
+	float buttonColors[4][3];
+	for (size_t i = 0; i <= TITLEBAR_ACTION_MENU; ++i) {
+		if (hovering[i]) {
+			buttonColors[i][0] = hoverBackground[0];
+			buttonColors[i][1] = hoverBackground[1];
+			buttonColors[i][2] = hoverBackground[2];
+		} else {
+			buttonColors[i][0] = defaultBackground[0];
+			buttonColors[i][0] = defaultBackground[1];
+			buttonColors[i][0] = defaultBackground[2];
+		}
+	}
+
+	self->vertices[0] = (TitlebarVertex) {{-1.0f, -1.0f}, {barColor[0], barColor[1], barColor[2]}, {0.0f, 0.0f}};
+	self->vertices[1] = (TitlebarVertex) {{-1.0f, 1.0f}, {barColor[0], barColor[1], barColor[2]}, {0.0f, 0.0f}};
+	self->vertices[2] = (TitlebarVertex) {{1.0f, 1.0f}, {barColor[0], barColor[1], barColor[2]}, {0.0f, 0.0f}};
+	self->vertices[3] = (TitlebarVertex) {{1.0f, -1.0f}, {barColor[0], barColor[1], barColor[2]}, {0.0f, 0.0f}};
+	for (size_t i = 0; i <= TITLEBAR_ACTION_MENU; ++i) {
+		self->vertices[(i + 1) * 4] = (TitlebarVertex) {
+			{self->buttonRectangles[i].offset.x, self->buttonRectangles[i].offset.y},
+			{buttonColors[i][0], buttonColors[i][1], buttonColors[i][2]},
+			{iconSpriteOriginMap[i][0], iconSpriteOriginMap[i][1]}
+		};
+		self->vertices[(i + 1) * 4 + 1] = (TitlebarVertex) {
+			{self->buttonRectangles[i].offset.x, self->buttonRectangles[i].offset.y + buttonHeight},
+			{buttonColors[i][0], buttonColors[i][1], buttonColors[i][2]},
+			{iconSpriteOriginMap[i][0], iconSpriteOriginMap[i][1] + 0.5f}
+		};
+		self->vertices[(i + 1) * 4 + 2] = (TitlebarVertex) {
+			{self->buttonRectangles[i].offset.x + buttonWidth, self->buttonRectangles[i].offset.y + buttonHeight},
+			{buttonColors[i][0], buttonColors[i][1], buttonColors[i][2]},
+			{iconSpriteOriginMap[i][0] + 0.5f, iconSpriteOriginMap[i][1] + 0.5f}
+		};
+		self->vertices[(i + 1) * 4 + 3] = (TitlebarVertex) {
+			{self->buttonRectangles[i].offset.x + buttonWidth, self->buttonRectangles[i].offset.y},
+			{buttonColors[i][0], buttonColors[i][1], buttonColors[i][2]},
+			{iconSpriteOriginMap[i][0] + 0.5f, iconSpriteOriginMap[i][1]}
+		};
+	}
+}
+
 static bool createTitlebarTextureSampler(Titlebar self, char **error)
 {
 	if (!createSampler(self->device, 0, 1, &self->sampler, error)) {
@@ -238,8 +399,76 @@ static bool createTitlebarDescriptors(Titlebar self, char **error)
 	return true;
 }
 
+static bool createVertexBuffer(Titlebar self, char **error)
+{
+	if (!createHostVisibleMutableBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, &self->vertexBufferMappedMemory, &self->vertexBuffer, &self->vertexBufferAllocation, self->vertices, TITLEBAR_VERTEX_COUNT, sizeof(*self->vertices), error)) {
+		return false;
+	}
+
+	return true;
+}
+
+static void updateVertexBuffer(Titlebar self)
+{
+	updateHostVisibleMutableBuffer(self->device, self->vertexBufferMappedMemory, &self->vertexBuffer, TITLEBAR_VERTEX_COUNT, sizeof(*self->vertices));
+}
+
+static void updateIndices(Titlebar self)
+{
+	for (size_t i = 0; i < 5; ++i) {
+		size_t verticesOffset = i * 4;
+		size_t indicesOffset = i * 6;
+
+		self->indices[indicesOffset] = verticesOffset + 0;
+		self->indices[indicesOffset + 1] = verticesOffset + 1;
+		self->indices[indicesOffset + 2] = verticesOffset + 2;
+		self->indices[indicesOffset + 3] = verticesOffset + 0;
+		self->indices[indicesOffset + 4] = verticesOffset + 2;
+		self->indices[indicesOffset + 5] = verticesOffset + 3;
+	}
+}
+
+static bool createIndexBuffer(Titlebar self, char **error)
+{
+	if (!createHostVisibleMutableBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->indexBufferMappedMemory, &self->indexBuffer, &self->indexBufferAllocation, self->indices, TITLEBAR_INDEX_COUNT, sizeof(*self->indices), error)) {
+		return false;
+	}
+
+	return true;
+}
+
+static void updateIndexBuffer(Titlebar self)
+{
+	updateHostVisibleMutableBuffer(self->device, self->indexBufferMappedMemory, &self->indexBuffer, TITLEBAR_INDEX_COUNT, sizeof(*self->indices));
+}
+
 static bool createTitlebarPipeline(Titlebar self, char **error)
 {
+	VkVertexInputBindingDescription vertexBindingDescription = {
+		.binding = 0,
+		.stride = sizeof(TitlebarVertex),
+		.inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+	};
+
+	VkVertexInputAttributeDescription vertexAttributeDescriptions[] = {
+		{
+			.binding = 0,
+			.location = 0,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(TitlebarVertex, pos),
+		}, {
+			.binding = 0,
+			.location = 1,
+			.format = VK_FORMAT_R32G32B32_SFLOAT,
+			.offset = offsetof(TitlebarVertex, color),
+		}, {
+			.binding = 0,
+			.location = 2,
+			.format = VK_FORMAT_R32G32_SFLOAT,
+			.offset = offsetof(TitlebarVertex, texCoord),
+		}
+	};
+
 #ifndef EMBED_SHADERS
 	char *titlebarVertShaderPath;
 	char *titlebarFragShaderPath;
@@ -287,10 +516,10 @@ static bool createTitlebarPipeline(Titlebar self, char **error)
 		.vertexShaderSize = titlebarVertShaderSize,
 		.fragmentShaderBytes = titlebarFragShaderBytes,
 		.fragmentShaderSize = titlebarFragShaderSize,
-		.vertexBindingDescriptionCount = 0,
-		.vertexBindingDescriptions = NULL,
-		.vertexAttributeDescriptionCount = 0,
-		.VertexAttributeDescriptions = NULL,
+		.vertexBindingDescriptionCount = 1,
+		.vertexBindingDescriptions = &vertexBindingDescription,
+		.vertexAttributeDescriptionCount = sizeof(vertexAttributeDescriptions) / sizeof(*vertexAttributeDescriptions),
+		.VertexAttributeDescriptions = vertexAttributeDescriptions,
 		.descriptorSetLayouts = self->descriptorSetLayouts,
 		.descriptorSetLayoutCount = 1,
 		.pushConstantRangeCount = 1,
@@ -315,6 +544,7 @@ static void updateHovering(Titlebar self)
 	self->hoveringClose = false;
 	self->hoveringMaximize = false;
 	self->hoveringMinimize = false;
+	self->hoveringMenu = false;
 
 	if (self->pointerPosition.x >= 1.0f - (1.0f / self->aspectRatio)) {
 		self->hoveringClose = true;
@@ -357,35 +587,17 @@ static void handleButtonUp(Titlebar self)
 
 bool drawTitlebar(Titlebar self, VkCommandBuffer commandBuffer, char **error)
 {
-	float hoverColor[] = {1.0f, 1.0f, 1.0f, 0.01f};
-	float pressedColor[] = {1.0f, 1.0f, 1.0f, 0.05f};
-
 	TitlebarPushConstants pushConstants = {
-		.minimizeColor = {0.0f, 0.0f, 0.0f, 0.0f},
-		.maximizeColor = {0.0f, 0.0f, 0.0f, 0.0f},
-		.closeColor = {0.0f, 0.0f, 0.0f, 0.0f},
 		.aspectRatio = self->aspectRatio
 	};
 
-	if (self->pressedClose) {
-		vec4Copy(pressedColor, pushConstants.closeColor);
-	} else if (self->pressedMaximize) {
-		vec4Copy(pressedColor, pushConstants.maximizeColor);
-	} else if (self->pressedMinimize) {
-		vec4Copy(pressedColor, pushConstants.minimizeColor);
-	} else if (self->hoveringClose) {
-		vec4Copy(hoverColor, pushConstants.closeColor);
-	} else if (self->hoveringMaximize) {
-		vec4Copy(hoverColor, pushConstants.maximizeColor);
-	} else if (self->hoveringMinimize) {
-		vec4Copy(hoverColor, pushConstants.minimizeColor);
-	}
-
 	VkDeviceSize offsets[] = {0};
+	vkCmdBindVertexBuffers(commandBuffer, 0, 1, &self->vertexBuffer, offsets);
+	vkCmdBindIndexBuffer(commandBuffer, self->indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipeline);
 	vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, self->pipelineLayout, 0, 1, self->descriptorSets, 0, NULL);
 	vkCmdPushConstants(commandBuffer, self->pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(pushConstants), &pushConstants);
-	vkCmdDraw(commandBuffer, 24, 1, 0, 0);
+	vkCmdDrawIndexed(commandBuffer, TITLEBAR_INDEX_COUNT, 1, 0, 0, 0);
 
 	return true;
 }
@@ -430,4 +642,5 @@ void destroyTitlebar(Titlebar self)
 void titlebarSetAspectRatio(Titlebar self, float aspectRatio)
 {
 	self->aspectRatio = aspectRatio;
+	updateVertexBuffer(self);
 }
