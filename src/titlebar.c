@@ -455,17 +455,17 @@ static bool createTitlebarPipeline(Titlebar self, char **error)
 			.binding = 0,
 			.location = 0,
 			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = offsetof(TitlebarVertex, pos),
+			.offset = offsetof(TitlebarVertex, pos)
 		}, {
 			.binding = 0,
 			.location = 1,
 			.format = VK_FORMAT_R32G32B32_SFLOAT,
-			.offset = offsetof(TitlebarVertex, color),
+			.offset = offsetof(TitlebarVertex, color)
 		}, {
 			.binding = 0,
 			.location = 2,
 			.format = VK_FORMAT_R32G32_SFLOAT,
-			.offset = offsetof(TitlebarVertex, texCoord),
+			.offset = offsetof(TitlebarVertex, texCoord)
 		}
 	};
 
