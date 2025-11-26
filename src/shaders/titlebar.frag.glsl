@@ -10,5 +10,4 @@ void main() {
 	vec4 background = vec4(fragColor, 1.0);
 	vec4 texture = texture(texSampler, fragTexCoord);
 	outColor = mix(background, vec4(1.0, 1.0, 1.0, 1.0), texture.a);
-	outColor = vec4(1.0, 1.0, 1.0, 1.0);
 }
