@@ -410,7 +410,7 @@ static bool createVertexBuffer(Titlebar self, char **error)
 
 static void updateVertexBuffer(Titlebar self)
 {
-	updateHostVisibleMutableBuffer(self->device, self->vertexBufferMappedMemory, &self->vertexBuffer, TITLEBAR_VERTEX_COUNT, sizeof(*self->vertices));
+	updateHostVisibleMutableBuffer(self->device, self->vertexBufferMappedMemory, self->vertices, TITLEBAR_VERTEX_COUNT, sizeof(*self->vertices));
 }
 
 static void updateIndices(Titlebar self)
@@ -439,7 +439,7 @@ static bool createIndexBuffer(Titlebar self, char **error)
 
 static void updateIndexBuffer(Titlebar self)
 {
-	updateHostVisibleMutableBuffer(self->device, self->indexBufferMappedMemory, &self->indexBuffer, TITLEBAR_INDEX_COUNT, sizeof(*self->indices));
+	updateHostVisibleMutableBuffer(self->device, self->indexBufferMappedMemory, self->indices, TITLEBAR_INDEX_COUNT, sizeof(*self->indices));
 }
 
 static bool createTitlebarPipeline(Titlebar self, char **error)
