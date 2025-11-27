@@ -3,6 +3,7 @@
 #include "lodepng.h"
 
 #include "titlebar.h"
+#include "component.h"
 #include "buffer.h"
 #include "descriptor.h"
 #include "image.h"
@@ -39,7 +40,7 @@ typedef enum action_t {
 	TITLEBAR_ACTION_MENU
 } TITLEBAR_ACTION;
 
-float iconSpriteOriginMap[4][2] = {
+float actionSpriteOriginMap[4][2] = {
 	{0.0f, 0.0f},
 	{0.5f, 0.0f},
 	{0.0f, 0.5f},
@@ -73,6 +74,7 @@ struct titlebar_t {
 	VkDescriptorSetLayout descriptorSetLayouts[MAX_FRAMES_IN_FLIGHT];
 	NormalizedPointerPosition pointerPosition;
 	float aspectRatio;
+	float height;
 	bool hoveringMenu;
 	bool hoveringMinimize;
 	bool hoveringMaximize;
@@ -87,7 +89,7 @@ struct titlebar_t {
 	void *maximizeArg;
 	void (*minimize)(void *);
 	void *minimizeArg;
-	VkRect2D buttonRectangles[4];
+	NormalizedRectangle buttonRectangles[4];
 	TitlebarVertex vertices[TITLEBAR_VERTEX_COUNT];
 	VkBuffer vertexBuffer;
 	VmaAllocation vertexBufferAllocation;
@@ -101,6 +103,7 @@ struct titlebar_t {
 static bool createTitlebarTexture(Titlebar self, char **error);
 static bool createTitlebarTextureSampler(Titlebar self, char **error);
 static bool createTitlebarDescriptors(Titlebar self, char **error);
+static void updateButtonRectangles(Titlebar self);
 static void updateMesh(Titlebar self);
 static bool createVertexBuffer(Titlebar self, char **error);
 static void updateVertexBuffer(Titlebar self);
@@ -111,7 +114,7 @@ static bool createTitlebarPipeline(Titlebar self, char **error);
 static void updateHovering(Titlebar self);
 static void updatePressed(Titlebar self);
 
-bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, void (*close)(void *), void *closeArg, void (*maximize)(void *), void *maximizeArg, void (*minimize)(void *), void *minimizeArg, char **error)
+bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator, VkCommandPool commandPool, VkQueue queue, VkRenderPass renderPass, uint32_t subpass, VkSampleCountFlagBits sampleCount, const char *resourcePath, float aspectRatio, float height, void (*close)(void *), void *closeArg, void (*maximize)(void *), void *maximizeArg, void (*minimize)(void *), void *minimizeArg, char **error)
 {
 	*titlebar = malloc(sizeof(**titlebar));
 
@@ -126,6 +129,7 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->sampleCount = sampleCount;
 	self->resourcePath = resourcePath;
 	self->aspectRatio = aspectRatio;
+	self->height = height;
 	self->hoveringMenu = false;
 	self->hoveringMinimize = false;
 	self->hoveringMaximize = false;
@@ -141,6 +145,7 @@ bool createTitlebar(Titlebar *titlebar, VkDevice device, VmaAllocator allocator,
 	self->minimize = minimize;
 	self->minimizeArg = minimizeArg;
 
+	updateButtonRectangles(self);
 	updateMesh(self);
 	updateIndices(self);
 
@@ -248,13 +253,13 @@ static bool createTitlebarTexture(Titlebar self, char **error)
 
 static void updateButtonRectangles(Titlebar self)
 {
-	float buttonHeight = 2.0f;
-	float buttonWidth = 2.0f;
+	float buttonHeight = self->height * 2;
+	float buttonWidth = buttonHeight / self->aspectRatio;
 
-	self->buttonRectangles[TITLEBAR_ACTION_CLOSE] = (VkRect2D) {
+	self->buttonRectangles[TITLEBAR_ACTION_CLOSE] = (NormalizedRectangle) {
 		.offset = {
-			.x = 1.0 - buttonWidth,
-			.y = 1.0 - buttonHeight
+			.x = 1.0f - buttonWidth,
+			.y = 1.0f - buttonHeight
 		},
 		.extent = {
 			.width = buttonWidth,
@@ -262,10 +267,10 @@ static void updateButtonRectangles(Titlebar self)
 		}
 	};
 
-	self->buttonRectangles[TITLEBAR_ACTION_MAXIMIZE] = (VkRect2D) {
+	self->buttonRectangles[TITLEBAR_ACTION_MAXIMIZE] = (NormalizedRectangle) {
 		.offset = {
-			.x = 1.0 - buttonWidth * 2,
-			.y = 1.0 - buttonHeight
+			.x = 1.0f - buttonWidth * 2,
+			.y = 1.0f - buttonHeight
 		},
 		.extent = {
 			.width = buttonWidth,
@@ -273,10 +278,10 @@ static void updateButtonRectangles(Titlebar self)
 		}
 	};
 
-	self->buttonRectangles[TITLEBAR_ACTION_MINIMIZE] = (VkRect2D) {
+	self->buttonRectangles[TITLEBAR_ACTION_MINIMIZE] = (NormalizedRectangle) {
 		.offset = {
-			.x = 1.0 - buttonWidth * 3,
-			.y = 1.0 - buttonHeight
+			.x = 1.0f - buttonWidth * 3,
+			.y = 1.0f - buttonHeight
 		},
 		.extent = {
 			.width = buttonWidth,
@@ -284,10 +289,10 @@ static void updateButtonRectangles(Titlebar self)
 		}
 	};
 
-	self->buttonRectangles[TITLEBAR_ACTION_MENU] = (VkRect2D) {
+	self->buttonRectangles[TITLEBAR_ACTION_MENU] = (NormalizedRectangle) {
 		.offset = {
-			.x = 1.0 - buttonWidth * 4,
-			.y = 1.0 - buttonHeight
+			.x = 1.0f - buttonWidth * 4,
+			.y = 1.0f - buttonHeight
 		},
 		.extent = {
 			.width = buttonWidth,
@@ -300,9 +305,6 @@ static void updateMesh(Titlebar self)
 {
 	float hoverColor[] = {1.0f, 1.0f, 1.0f, 0.01f};
 	float pressedColor[] = {1.0f, 1.0f, 1.0f, 0.05f};
-
-	float buttonHeight = 2.0f;
-	float buttonWidth = 2.0f;
 
 	float barColor[] = {0.0f, 0.5f, 0.5f};
 	srgbToLinear(barColor);
@@ -320,8 +322,8 @@ static void updateMesh(Titlebar self)
 			buttonColors[i][2] = hoverBackground[2];
 		} else {
 			buttonColors[i][0] = defaultBackground[0];
-			buttonColors[i][0] = defaultBackground[1];
-			buttonColors[i][0] = defaultBackground[2];
+			buttonColors[i][1] = defaultBackground[1];
+			buttonColors[i][2] = defaultBackground[2];
 		}
 	}
 
@@ -330,25 +332,28 @@ static void updateMesh(Titlebar self)
 	self->vertices[2] = (TitlebarVertex) {{1.0f, 1.0f}, {barColor[0], barColor[1], barColor[2]}, {0.0f, 0.0f}};
 	self->vertices[3] = (TitlebarVertex) {{1.0f, -1.0f}, {barColor[0], barColor[1], barColor[2]}, {0.0f, 0.0f}};
 	for (size_t i = 0; i <= TITLEBAR_ACTION_MENU; ++i) {
+		NormalizedRectangle rectangle = self->buttonRectangles[i];
+		float *color = buttonColors[i];
+		float *spriteOrigin = actionSpriteOriginMap[i];
 		self->vertices[(i + 1) * 4] = (TitlebarVertex) {
-			{self->buttonRectangles[i].offset.x, self->buttonRectangles[i].offset.y},
-			{buttonColors[i][0], buttonColors[i][1], buttonColors[i][2]},
-			{iconSpriteOriginMap[i][0], iconSpriteOriginMap[i][1]}
+			{rectangle.offset.x, rectangle.offset.y},
+			{color[0], color[1], color[2]},
+			{spriteOrigin[0], spriteOrigin[1]}
 		};
 		self->vertices[(i + 1) * 4 + 1] = (TitlebarVertex) {
-			{self->buttonRectangles[i].offset.x, self->buttonRectangles[i].offset.y + buttonHeight},
-			{buttonColors[i][0], buttonColors[i][1], buttonColors[i][2]},
-			{iconSpriteOriginMap[i][0], iconSpriteOriginMap[i][1] + 0.5f}
+			{rectangle.offset.x, rectangle.offset.y + rectangle.extent.height},
+			{color[0], color[1], color[2]},
+			{spriteOrigin[0], spriteOrigin[1] + 0.5f}
 		};
 		self->vertices[(i + 1) * 4 + 2] = (TitlebarVertex) {
-			{self->buttonRectangles[i].offset.x + buttonWidth, self->buttonRectangles[i].offset.y + buttonHeight},
-			{buttonColors[i][0], buttonColors[i][1], buttonColors[i][2]},
-			{iconSpriteOriginMap[i][0] + 0.5f, iconSpriteOriginMap[i][1] + 0.5f}
+			{rectangle.offset.x + rectangle.extent.width, rectangle.offset.y + rectangle.extent.height},
+			{color[0], color[1], color[2]},
+			{spriteOrigin[0] + 0.5f, spriteOrigin[1] + 0.5f}
 		};
 		self->vertices[(i + 1) * 4 + 3] = (TitlebarVertex) {
-			{self->buttonRectangles[i].offset.x + buttonWidth, self->buttonRectangles[i].offset.y},
-			{buttonColors[i][0], buttonColors[i][1], buttonColors[i][2]},
-			{iconSpriteOriginMap[i][0] + 0.5f, iconSpriteOriginMap[i][1]}
+			{rectangle.offset.x + rectangle.extent.width, rectangle.offset.y},
+			{color[0], color[1], color[2]},
+			{spriteOrigin[0] + 0.5f, spriteOrigin[1]}
 		};
 	}
 }
@@ -642,5 +647,7 @@ void destroyTitlebar(Titlebar self)
 void titlebarSetAspectRatio(Titlebar self, float aspectRatio)
 {
 	self->aspectRatio = aspectRatio;
+	updateButtonRectangles(self);
+	updateMesh(self);
 	updateVertexBuffer(self);
 }
