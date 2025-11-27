@@ -5,6 +5,7 @@
 #include "lodepng.h"
 
 #include "chess_board.h"
+#include "buffer.h"
 #include "descriptor.h"
 #include "image.h"
 #include "image_view.h"
@@ -601,7 +602,7 @@ static bool createBoardIndexBuffer(ChessBoard self, char **error)
 		indices[indicesOffset + 5] = verticesOffset + 0;
 	}
 
-	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, indices, sizeof(indices[0]), CHESS_INDEX_COUNT + 48, error)) {
+	if (!createStaticBuffer(self->device, self->allocator, self->commandPool, self->queue, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, &self->boardIndexBuffer, &self->boardIndexBufferAllocation, indices, CHESS_INDEX_COUNT + 48, sizeof(indices[0]), error)) {
 		return false;
 	}
 
