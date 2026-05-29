@@ -4,17 +4,21 @@ plugins {
 }
 
 android {
-    namespace = "io.abalog.modeler"
+    namespace = "io.abalog.chess"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.abalog.modeler"
+        applicationId = "io.abalog.chess"
         minSdk = 30
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters.add("arm64-v8a")
+        }
     }
 
     buildTypes {
