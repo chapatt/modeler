@@ -638,6 +638,10 @@ void destroyTitlebar(Titlebar self)
 	for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		destroyDescriptorSetLayout(self->device, self->descriptorSetLayouts[i]);
 	}
+	vmaUnmapMemory(self->allocator, self->vertexBufferAllocation);
+	destroyBuffer(self->allocator, self->vertexBuffer, self->vertexBufferAllocation);
+	vmaUnmapMemory(self->allocator, self->indexBufferAllocation);
+	destroyBuffer(self->allocator, self->indexBuffer, self->indexBufferAllocation);
 	destroySampler(self->device, self->sampler);
 	destroyImageView(self->device, self->textureImageView);
 	destroyImage(self->allocator, self->textureImage, self->textureImageAllocation);
