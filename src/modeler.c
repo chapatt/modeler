@@ -218,14 +218,14 @@ void *threadProc(void *arg)
 	}
 
 	float aspectRatio = (float) windowDimensions.activeArea.extent.width / windowDimensions.titlebarHeight;
-	float titlebarHeight = (float) windowDimensions.titlebarHeight / windowDimensions.activeArea.extent.height;
+	float titlebarHeight = (float) windowDimensions.titlebarHeight / (windowDimensions.titlebarHeight + windowDimensions.insets.top);
 #ifdef ENABLE_IMGUI
 	int titlebarSubpass = 2;
 #else /* ENABLE_IMGUI */
 	int titlebarSubpass = 1;
 #endif /* ENABLE_IMGUI */
 	Titlebar titlebar;
-	if (!createTitlebar(&titlebar, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, titlebarSubpass, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, aspectRatio, &sendCloseSignal, platformWindow, &sendMaximizeSignal, platformWindow, &sendMinimizeSignal, platformWindow, error)) {
+	if (!createTitlebar(&titlebar, device, allocator, commandPool, queueInfo.graphicsQueue, renderPass, titlebarSubpass, getMaxSampleCount(physicalDeviceCharacteristics.deviceProperties), resourcePath, aspectRatio, titlebarHeight, &sendCloseSignal, platformWindow, &sendMaximizeSignal, platformWindow, &sendMinimizeSignal, platformWindow, error)) {
 		sendThreadFailureSignal(platformWindow);
 	}
 

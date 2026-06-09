@@ -1,4 +1,4 @@
-package io.abalog.modeler
+package io.abalog.chess
 
 import com.google.androidgamesdk.GameActivity
 import android.view.WindowInsets

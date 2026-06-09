@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-	"vulkan.h": "c",
-	"vulkan_metal.h": "c"
-}
-}

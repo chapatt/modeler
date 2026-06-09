@@ -10,7 +10,7 @@ ifeq ($(OS),Windows_NT)
 	SED=sed
 	ANDROID_NDK=/Users/chapa/AppData/Local/Android/Sdk/ndk/28.0.12674087
 	ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/windows-x86_64
-	VULKAN_SDK=/VulkanSDK/1.4.328.1
+	VULKAN_SDK=/VulkanSDK/1.4.350.0
 	GLSLC=$(VULKAN_SDK)/Bin/glslc
 else
 	UNAME_S := $(shell uname -s)
@@ -38,7 +38,10 @@ ifdef ANDROID
 	TARGET=aarch64-linux-android
 	API=21
 	LDLIBS+=-lvulkan
-	ALL_TARGET=modeler_android.a imgui.a
+	ALL_TARGET=modeler_android.a
+ifdef ENABLE_IMGUI
+	ALL_TARGET+=imgui.a
+endif
 	CFLAGS+=--target=$(TARGET)$(API)
 	CFLAGS+=-I$(ANDROID_TOOLCHAIN)/sysroot/usr/include
 	CFLAGS+=-DVK_USE_PLATFORM_ANDROID_KHR
@@ -51,8 +54,6 @@ else ifdef IOS
 	CFLAGS+=-DVK_USE_PLATFORM_METAL_EXT
 	CFLAGS+=--target=arm64-apple-ios
 else ifeq ($(OS),Windows_NT)
-	CC=/msys64/mingw64/bin/gcc
-	CXX=/msys64/mingw64/bin/g++
 	CFLAGS+=-I$(VULKAN_SDK)/Include -mwindows -municode
 	LDFLAGS+=-L$(VULKAN_SDK)/Lib
 	LDLIBS+=-lvulkan-1 -ldwmapi
