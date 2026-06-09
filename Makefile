@@ -10,7 +10,7 @@ ifeq ($(OS),Windows_NT)
 	SED=sed
 	ANDROID_NDK=/Users/chapa/AppData/Local/Android/Sdk/ndk/28.0.12674087
 	ANDROID_TOOLCHAIN=$(ANDROID_NDK)/toolchains/llvm/prebuilt/windows-x86_64
-	VULKAN_SDK=/VulkanSDK/1.4.328.1
+	VULKAN_SDK=/VulkanSDK/1.4.350.0
 	GLSLC=$(VULKAN_SDK)/Bin/glslc
 else
 	UNAME_S := $(shell uname -s)
