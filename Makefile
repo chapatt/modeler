@@ -38,7 +38,10 @@ ifdef ANDROID
 	TARGET=aarch64-linux-android
 	API=21
 	LDLIBS+=-lvulkan
-	ALL_TARGET=modeler_android.a imgui.a
+	ALL_TARGET=modeler_android.a
+ifdef ENABLE_IMGUI
+	ALL_TARGET+=imgui.a
+endif
 	CFLAGS+=--target=$(TARGET)$(API)
 	CFLAGS+=-I$(ANDROID_TOOLCHAIN)/sysroot/usr/include
 	CFLAGS+=-DVK_USE_PLATFORM_ANDROID_KHR
