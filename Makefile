@@ -54,8 +54,6 @@ else ifdef IOS
 	CFLAGS+=-DVK_USE_PLATFORM_METAL_EXT
 	CFLAGS+=--target=arm64-apple-ios
 else ifeq ($(OS),Windows_NT)
-	CC=/msys64/mingw64/bin/gcc
-	CXX=/msys64/mingw64/bin/g++
 	CFLAGS+=-I$(VULKAN_SDK)/Include -mwindows -municode
 	LDFLAGS+=-L$(VULKAN_SDK)/Lib
 	LDLIBS+=-lvulkan-1 -ldwmapi
